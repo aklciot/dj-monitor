@@ -1,0 +1,9 @@
+{% if nodeList %}
+  <ul>
+  {% for node in nodeList%}
+    <li><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a></li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <pNo nodes defined</p>>
+{% endif %}
