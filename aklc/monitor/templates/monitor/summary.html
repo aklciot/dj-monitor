@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}
+Node operating summary
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ name }}</p>
+  
+  <div id="devices">
+    <div id="gateways" class="devices"> 
+      {% if gatewaydown %}
+        <p>Gateways that are not responding are:</p> 
+        <ul id = "gatewaydown">
+        {% for entry in gatewaydown %}
+          {% if entry.descr %}
+            <br><span class="descr">{{ entry.descr }}</span>
+          {% endif %}
+          <li><span class="node_down">{{entry.nodeID}}</span> <span class="lastseen"> (last seen {{entry.lastseen}})
+            <br>The following people have been notified: 
+            {% if entry.update_users %}
+              {% for person in entry.update_users %}
+		{% if forloop.last %}
+      		  {{ person }}
+                {% else %}
+                  {{ person }} ,
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              No-one was notified
+            {% endif %}
+	  </span></li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="nodeup">All Gateways are responding!</p>
+      {% endif %}
+    </div>
+    <div id="nodes" class="devices">
+      {% if nodedown %}
+        <p>Nodes that are not responding are: </p>
+        <ul id = "nodedown">
+        {% for entry in nodedown %}
+          {% if entry.descr %}
+            <br><span class="descr">{{ entry.descr }}</span>
+          {% endif %}
+          <li><span class="node_down">{{entry.nodeID}}</span> <span class="lastseen">(last seen {{entry.lastseen}})
+            <br>The following people have been notified: 
+            {% if entry.update_users %}
+              {% for person in entry.update_users %}
+		{% if forloop.last %}
+      		  {{ person }}
+                {% else %}
+                  {{ person }} ,
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              No-one was notified
+            {% endif %}
+        </span></li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="nodeup">All nodes are responding!</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="mqtt_instructions">
+    <p>If you wish to be notified if a node is not responding, send an MQTT message to the far queue with a topic of 
+    <span class="topic">AKLC/Control/sys-monitor</span>. The payload must be <span class = "payload">
+    {"Action": "NodeUpdate", "nodeName": "<span class = "nodename">NodeID</span>", "addPerson": "{{ name }}"}</span>.
+    This will add you to the people being notified. You can also control the means by which you are informed the node is not responding.
+    The options are "<b>sms</b>" or "<b>email</b>". To add a notification type, send an MQTT message to the far queue with a topic of 
+    <span class="topic">AKLC/Control/sys-monitor</span>. The payload must be <span class = "payload">
+    {"Action":"NodeUpdate", "nodeName":"<span class = "nodename">NodeID</span>", "addMethod":"sms/email"}</span> (The method must be <b>sms</b> or <b>email</b>).
+    Methods can also be removed: send an MQTT message to the far queue with a topic of 
+    <span class="topic">AKLC/Control/sys-monitor</span>. The payload must be <span class = "payload">
+    {"Action":"NodeUpdate", "nodeName":"<span class = "nodename">NodeID</span>", "delMethod":"sms/email"}.</span>
+</p>
+
+  </div>
+
+{% endblock %}

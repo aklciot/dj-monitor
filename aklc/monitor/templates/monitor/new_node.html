@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}
+New node discovered
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ name }}</p>
+
+  <p>This is a notification to let you know that <span class="nodename">{{node.nodeID}}</span> has appeared on the network.
+  </p>
+  <p>This is the information currently held for <b>{{ node.nodeID }}</b></p>
+  <table class = "node-details">
+    <tr>
+      <td class = "node-details">Node ID:</td><td class = "node-details">{{ node.nodeID }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Current status:</td><td class = "node-details"> {{ node.status }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Last seen at:</td><td class = "node-details">{{ node.lastseen }}</td>
+    </tr>
+  </table>
+  <div class="mqtt_instructions">
+    <p>If you wish to be notified if a node is not responding, send an MQTT message to the far queue with a topic of 
+    <span class="topic">AKLC/Control/sys-monitor</span>. The payload must be <span class = "payload">
+    {"Action": "NodeUpdate", "nodeName": "<span class = "nodename">NodeID</span>", "addPerson": "{{ name }}"}</span>.
+    This will add you to the people being notified. You can also control the means by which you are informed the node is not responding.
+    The options are "<b>sms</b>" or "<b>email</b>". To add a notification type, send an MQTT message to the far queue with a topic of 
+    <span class="topic">AKLC/Control/sys-monitor</span>. The payload must be <span class = "payload">
+    {"Action":"NodeUpdate", "nodeName":"<span class = "nodename">NodeID</span>", "addMethod":"sms/email"}</span> (The method must be <b>sms</b> or <b>email</b>).
+    Methods can also be removed: send an MQTT message to the far queue with a topic of 
+    <span class="topic">AKLC/Control/sys-monitor</span>. The payload must be <span class = "payload">
+    {"Action":"NodeUpdate", "nodeName":"<span class = "nodename">NodeID</span>", "delMethod":"sms/email"}.</span>
+</p>
+
+  </div>
+
+{% endblock %}

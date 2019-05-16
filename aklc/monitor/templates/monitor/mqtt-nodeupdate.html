@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}
+MQTT Request
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi <b>{{ name }}</b></p>
+
+  <p>sys-monitor received a request to update the system configuration. 
+The request was to {{ request }}.</p>
+<p><b>Result:</b> {{ result }}</p>
+
+<p>This is the information currently held for <b>{{ node.nodeID }}</b></p>
+  <table>
+    <tr>
+      <td>Node ID:</td><td>{{ node.nodeID }}</td>
+    </tr>
+    <tr>
+      <td>Current status:</td><td> {{ node.status }}</td>
+    </tr>
+    <tr>
+      <td>Users notified of issues:</td>
+      <td>{% for entry in node.update_users %}
+        {% if forloop.last %}
+          {{entry }}
+        {% else %}
+          {{entry }} ,
+        {% endif %}
+      {% endfor %}</td>
+    </tr>
+    <tr>
+      <td>Notification methods used:</td>
+      <td>{% for entry in node.update_method %}
+        {% if forloop.last %}
+          {{entry }}
+        {% else %}
+          {{entry }} ,
+        {% endif %}
+      {% endfor %}</td>
+    </tr>
+    <tr>
+      <td>Specific node topic:</td><td>{{ node.topic }}</td>
+    </tr>
+    <tr>
+      <td>Last seen at:</td><td>{{ node.lastseen }}</td>
+    </tr>
+    <tr>
+      <td>Is this a Gateway:</td><td> {{ node.is_gateway }}</td>
+    </tr>
+
+  </table>
+{% endblock %}

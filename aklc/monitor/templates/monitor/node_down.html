@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}
+Node down notification
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ name }}</p>
+
+  <p>This is a notification to let you know that <span class="nodename">{{node.nodeID}}</span> is down.
+  {% if node.descr %}
+     <br><span class="descr">{{ node.descr }}</span>
+  {% endif %}
+  </p>
+  <p>This is the information currently held for <b>{{ node.nodeID }}</b></p>
+  <table class = "node-details">
+    <tr>
+      <td class = "node-details">Node ID:</td><td class = "node-details">{{ node.nodeID }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Current status:</td><td class = "node-details"> {{ node.status }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Users notified of issues:</td>
+      <td class = "node-details">{% for entry in node.update_users %}
+        {% if forloop.last %}
+          {{entry }}
+        {% else %}
+          {{entry }} ,
+        {% endif %}
+      {% endfor %}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Notification methods used:</td>
+      <td class = "node-details">{% for entry in node.update_method %}
+        {% if forloop.last %}
+          {{entry }}
+        {% else %}
+          {{entry }} ,
+        {% endif %}
+      {% endfor %}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Specific node topic:</td><td class = "node-details">{{ node.topic }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Last seen at:</td><td class = "node-details">{{ node.lastseen }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Last notification sent at:</td><td class = "node-details">{{ node.status_sent }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Is this a Gateway:</td><td class = "node-details"> {{ node.is_gateway }}</td>
+    </tr>
+  </table>
+  <div class="mqtt_instructions">
+    <p>If node <span class="nodename">{{ node.nodeID }}</span> is permamently down you can remove it from the system. 
+    Send an MQTT message to the far queue with a topic of <span class="topic">AKLC/Control/sys-monitor</span>. 
+    The payload must be <span class = "payload">{"Action":"Delete", "nodeName":"{{ node.nodeID }}"}</span></p>
+    <p>Alternatively, if node <span class="nodename">{{ node.nodeID }}</span> is being worked on you can halt
+    'node down' messages for 7 days by sending an MQTT message to the far queue with a
+    topic of <span class="topic">AKLC/Control/sys-monitor</span>.
+    The payload must be <span class = "payload">{"Action":"NodeMaintain", "nodeName":"{{ node.nodeID }}"}</span></p>
+  </div>
+{% endblock %}

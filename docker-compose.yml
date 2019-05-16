@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+  web:
+    image: aklciot/monitor
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+  script:
+    image: aklciot/mqtt-script
+    build:
+      context: .
+      dockerfile: script-dockerfile
+    command: python mqtt-monitor.py
+    volumes:
+      - .:/code
+    restart: always
+
+

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+MQTT Request
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ name }}</p>
+
+  <p>sys-monitor received a request to put this node into maintenance mode</p>
+  <p> {{ request }}</p>
+  <p> {{ result }}</p>
+  <p>Node name: {{ node.nodeID }}</p>
+  <p>Next update will be after: {{ node.next_update }}</p>
+
+  <table>
+    <tr>
+      <td>Node ID:</td><td>{{ node.nodeID }}</td>
+    </tr>
+    <tr>
+      <td>Next update will be after:</td><td>{{ node.next_update }}</td>
+    </tr>
+
+  </table>
+{% endblock %}

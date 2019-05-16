@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}
+MQTT Request
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ name }}</p>
+
+  <p>sys-monitor received a request to update the system configuration</p>
+  <p> {{ request }}</p>
+  <p> {{ result }}</p>
+  <p>Node name: {{ node.nodeID }}</p>
+  <p>Notify users: 
+  {% for entry in node.update_users %}
+    {{entry }} ,
+  {% endfor %}
+  </p>
+  <p>Notify_method:   
+  {% for entry in node.update_method %}
+    {{entry }} ,
+  {% endfor %}
+  </p>
+  <p>Node topic: {{ node.topic }}</p>
+  <p>Node lastseen: {{ node.lastseen }}</p>
+  <p>Node last status sent: {{ node.status_sent }}</p>
+  <p>Node Gateway: {{ node.is_gateway }}</p>
+
+{% endblock %}
