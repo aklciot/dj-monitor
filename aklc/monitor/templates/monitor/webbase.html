@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="{% static "monitor/style.css" %}">    
+    <title>
+	{% block title %}
+        Node monitoring system
+        {% endblock %}
+    </title>
+  </head>
+  <body>
+    {% block web-body %}
+      Node monitor
+    {% endblock %}
+    <!-- START FOOTER -->
+    <div class="footer">
+      <table class="footer">
+        <tr>
+          <td class="content-block">
+            <span class="apple-link">Auckland Council Innovation team</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- END FOOTER -->
+
+  </body>
+</html>

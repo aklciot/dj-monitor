@@ -1,0 +1,41 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Node Details
+{% endblock %}
+
+{% block web-body %}
+  <p>Logged in as {{ user.username }}</p>
+  <p>This is the information currently held for <b>{{ node.nodeID }}</b></p>
+    <table>
+      <tr>
+        <td>Node ID:</td><td><span class="nodeup">{{ node.nodeID }}</span></td>
+      </tr>
+      <tr>
+        <td>Description:</td><td> {{ node.descr }}</td>
+      </tr>
+
+      <tr>
+        <td>Current status:</td><td> {{ node.status }}</td>
+      </tr>
+      <tr>
+        <td>Specific node topic:</td><td>{{ node.topic }}</td>
+      </tr>
+      <tr>
+        <td>Last seen at:</td><td>{{ node.lastseen }}</td>
+      </tr>
+      <tr>
+        <td>Is this a Gateway:</td><td> {{ node.is_gateway }}</td>
+      </tr>
+
+    </table>
+  {% if node.nodeuser_set.all %}
+    {% for nu in node.nodeuser_set.all %}
+      <p>{{nu.username}}</p>
+    {% endfor %}
+  {% endif %}
+  <form action="{% url 'monitor:nodeDetail' node.id  %}" method="post">
+  {% csrf_token %}
+  <input type="submit" value="Offline">
+  </form>
+{% endblock %}

@@ -1,0 +1,107 @@
+<style>
+  body {
+    font-family:Verdana, Geneva, Arial, sans-serif;
+  }
+
+  .node_down {
+    color: red;
+    font-weight: bold;
+  }
+
+  .nodeup {
+    color: #0b772f; /*medium green */
+    font-weight: bold;
+  }
+
+  .lastseen {
+    font-style: italic;
+  }
+
+  .descr {
+    font-style: italic;
+  }
+
+  .topic {
+    font-family: Monospace;
+    color: blue;   
+  }
+
+  .payload {
+    color: #0b772f; /*medium green */
+/*     font-weight: bold;  */
+  }
+
+  .nodename {
+    font-weight: bold;
+  }
+
+  .mqtt_instructions {
+     font-size: 0.875em;
+  }
+
+  table.node-details {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+
+  td.node-details {
+    border: 1px solid black;
+  }
+
+
+  /* -------------------------------------
+      HEADER, FOOTER, MAIN
+  ------------------------------------- */
+  .main {
+    background: #ffffff;
+    border-radius: 3px;
+    width: 100%; 
+  }
+
+  .wrapper {
+    box-sizing: border-box;
+    padding: 20px; 
+  }
+
+  .content-block {
+    padding-bottom: 10px;
+    padding-top: 10px;
+  }
+
+  .footer {
+    clear: both;
+    Margin-top: 10px;
+    text-align: center;
+    width: 100%; 
+  }
+    .footer td,
+    .footer p,
+    .footer span,
+    .footer a {
+      color: #999999;
+      font-size: 12px;
+      text-align: center; 
+  }
+
+  /* unsure why this is a good thing !   */
+  .apple-link a {
+      color: inherit !important;
+      font-family: inherit !important;
+      font-size: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+      text-decoration: none !important; 
+    }
+
+  table.footer {
+    border: 0;
+    cellpadding: 0;
+    cellspacing: 0;
+  }
+
+  .signature {
+    font-family:Verdana, Geneva, Arial, sans-serif;
+  }
+
+
+</style>
