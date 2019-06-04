@@ -2,7 +2,6 @@ import django
 import sys
 import os
 from django.conf import settings
-import logging
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import json
@@ -13,6 +12,12 @@ from django.utils import timezone
 
 sys.path.append("/code/aklc")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aklc.settings")
+
+eMqtt_client_id = os.getenv("AKLC_MQTT_CLIENT_ID", "mqtt_monitor")
+eMqtt_host = os.getenv("AKLC_MQTT_HOST", "172.17.0.4")
+eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
+eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
+eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 
 django.setup()
 
@@ -26,10 +31,8 @@ def mqtt_on_connect(client, userdata, flags, rc):
     #global nodes_config
     
     print("Connected to mqtt with result code "+str(rc))
-    logging.info("Connected to mqtt server")
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
-    logging.info("mqtt Subscribed to " + sub_topic)
     print("mqtt Subscribed to " + sub_topic)
     
 #********************************************************************
@@ -123,21 +126,27 @@ def sys_monitor():
 
     print("Start function")
 
-    #all_nodes = Node.objects.all()
-
-    #for n in all_nodes:
-    #    print(n)
+    print(eMqtt_client_id)
+    print(eMqtt_host)
+    print(eMqtt_port)
 
     #The mqtt client is initialised
-    client = mqtt.Client(client_id='sys_monitor2')
+    client = mqtt.Client(client_id=eMqtt_client_id)
 
     #functions called by mqtt client
     client.on_connect = mqtt_on_connect
     client.on_message = mqtt_on_message
+    
+    try:
 
     # set up the local MQTT environment
-    client.username_pw_set("aklciot", "iotiscool")
-    client.connect("aws2.innovateauckland.nz", 1883, 60)
+    #client.username_pw_set(eMqtt_user, eMqtt_password)
+    
+        client.connect(eMqtt_host, int(eMqtt_port), 60)
+    except Exception as e:
+        print(e)
+
+    print("Breakpoint 3")
 
     # used to manage mqtt subscriptions
     client.loop_start()

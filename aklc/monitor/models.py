@@ -12,7 +12,8 @@ class Node(models.Model):
     statusSent = models.DateTimeField(blank=True, null=True)
     isGateway = models.BooleanField(blank=True, default=False)
     notificationSent = models.BooleanField(blank=True, default=False)
-    status = models.CharField(max_length=10, blank=True, null=True)
+    status = models.CharField(max_length=1, default=" ", help_text="C is current, X is down, M in maintenance mode")
+    textStatus = models.CharField(max_length=10, blank=True, null=True)
     nextUpdate = models.DateTimeField(blank=True, null=True)
     topic = models.CharField(max_length=50, blank=True, null=True)
     descr = models.TextField(blank=True, null=True)
@@ -24,6 +25,10 @@ class Node(models.Model):
     software = models.CharField(max_length=50, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude  = models.FloatField(blank=True, null=True)
+    battName = models.CharField(max_length=40, blank=True, null=True)
+    battValue = models.FloatField(default = 0.0)
+    battWarning = models.FloatField(default = 0.0)
+    battCritical = models.FloatField(default = 0.0)
 
     def __str__(self):
         return self.nodeID

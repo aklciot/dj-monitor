@@ -1,8 +1,13 @@
-version: '2'
+version: '3'
 
 services:
   db:
     image: postgres
+    environment:
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
   web:
     image: aklciot/monitor
     build: .
@@ -24,5 +29,22 @@ services:
     restart: always
     depends_on:
       - db
+      - mqtt
+    environment:
+      AKLC_MQTT_CLIENT_ID: mqtt_monitor
+      AKLC_MQTT_HOST: mqtt
+  mqtt:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+  nodered:
+    image: nodered/node-red-docker
+    ports:
+      - "1880:1880"
+    volumes:
+      - nodered-data:/data
 
-
+#networks:
+volumes:
+  postgres-data:
+  nodered-data:
