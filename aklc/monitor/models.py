@@ -19,7 +19,7 @@ class Node(models.Model):
     topic = models.CharField(max_length=30, blank=True, null=True)
     lastData = models.TextField(blank=True, null=True)
     lastStatus = models.TextField(blank=True, null=True)
-    message_delay = models.FloatField(blank=True, null=True, help_text="Minutes the node can be inactive without being considered down")
+    message_delay = models.FloatField(default=60, help_text="Minutes the node can be inactive without being considered down")
     hardware = models.CharField(max_length=50, blank=True, null=True)
     software = models.CharField(max_length=50, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)

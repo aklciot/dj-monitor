@@ -1,6 +1,8 @@
 version: '2'
 
 services:
+  db:
+    image: postgres
   web:
     image: aklciot/monitor
     build: .
@@ -9,6 +11,8 @@ services:
       - .:/code
     ports:
       - "8000:8000"
+    depends_on:
+      - db
   script:
     image: aklciot/mqtt-script
     build:
@@ -18,5 +22,7 @@ services:
     volumes:
       - .:/code
     restart: always
+    depends_on:
+      - db
 
 
