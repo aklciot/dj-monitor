@@ -182,9 +182,9 @@ def sys_monitor():
 
     print("Start function")
 
-    #print(eMqtt_client_id)
-    #print(eMqtt_host)
-    #print(eMqtt_port)
+    print(eMqtt_client_id)
+    print(eMqtt_host)
+    print(eMqtt_port)
 
     #The mqtt client is initialised
     client = mqtt.Client(client_id=eMqtt_client_id)
