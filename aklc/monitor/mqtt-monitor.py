@@ -8,6 +8,8 @@ import json
 import datetime
 import time
 from django.utils import timezone
+from django import template
+from email.mime.text import MIMEText
 #timezone.make_aware(yourdate, timezone.get_current_timezone())
 
 sys.path.append("/code/aklc")
@@ -18,6 +20,7 @@ eMqtt_host = os.getenv("AKLC_MQTT_HOST", "172.17.0.4")
 eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
+eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
 
 django.setup()
 
@@ -129,6 +132,48 @@ def node_validate(inNode):
         return(False)
     return(True)
 
+#******************************************************************
+def missing_node(node, mqtt_client):
+  """
+  Procedure run when a node has not been seen for a while
+  """
+  if node.status == 'C':
+    node.textStatus = "Missing"
+    node.status = "X"
+    node.notification_sent = True
+    node.status_sent = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+    node.save()
+    cDict = {'node': node}
+    sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client)
+    print("Node {} marked as down and notification sent".format(node.nodeID))
+  return
+
+# ******************************************************************************
+def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
+    """A function to send email notification
+    """
+    try:
+       
+        t = template.loader.get_template(inTemplate)
+        body = t.render(inDataDict)
+      
+        msg = MIMEText(body, 'html') 
+        msg['From'] = eMail_From
+        msg['To'] = "jim@west.net.nz"
+        msg['Subject'] = inSubject
+      
+        payload['To'] = "jim@west.net.nz"
+        payload['From'] = 'info@innovateauckland.nz'
+        payload['Body'] = msg.as_string()
+
+        mqtt_client.publish('AKLC/send/email', json.dump(payload))
+
+    except Exception as e:
+        print(e)
+        print("Houston, we have an error {}".format(e))  
+       
+    return
+
 
 #******************************************************************
 def sys_monitor():
@@ -137,9 +182,9 @@ def sys_monitor():
 
     print("Start function")
 
-    print(eMqtt_client_id)
-    print(eMqtt_host)
-    print(eMqtt_port)
+    #print(eMqtt_client_id)
+    #print(eMqtt_host)
+    #print(eMqtt_port)
 
     #The mqtt client is initialised
     client = mqtt.Client(client_id=eMqtt_client_id)
@@ -157,13 +202,30 @@ def sys_monitor():
     except Exception as e:
         print(e)
 
-    print("Breakpoint 3")
-
     # used to manage mqtt subscriptions
     client.loop_start()
 
+    #initialise the checkpoint timer
+    checkTimer = timezone.now()   
+
     while True:
       time.sleep(1)
+      
+      # this section runs regularly (every 15 sec) and does a number of functions
+      if (timezone.now() - checkTimer) > datetime.timedelta(0,15):  #second value is seconds to pause between....
+        # update the checkpoint timer
+        checkTimer = timezone.now()                                 #reset timer
+        
+        print("Timer check")
+
+        allNodes = Node.objects.all()
+
+        for n in allNodes:
+            #if nothing then our 'patience' will run out
+            if (timezone.now() - n.lastseen) > datetime.timedelta(minutes=n.allowedDowntime):
+                print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
+                missing_node(n, client)
+               
 
 
 #********************************************************************
