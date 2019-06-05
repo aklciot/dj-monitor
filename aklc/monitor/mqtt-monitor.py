@@ -192,7 +192,8 @@ def sys_monitor():
     #functions called by mqtt client
     client.on_connect = mqtt_on_connect
     client.on_message = mqtt_on_message
-    
+    print("MQTT env set up done")
+
     try:
 
     # set up the local MQTT environment
@@ -207,6 +208,8 @@ def sys_monitor():
 
     #initialise the checkpoint timer
     checkTimer = timezone.now()   
+
+    print("About to start loop")
 
     while True:
       time.sleep(1)
