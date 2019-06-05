@@ -197,8 +197,7 @@ def sys_monitor():
     try:
 
     # set up the local MQTT environment
-    #client.username_pw_set(eMqtt_user, eMqtt_password)
-    
+        client.username_pw_set(eMqtt_user, eMqtt_password)
         client.connect(eMqtt_host, int(eMqtt_port), 60)
     except Exception as e:
         print(e)
