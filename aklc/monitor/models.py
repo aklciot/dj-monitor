@@ -52,7 +52,7 @@ class Profile(models.Model):
     reportType = models.CharField(max_length=1, blank=True, null=True, default='S')
 
     def __str__(self):
-        return self.user
+        return self.user.username
 
 
 @receiver(post_save, sender=User)

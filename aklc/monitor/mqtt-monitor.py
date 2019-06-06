@@ -22,9 +22,12 @@ eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
 
+eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz/admin")
+
 django.setup()
 
-from monitor.models import Node
+from monitor.models import Node, Profile
+from django.contrib.auth.models import User
 
 # ********************************************************************
 def mqtt_on_connect(client, userdata, flags, rc):
@@ -42,7 +45,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
 def mqtt_on_message(client, userdata, msg):
     """This procedure is called each time a mqtt message is received"""
 
-    print("mqtt message received {} : {}".format(msg.topic, msg.payload))
+    #print("mqtt message received {} : {}".format(msg.topic, msg.payload))
 
     #separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
@@ -155,7 +158,7 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, aRecipients)
     """
     payload = {}
     try:
-       
+        inDataDict['web_base_url'] = eWeb_Base_URL
         t = template.loader.get_template(inTemplate)
         body = t.render(inDataDict)
       
@@ -238,6 +241,15 @@ def sys_monitor():
 
     #initialise the checkpoint timer
     checkTimer = timezone.now()   
+
+    allUsers = Profile.objects.all()
+    uReport = []
+    for usr in allUsers:
+        print("User is {}, email is {}".format(usr.user.username, usr.user.email))
+        if usr.reportType == 'F':
+            uReport.append(usr.user.email)
+            print("Full report to {}".format(usr.user.email))
+
 
     aEmail_to = ['jim@west.net.nz']
 
