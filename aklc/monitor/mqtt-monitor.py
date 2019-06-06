@@ -144,12 +144,13 @@ def missing_node(node, mqtt_client):
     node.status_sent = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     node.save()
     cDict = {'node': node}
-    sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client)
+    aRecpients = {'jim@west.net.nz'}
+    sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, aRecpients)
     print("Node {} marked as down and notification sent".format(node.nodeID))
   return
 
 # ******************************************************************************
-def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
+def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, aRecipients):
     """A function to send email notification
     """
     payload = {}
@@ -174,6 +175,35 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
         print("Houston, we have an error {}".format(e))  
        
     return
+
+#******************************************************************
+def sendReport(aRecipients, mqttClient):
+  """
+  Function collates data and sends a full system report
+  """
+  print("Sending full report")
+  allNodes = Node.objects.all()
+  batWarnList = []
+  batCritList=[]
+  nodeOKList = []
+  nodeDownList = []
+  for a in allNodes:
+    if a.status == 'C':
+      #print("Battery name is '{}'".format(a.battName))
+      if a.battName == None:
+        nodeOKList.append(a)
+      else:
+        if a.battLevel > a.battWarn:
+          nodeOKList.append(a)
+        elif a.battLevel > a.battCritical:
+          batWarnList.append(a)
+        else:
+          batCritList.append(a)
+    elif a.status == 'X':
+      nodeDownList.append(a)
+  cDict = {'nodes': allNodes, 'nodeOK': nodeOKList, 'nodeWarn': batWarnList, 'nodeCrit': batCritList, 'nodeDown': nodeDownList}
+  sendNotifyEmail("Daily report", cDict, "monitor/email-full.html", mqttClient,aRecipients)
+  return
 
 
 #******************************************************************
@@ -208,6 +238,10 @@ def sys_monitor():
 
     #initialise the checkpoint timer
     checkTimer = timezone.now()   
+
+    aEmail_to = ['jim@west.net.nz']
+
+    sendReport(aEmail_to, client)
 
     print("About to start loop")
 
