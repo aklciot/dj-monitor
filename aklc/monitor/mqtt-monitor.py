@@ -245,15 +245,12 @@ def sys_monitor():
     allUsers = Profile.objects.all()
     uReport = []
     for usr in allUsers:
-        print("User is {}, email is {}".format(usr.user.username, usr.user.email))
+        #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
         if usr.reportType == 'F':
             uReport.append(usr.user.email)
-            print("Full report to {}".format(usr.user.email))
+            #print("Full report to {}".format(usr.user.email))
 
-
-    aEmail_to = ['jim@west.net.nz']
-
-    sendReport(aEmail_to, client)
+    sendReport(uReport, client)
 
     print("About to start loop")
 
