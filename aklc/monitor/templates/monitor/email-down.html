@@ -1,0 +1,52 @@
+{% extends "monitor/email-base.html" %}
+
+{% block title %}
+Node down notification
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi Jim</p>
+
+  <p>This is a notification to let you know that <span class="nodename">{{node.nodeID}}</span> is down.
+  {% if node.descr %}
+     <br><span class="descr">{{ node.descr }}</span>
+  {% endif %}
+  </p>
+  <p>This is the information currently held for <b>{{ node.nodeID }}</b></p>
+  <table class = "node-details">
+    <tr>
+      <td class = "node-details">Node ID:</td><td class = "node-details">{{ node.nodeID }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Current status:</td><td class = "node-details"> {{ node.textStatus }}</td>
+    </tr>
+    
+    <tr>
+      <td class = "node-details">Minutes allowed to be silent:</td><td class = "node-details">{{ node.allowedDowntime }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Last seen at:</td><td class = "node-details">{{ node.lastseen }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Last notification sent at:</td><td class = "node-details">{{ node.status_sent }}</td>
+    </tr>
+    <tr>
+      <td class = "node-details">Is this a Gateway:</td><td class = "node-details"> {{ node.is_gateway }}</td>
+    </tr>
+    {% if node.battName %}
+      <tr>
+        <td class = "node-details">Last battery level:</td><td class = "node-details"> {{ node.battLevel }}</td>
+      </tr>
+      <tr>
+        <td class = "node-details">Warn when battery is below:</td><td class = "node-details"> {{ node.battWarn }}</td>
+      </tr>
+      <tr>
+        <td class = "node-details">Critical battery level:</td><td class = "node-details"> {{ node.battCritical }}</td>
+      </tr>
+
+    {% endif %}
+  </table>
+  <div class="mqtt_instructions">
+    <p>If node <span class="nodename"><a href="{% url 'monitor:node_detail' node.id %}">{{node.nodeID}}</a></span> is permamently down you can remove it from the system. </p>
+  </div>
+{% endblock %}

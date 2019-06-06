@@ -33,6 +33,7 @@ services:
     environment:
       AKLC_MQTT_CLIENT_ID: mqtt_monitor
       AKLC_MQTT_HOST: mqtt
+      AKLC_MAIL_FROM: info@innovateauckland.nz
   mqtt:
     image: eclipse-mosquitto
     ports:
