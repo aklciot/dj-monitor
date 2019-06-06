@@ -248,7 +248,7 @@ def sys_monitor():
         #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
         if usr.reportType == 'F':
             uReport.append(usr.user.email)
-            #print("Full report to {}".format(usr.user.email))
+            print("Full report to {}".format(usr.user.email))
 
     sendReport(uReport, client)
 
