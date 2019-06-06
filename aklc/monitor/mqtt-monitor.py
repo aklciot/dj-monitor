@@ -152,6 +152,7 @@ def missing_node(node, mqtt_client):
 def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
     """A function to send email notification
     """
+    payload = {}
     try:
        
         t = template.loader.get_template(inTemplate)
@@ -166,7 +167,7 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
         payload['From'] = 'info@innovateauckland.nz'
         payload['Body'] = msg.as_string()
 
-        mqtt_client.publish('AKLC/send/email', json.dump(payload))
+        mqtt_client.publish('AKLC/send/email', json.dumps(payload))
 
     except Exception as e:
         print(e)
