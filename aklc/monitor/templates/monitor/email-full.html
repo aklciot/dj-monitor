@@ -29,7 +29,7 @@ Node down notification
         <p>Nodes that have low battery levels are:</p>
         <ul id = "nodeWarnUL">
         {% for entry in nodeWarn %}
-          <li><span class="battWarning"><a href="http://192.168.1.170:8000/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
+          <li><span class="battWarning"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -44,7 +44,7 @@ Node down notification
         <p>Nodes that are DOWN are:</p>
         <ul id = "nodeDown">
         {% for entry in nodeDown %}
-          <li><span class="node_down"><a href="http://192.168.1.170:8000/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -61,7 +61,7 @@ Node down notification
         <p>Nodes that are fine are:</p>
         <ul id = "nodeOK">
         {% for entry in nodeOK %}
-          <li><span class="nodeup"><a href="http://192.168.1.170:8000/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          <li><span class="nodeup"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
