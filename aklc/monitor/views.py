@@ -26,3 +26,8 @@ def nodeDetail(request, node_ref):
     node = Node.objects.get(id = node_ref)
     context = {'node': node, 'user': request.user}
     return render(request, 'monitor/nodeDetail.html', context)
+
+def nodeUpdate(request, node_ref):
+    node = Node.objects.get(id = node_ref)
+    context = {'node': node, 'user': request.user}
+    return render(request, 'monitor/nodeUpdate.html', context)

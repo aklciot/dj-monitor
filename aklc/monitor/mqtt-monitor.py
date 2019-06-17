@@ -22,8 +22,11 @@ eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
+eMail_To = os.getenv("AKLC_MAIL_To", "westji@aklc.govt.nz")
 
 eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz/admin")
+
+testRunDaily = ("AKLC_TEST_DAILY", "F")
 
 django.setup()
 
@@ -264,15 +267,16 @@ def sys_monitor():
         print("Notification pickle file not found")
         notification_data = {"LastSummary": datetime.datetime.now() + datetime.timedelta(days = -3)}
 
-    #allUsers = Profile.objects.all()
-    #uReport = []
-    #for usr in allUsers:
+    if (testRunDaily == "T"):               # if this environment flag is true, run the daily report
+      allUsers = Profile.objects.all()
+      uReport = []
+      for usr in allUsers:
         #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
-    #    if usr.reportType == 'F':
-    #        uReport.append(usr.user.email)
-    #        print("Full report to {}".format(usr.user.email))
+        if usr.reportType == 'F':
+            uReport.append(usr.user.email)
+            print("Full report to {}".format(usr.user.email))
 
-    #sendReport(uReport, client)
+      sendReport(uReport, client)
 
     print("About to start loop")
 
