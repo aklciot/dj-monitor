@@ -1,0 +1,105 @@
+<style>
+  .card {
+    width: 100%;
+    height: 100%;
+    border: 2px solid #ccc;
+    box-sizing: border-box;
+  }
+
+  .card .content {
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .card .content .column {
+    display: flex;
+    flex-direction: column;    
+    justify-content: space-around;
+    height: 100%;
+   }
+ 
+  .card h1 {
+    text-transform: uppercase;
+    color: #999;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+    padding-bottom: 10px;
+    line-height: 32px;
+   }
+
+  .card .value {
+    font-size: 38px;
+    font-weight: 200;
+  }
+
+  .card .description {
+    font-size: 20px;
+    color: #999;
+  }
+
+  .card .a_content {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .goodBattery {
+    background-color: #3e557e
+  }
+
+  .warnBattery {
+    background-color: #fd8500
+  }
+
+  .critBattery {
+    background-color: #b90000
+  }
+</style>
+
+<script>
+    if (${VBat:2} >= 3.70){
+        $(".a_content").css("background-color", "#3e557e");
+        }
+    else if (${VBat:2} <= 3.69 && ${VBat:2} >= 3.61){
+        $(".a_content").css("background-color", "#fd8500");
+        }
+    else if (${VBat:2} < 3.6){
+        $(".a_content").css("background-color", "#b90000");
+        }
+</script>
+<div class='card'>
+    {% if node.battLevel > node.battWarn %}
+        <div class='a_content goodBattery'>
+            <div class='column'>
+                Sensor: {{ node.nodeID }}
+                <div class='value'> {{ node.battLevel }} Volts </div>
+            </div>
+        </div>
+    {% else %}
+        {% if node.battLevel > node.battCritical %}
+            <div class='a_content warnBattery'>
+                <div class='column'>
+                    Sensor: {{ node.nodeID }}
+                    <div class='value'> {{ node.battLevel }} Volts </div>
+                </div>
+            </div>
+        {% else %}
+            <div class='a_content critBattery'>
+                <div class='column'>
+                    Sensor: {{ node.nodeID }}
+                    <div class='value'> {{ node.battLevel }} Volts </div>
+                </div>
+            </div>   
+        {% endif %}
+    {% endif %}
+ </div>
