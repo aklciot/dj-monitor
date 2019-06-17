@@ -5,7 +5,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 # Create your models here.
-# Create your models here.
+class Team(models.Model):
+    teamID = models.CharField(max_length=50)
+    descr = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.teamID
+
+
 class Node(models.Model):
     nodeID = models.CharField(max_length=30)
     lastseen = models.DateTimeField(blank=True, null=True)
@@ -17,7 +24,6 @@ class Node(models.Model):
     nextUpdate = models.DateTimeField(blank=True, null=True)
     topic = models.CharField(max_length=50, blank=True, null=True)
     descr = models.TextField(blank=True, null=True)
-    topic = models.CharField(max_length=30, blank=True, null=True)
     lastData = models.TextField(blank=True, null=True)
     lastStatus = models.TextField(blank=True, null=True)
     allowedDowntime = models.IntegerField(default=60, help_text="Minutes that the node can be 'unheard' before being marked as Offline")
@@ -30,6 +36,7 @@ class Node(models.Model):
     battLevel = models.FloatField(default = 0.0)
     battWarn = models.FloatField(default = 0.0)
     battCritical = models.FloatField(default = 0.0)
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.nodeID

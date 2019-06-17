@@ -30,7 +30,7 @@ testRunDaily = ("AKLC_TEST_DAILY", "F")
 
 django.setup()
 
-from monitor.models import Node, Profile, NodeUser
+from monitor.models import Node, Profile, NodeUser, Team
 from django.contrib.auth.models import User
 
 # ********************************************************************
@@ -44,6 +44,12 @@ def mqtt_on_connect(client, userdata, flags, rc):
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
     print("mqtt Subscribed to " + sub_topic)
+
+    aTeams = Team.objects.all()
+    for t in aTeams:
+      sub_topic = t.teamID + "/#"
+      print(sub_topic)
+      client.subscribe(sub_topic)
     
 #********************************************************************
 def mqtt_on_message(client, userdata, msg):
@@ -124,6 +130,34 @@ def mqtt_on_message(client, userdata, msg):
                     nd.battValue = jPayload[nd.battName]
                 nd.save()
 
+    else:     # not AKLC, a team subscription
+      # the payload is expected to be json
+      jPayload = json.loads(msg.payload)
+      if "NodeID" in jPayload:
+        try:
+          nd = Node.objects.get(nodeID = jPayload["NodeID"])
+          nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+          nd.textStatus = "Online"
+          nd.status = "C"
+          nd.lastData = sPayload
+          if nd.battName in jPayload:
+            nd.battLevel = jPayload[nd.battName]
+          if "latitude" in jPayload:
+            nd.latitude = jPayload["latitude"]
+          if "longitude" in jPayload:
+            nd.longitude = jPayload["longitude"]
+
+          try:
+            tm = Team.objects.get(teamID = cTopic[0])
+            nd.team = tm
+          except:
+            print("team {} not found".format(cTopic[0]))
+
+          nd.save()
+          print("Processed data for {}".format(nd.nodeID))
+        except Exception as e:
+          print("NodeID error - {} not in database".format(jPayload["NodeID"]))
+          print(e)
   
 
 
