@@ -1,19 +1,63 @@
 {% extends "monitor/webbase.html" %}
 
+{% block pagerefresh %}<meta http-equiv="refresh" content="30">{% endblock %}
+
 {% block title %}
-Node down notification
+Node and gateway list
 {% endblock %}
 
 {% block web-body %}
 
-{% if nodeList %}
-  <ul>
-  {% for node in nodeList%}
-    <li><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a></li>
-  {% endfor %}
-  </ul>
-{% else %}
-  <pNo nodes defined</p>>
-{% endif %}
+  <div id="nodes">
+  <h1>Node List</h1>
+    {% if nodeList %}
+      <div class="list-group">
+      {% for node in nodeList%}
+        {% if not node.isGateway %}
+          {% if node.status == 'X' %}
+            <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (node not reporting in)</a>
+          {% else %}
+            {% if node.battName %}
+              {% if node.battLevel > node.battWarn %}
+                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+              {% else %}
+                {% if node.battLevel > node.battCritical %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-warning">{{node.nodeID}} (battery level is low)</a>
+                {% else %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-danger">{{node.nodeID}} (battery level is critically low)</a>
+                {% endif %}
+              {% endif %}
+            {% else %}
+              <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+            {% endif %}  
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      </div>
+    {% else %}
+      <p>No nodes defined</p>>
+    {% endif %}
+  </div>
+
+  
+  <div id="gateways">
+      <h1>Gateway List</h1>
+        {% if nodeList %}
+          <div class="list-group">
+          {% for node in nodeList%}
+            {% if node.isGateway %}
+              {% if node.status == 'X' %}
+                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (gateway not reporting in)</a>
+              {% else %}
+                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          </div>
+        {% else %}
+          <p>No gateways defined</p>>
+        {% endif %}
+      </div>
+    
 
 {% endblock %}
