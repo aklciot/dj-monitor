@@ -26,8 +26,9 @@ class Node(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude  = models.FloatField(blank=True, null=True)
     battName = models.CharField(max_length=40, blank=True, null=True)
-    battValue = models.FloatField(default = 0.0)
-    battWarning = models.FloatField(default = 0.0)
+    battMonitor = models.BooleanField(default=False)
+    battLevel = models.FloatField(default = 0.0)
+    battWarn = models.FloatField(default = 0.0)
     battCritical = models.FloatField(default = 0.0)
 
     def __str__(self):
@@ -51,7 +52,7 @@ class Profile(models.Model):
     reportType = models.CharField(max_length=1, blank=True, null=True, default='S')
 
     def __str__(self):
-        return self.user
+        return self.user.username
 
 
 @receiver(post_save, sender=User)

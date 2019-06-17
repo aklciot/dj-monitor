@@ -7,6 +7,7 @@ import paho.mqtt.publish as publish
 import json
 import datetime
 import time
+import pickle
 from django.utils import timezone
 from django import template
 from email.mime.text import MIMEText
@@ -21,10 +22,16 @@ eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
+eMail_To = os.getenv("AKLC_MAIL_To", "westji@aklc.govt.nz")
+
+eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz/admin")
+
+testRunDaily = ("AKLC_TEST_DAILY", "F")
 
 django.setup()
 
-from monitor.models import Node
+from monitor.models import Node, Profile, NodeUser
+from django.contrib.auth.models import User
 
 # ********************************************************************
 def mqtt_on_connect(client, userdata, flags, rc):
@@ -42,7 +49,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
 def mqtt_on_message(client, userdata, msg):
     """This procedure is called each time a mqtt message is received"""
 
-    print("mqtt message received {} : {}".format(msg.topic, msg.payload))
+    #print("mqtt message received {} : {}".format(msg.topic, msg.payload))
 
     #separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
@@ -137,34 +144,42 @@ def missing_node(node, mqtt_client):
   """
   Procedure run when a node has not been seen for a while
   """
-  if node.status == 'C':
+  
+  if node.status == 'C':                        # only do something if node is currently marked as "C"urrent
+    print("Update node is down!")
     node.textStatus = "Missing"
     node.status = "X"
     node.notification_sent = True
     node.status_sent = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     node.save()
-    cDict = {'node': node}
-    sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client)
-    print("Node {} marked as down and notification sent".format(node.nodeID))
+    cDict = {'node': node}                      # dict to pass to template
+    aRecpients = {'jim@west.net.nz'}
+    uNotify = NodeUser.objects.filter(nodeID=node.id)
+    for usr in uNotify:
+      nUser = User.objects.get(username = usr.username)
+      print(nUser.email)
+      sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, nUser)
+    print("Node {} marked as down and notification sent to {}".format(node.nodeID, nUser.username))
   return
 
 # ******************************************************************************
-def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
+def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
     """A function to send email notification
     """
     payload = {}
     try:
-       
+        inDataDict['web_base_url'] = eWeb_Base_URL
+        inDataDict['user'] = mailUser
         t = template.loader.get_template(inTemplate)
         body = t.render(inDataDict)
       
         msg = MIMEText(body, 'html') 
         msg['From'] = eMail_From
-        msg['To'] = "jim@west.net.nz"
+        msg['To'] = mailUser.email
         msg['Subject'] = inSubject
       
-        payload['To'] = "jim@west.net.nz"
-        payload['From'] = 'info@innovateauckland.nz'
+        payload['To'] = mailUser.email
+        payload['From'] = eMail_From
         payload['Body'] = msg.as_string()
 
         mqtt_client.publish('AKLC/send/email', json.dumps(payload))
@@ -174,6 +189,37 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client):
         print("Houston, we have an error {}".format(e))  
        
     return
+
+#******************************************************************
+def sendReport(aNotifyUsers, mqttClient):
+  """
+  Function collates data and sends a full system report
+  """
+  print("Sending full report")
+  allNodes = Node.objects.all()
+  batWarnList = []
+  batCritList=[]
+  nodeOKList = []
+  nodeDownList = []
+  mailUser = User.objects.get(username="jim")
+  for a in allNodes:
+    if a.status == 'C':
+      #print("Battery name is '{}'".format(a.battName))
+      if a.battName == None:
+        nodeOKList.append(a)
+      else:
+        if a.battLevel > a.battWarn:
+          nodeOKList.append(a)
+        elif a.battLevel > a.battCritical:
+          batWarnList.append(a)
+        else:
+          batCritList.append(a)
+    elif a.status == 'X':
+      nodeDownList.append(a)
+  cDict = {'nodes': allNodes, 'nodeOK': nodeOKList, 'nodeWarn': batWarnList, 'nodeCrit': batCritList, 'nodeDown': nodeDownList}
+  for u in aNotifyUsers:
+    sendNotifyEmail("Daily report", cDict, "monitor/email-full.html", mqttClient, u)
+  return
 
 
 #******************************************************************
@@ -209,6 +255,29 @@ def sys_monitor():
     #initialise the checkpoint timer
     checkTimer = timezone.now()   
 
+    notification_data = {"LastSummary": datetime.datetime.now() + datetime.timedelta(days = -3)}
+
+    #get any pickled notification data
+    try:
+        notificationPfile = open("notify.pkl", 'rb')
+        notification_data = pickle.load(notificationPfile)
+        print("Pickled notification read")
+        notificationPfile.close()
+    except:
+        print("Notification pickle file not found")
+        notification_data = {"LastSummary": datetime.datetime.now() + datetime.timedelta(days = -3)}
+
+    if (testRunDaily == "T"):               # if this environment flag is true, run the daily report
+      allUsers = Profile.objects.all()
+      uReport = []
+      for usr in allUsers:
+        #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
+        if usr.reportType == 'F':
+            uReport.append(usr.user.email)
+            print("Full report to {}".format(usr.user.email))
+
+      sendReport(uReport, client)
+
     print("About to start loop")
 
     while True:
@@ -220,7 +289,7 @@ def sys_monitor():
         checkTimer = timezone.now()                                 #reset timer
         
         print("Timer check")
-
+        
         allNodes = Node.objects.all()
 
         for n in allNodes:
@@ -228,7 +297,34 @@ def sys_monitor():
             if (timezone.now() - n.lastseen) > datetime.timedelta(minutes=n.allowedDowntime):
                 print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
                 missing_node(n, client)
-               
+
+      #if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
+        if (timezone.now().hour > 0):                                   # run at certain time of the day
+            print("Check 1 {}".format(notification_data["LastSummary"]))
+            if notification_data["LastSummary"].day != datetime.datetime.now().day:
+              print("Send 8am messages")
+
+              allUsers = Profile.objects.all()
+              uReport = []
+              for usr in allUsers:
+                #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
+                if usr.reportType == 'F':
+                  uReport.append(usr.user)
+                  print("Full report to {}".format(usr.user.email))
+
+              sendReport(uReport, client)
+
+              #update out notification data and save
+              notification_data["LastSummary"] = datetime.datetime.now()
+              #write a pickle containing current notification data
+              try:
+                  notificationPfile = open("notify.pkl", 'wb')
+                  pickle.dump(notification_data, notificationPfile)
+                  notificationPfile.close()
+              except Exception as e:
+                  print(e)
+                  print("Notification Pickle failed")
+
 
 
 #********************************************************************
