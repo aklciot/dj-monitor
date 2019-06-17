@@ -36,6 +36,7 @@ class Node(models.Model):
     battLevel = models.FloatField(default = 0.0)
     battWarn = models.FloatField(default = 0.0)
     battCritical = models.FloatField(default = 0.0)
+    RSSI = models.FloatField(default = 0.0)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
