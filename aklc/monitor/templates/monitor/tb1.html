@@ -66,17 +66,6 @@
   }
 </style>
 
-<script>
-    if (${VBat:2} >= 3.70){
-        $(".a_content").css("background-color", "#3e557e");
-        }
-    else if (${VBat:2} <= 3.69 && ${VBat:2} >= 3.61){
-        $(".a_content").css("background-color", "#fd8500");
-        }
-    else if (${VBat:2} < 3.6){
-        $(".a_content").css("background-color", "#b90000");
-        }
-</script>
 <div class='card'>
     {% if node.battLevel > node.battWarn %}
         <div class='a_content goodBattery'>
