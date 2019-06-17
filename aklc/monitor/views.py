@@ -31,3 +31,14 @@ def nodeUpdate(request, node_ref):
     node = Node.objects.get(id = node_ref)
     context = {'node': node, 'user': request.user}
     return render(request, 'monitor/nodeUpdate.html', context)
+
+def tb1(request, node_ref):
+    node = Node.objects.get(id = node_ref)
+    context = {'node': node}
+    return render(request, 'monitor/tb1.html', context)
+
+def tb2(request, node_ref):
+    node = Node.objects.get(id = node_ref)
+    context = {'node': node}
+    return render(request, 'monitor/tb2.html', context)
+        
