@@ -255,7 +255,12 @@ def sendReport(aNotifyUsers, mqttClient):
           batCritList.append(a)
     elif a.status == 'X':
       nodeDownList.append(a)
-  cDict = {'nodes': allNodes, 'nodeOK': nodeOKList, 'nodeWarn': batWarnList, 'nodeCrit': batCritList, 'nodeDown': nodeDownList}
+  cDict = {'nodes': allNodes,
+     'nodeOK': nodeOKList,
+     'nodeWarn': batWarnList,
+     'nodeCrit': batCritList,
+     'nodeDown': nodeDownList,
+     'web_base_url': eWeb_Base_URL}
   for u in aNotifyUsers:
     sendNotifyEmail("Daily report", cDict, "monitor/email-full.html", mqttClient, u)
   return
