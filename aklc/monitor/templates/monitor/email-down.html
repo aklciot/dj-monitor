@@ -30,9 +30,6 @@ Node down notification
     <tr>
       <td class = "node-details">Last notification sent at:</td><td class = "node-details">{{ node.status_sent }}</td>
     </tr>
-    <tr>
-      <td class = "node-details">Is this a Gateway:</td><td class = "node-details"> {{ node.is_gateway }}</td>
-    </tr>
     {% if node.battName %}
       <tr>
         <td class = "node-details">Last battery level:</td><td class = "node-details"> {{ node.battLevel }}</td>
