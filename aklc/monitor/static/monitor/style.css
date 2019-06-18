@@ -2,6 +2,10 @@ body {
   font-family:Verdana, Geneva, Arial, sans-serif;
 }
 
+.iot_background{
+  background-image: url("static/monitor/iot2.jpg");
+}
+
 .node_down {
   color: red;
   font-weight: bold;

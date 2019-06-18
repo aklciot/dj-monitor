@@ -5,6 +5,7 @@ Node Details
 {% endblock %}
 
 {% block web-body %}
+<div class="iot_background">
   <div id="logged_in">Logged in as {{ user.username }}</div>
   <div id="node-header">This is the information currently held for <span class="nodename">{{ node.nodeID }}</span> </div>
   <div id="node_detail">
@@ -97,4 +98,5 @@ Node Details
   {% csrf_token %}
   <input type="submit" value="Offline">
   </form>
+</div>
 {% endblock %}
