@@ -26,7 +26,7 @@ eMail_To = os.getenv("AKLC_MAIL_To", "westji@aklc.govt.nz")
 
 eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz/admin")
 
-testRunDaily = ("AKLC_TEST_DAILY", "F")
+testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
 
 django.setup()
 
@@ -146,7 +146,8 @@ def mqtt_on_message(client, userdata, msg):
             nd.latitude = jPayload["latitude"]
           if "longitude" in jPayload:
             nd.longitude = jPayload["longitude"]
-
+          if "RSSI" in jPayload:
+            nd.RSSI = jPayload["RSSI"]
           try:
             tm = Team.objects.get(teamID = cTopic[0])
             nd.team = tm
@@ -214,8 +215,12 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
       
         payload['To'] = mailUser.email
         payload['From'] = eMail_From
-        payload['Body'] = msg.as_string()
+        #payload['Body'] = msg.as_string()
+        #mqtt_client.publish('AKLC/send/email', json.dumps(payload))
 
+        # test if we can send the body as readable text
+        payload['Body'] = body
+        payload['Subject'] = inSubject
         mqtt_client.publish('AKLC/send/email', json.dumps(payload))
 
     except Exception as e:
@@ -302,12 +307,13 @@ def sys_monitor():
         notification_data = {"LastSummary": datetime.datetime.now() + datetime.timedelta(days = -3)}
 
     if (testRunDaily == "T"):               # if this environment flag is true, run the daily report
+      print("Send test daily report")
       allUsers = Profile.objects.all()
       uReport = []
       for usr in allUsers:
         #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
         if usr.reportType == 'F':
-            uReport.append(usr.user.email)
+            uReport.append(usr.user)
             print("Full report to {}".format(usr.user.email))
 
       sendReport(uReport, client)
@@ -333,7 +339,7 @@ def sys_monitor():
                 missing_node(n, client)
 
       #if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
-        if (timezone.now().hour > 0):                                   # run at certain time of the day
+        if (timezone.now().hour > 7):                                   # run at certain time of the day
             print("Check 1 {}".format(notification_data["LastSummary"]))
             if notification_data["LastSummary"].day != datetime.datetime.now().day:
               print("Send 8am messages")
