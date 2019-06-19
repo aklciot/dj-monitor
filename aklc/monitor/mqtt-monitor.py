@@ -152,7 +152,7 @@ def mqtt_on_message(client, userdata, msg):
             tm = Team.objects.get(teamID = cTopic[0])
             nd.team = tm
           except:
-            #print("team {} not found".format(cTopic[0]))
+            print("team {} not found".format(cTopic[0]))
 
           nd.save()
           #print("Processed data for {}".format(nd.nodeID))
@@ -244,7 +244,7 @@ def sendReport(aNotifyUsers, mqttClient):
   for a in allNodes:
     if a.status == 'C':
       #print("Battery name is '{}'".format(a.battName))
-      if a.battName == None:
+      if a.battName == None or a.battLevel == 0:
         nodeOKList.append(a)
       else:
         if a.battLevel > a.battWarn:
@@ -340,7 +340,7 @@ def sys_monitor():
         for n in allNodes:
             #if nothing then our 'patience' will run out
             if (timezone.now() - n.lastseen) > datetime.timedelta(minutes=n.allowedDowntime):
-                print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
+                #print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
                 missing_node(n, client)
 
       #if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour

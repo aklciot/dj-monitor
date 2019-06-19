@@ -8,6 +8,15 @@ Node Details
 <div class="iot_background">
   <div id="logged_in">Logged in as {{ user.username }}</div>
   <div id="node-header">This is the information currently held for <span class="nodename">{{ node.nodeID }}</span> </div>
+  <div id="node_detail" class="row bg-info text-white">
+      <ul class="simple_list">
+        <li><span>NodeID: </span><span>{{ node.nodeID }}</span></li>
+        <li><span>Description: </span><span>{{ node.descr }}</span></li>
+        <li><span>Team: </span><span class="topic">{{ node.team.teamID }}</span></li>
+        <li><span>Current status: </span><span>{{ node.textStatus }}</span></li>
+        <li><span>Last seen at: </span><span class="lastseen">{{ node.lastseen }}</span></li>
+      </ul>
+    </div>
   <div id="node_detail">
     <div class="row">
       <div class="col-sm-3">Node ID:</div>

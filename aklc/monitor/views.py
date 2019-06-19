@@ -33,6 +33,11 @@ def nodeUpdate(request, node_ref):
     context = {'node': node, 'user': request.user}
     return render(request, 'monitor/nodeUpdate.html', context)
 
+def nodeModNotify(request, node_ref):
+    node = Node.objects.get(id = node_ref)
+    context = {'node': node, 'user': request.user}
+    return render(request, 'monitor/nodeModNotify.html', context)
+
 def tb1(request, node_ref):
     node = Node.objects.get(id = node_ref)
     context = {'node': node}
