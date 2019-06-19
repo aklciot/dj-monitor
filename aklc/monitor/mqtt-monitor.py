@@ -152,7 +152,7 @@ def mqtt_on_message(client, userdata, msg):
             tm = Team.objects.get(teamID = cTopic[0])
             nd.team = tm
           except:
-            #print("team {} not found".format(cTopic[0]))
+            print("team {} not found".format(cTopic[0]))
 
           nd.save()
           #print("Processed data for {}".format(nd.nodeID))
