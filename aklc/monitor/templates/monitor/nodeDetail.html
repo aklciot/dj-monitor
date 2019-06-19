@@ -5,37 +5,114 @@ Node Details
 {% endblock %}
 
 {% block web-body %}
-  <p>Logged in as {{ user.username }}</p>
-  <p>This is the information currently held for <b>{{ node.nodeID }}</b></p>
-    <table>
-      <tr>
-        <td>Node ID:</td><td><span class="nodeup">{{ node.nodeID }}</span></td>
-      </tr>
-      <tr>
-        <td>Description:</td><td> {{ node.descr }}</td>
-      </tr>
+<div class="iot_background">
+  <div id="logged_in">Logged in as {{ user.username }}</div>
+  <div id="node-header">Node information</div>
+  <div id="node_detail" class="row bg-info text-white">
+    <ul class="simple_list">
+      <li><span>Description:</span><span>{{ node.descr }}</span></li>
+    </ul>
+  </div>
 
-      <tr>
-        <td>Current status:</td><td> {{ node.status }}</td>
-      </tr>
-      <tr>
-        <td>Specific node topic:</td><td>{{ node.topic }}</td>
-      </tr>
-      <tr>
-        <td>Last seen at:</td><td>{{ node.lastseen }}</td>
-      </tr>
-      <tr>
-        <td>Is this a Gateway:</td><td> {{ node.is_gateway }}</td>
-      </tr>
+  <div>
+    <div class="row">
+      <div class="col-sm-3">Node ID:</div>
+      <div class="col nodeup">{{ node.nodeID }}</div>
+    </div>
 
-    </table>
+    <div class="row">
+      <div class="col-sm-3">Description:</div>
+      <div class="col">{{ node.descr }}</div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">Team:</div>
+      <div class="col">{{ node.team.teamID }}</div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">Current status:</div>
+      <div class="col">{{ node.textStatus }}</div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">Last seen at:</div>
+      <div class="col">{{ node.lastseen }}</div>
+    </div>
+  </div>
+  <div id="people-notify">
+    {% if people %}
+      {% for person in people %}
+        <p>{{ person.username }}: Notification methods include:
+        {% if person.email %} Email {% endif %}
+        {% if person.email %} SMS {% endif %}
+        </p>
+     {% endfor %}
+    {% endif %}
+  </div>
+  <div id="device">
+    {% if node.hardware %}
+      <div class="row">
+        <div class="col-sm-3">Hardware:</div>
+        <div class="col">{{ node.hardware }}</div>
+      </div>
+    {% endif %}
+
+    {% if node.software %}
+      <div class="row">
+        <div class="col-sm-3">Software:</div>
+        <div class="col">{{ node.software }}</div>
+      </div>
+    {% endif %}
+
+    {% if node.isGateway %}
+      <div class="row">
+        <div class="col">This is a Gateway</div>
+      </div>
+    {% endif %} 
+
+    {% if node.latitude %} {% if node.longitude %}
+      <div class="row">
+        <div class="col-sm-3">Latitude:</div>
+        <div class="col">{{ node.latitude }}</div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">Longitude:</div>
+        <div class="col">{{ node.longitude }}</div>
+      </div>
+    {% endif %} {% endif %} 
+
+    {% if node.battName %} {% if node.battLevel > 0 %}
+      <div class="row">
+        <div class="col-sm-3">Battery value key:</div>
+        <div class="col">{{ node.battName }}</div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">Current battery level:</div>
+        <div class="col">{{ node.battLevel }}</div>
+      </div>
+      {% if node.battWarn %}
+        <div class="row">
+          <div class="col-sm-3">Warning battery level:</div>
+          <div class="col">{{ node.battWarn }}</div>
+        </div>
+      {% endif %}
+      {% if node.battCritical %}
+        <div class="row">
+          <div class="col-sm-3">Critical battery level:</div>
+          <div class="col">{{ node.battCritical }}</div>
+        </div>
+      {% endif %}
+    {% endif %} {% endif %} 
+
+  </div>
   {% if node.nodeuser_set.all %}
     {% for nu in node.nodeuser_set.all %}
       <p>{{nu.username}}</p>
     {% endfor %}
   {% endif %}
-  <form action="{% url 'monitor:nodeDetail' node.id  %}" method="post">
-  {% csrf_token %}
-  <input type="submit" value="Offline">
-  </form>
+  <a href="{% url 'monitor:nodeUpdate' node.id %}" class="btn btn-info" role="button">Update details</a>
+  <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>
+ 
+</div>
 {% endblock %}
