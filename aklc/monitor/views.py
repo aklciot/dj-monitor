@@ -24,7 +24,8 @@ def index(request):
 
 def nodeDetail(request, node_ref):
     node = Node.objects.get(id = node_ref)
-    context = {'node': node, 'user': request.user}
+    aPpl = NodeUser.objects.filter(nodeID = node)
+    context = {'node': node, 'user': request.user, 'people': aPpl}
     return render(request, 'monitor/nodeDetail.html', context)
 
 def nodeUpdate(request, node_ref):

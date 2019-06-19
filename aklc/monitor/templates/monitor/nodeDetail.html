@@ -33,7 +33,18 @@ Node Details
       <div class="col-sm-3">Last seen at:</div>
       <div class="col">{{ node.lastseen }}</div>
     </div>
-
+  </div>
+  <div id="people-notify">
+    {% if people %}
+      {% for person in people %}
+        <p>{{ person.username }}: Notification methods include:
+        {% if person.email %} Email {% endif %}
+        {% if person.email %} SMS {% endif %}
+        </p>
+     {% endfor %}
+    {% endif %}
+  </div>
+  <div id="device">
     {% if node.hardware %}
       <div class="row">
         <div class="col-sm-3">Hardware:</div>
@@ -50,7 +61,7 @@ Node Details
 
     {% if node.isGateway %}
       <div class="row">
-        <div class="col">This is a Gateway:</div>
+        <div class="col">This is a Gateway</div>
       </div>
     {% endif %} 
 
@@ -94,9 +105,8 @@ Node Details
       <p>{{nu.username}}</p>
     {% endfor %}
   {% endif %}
-  <form action="{% url 'monitor:nodeDetail' node.id  %}" method="post">
-  {% csrf_token %}
-  <input type="submit" value="Offline">
-  </form>
+  <a href="{% url 'monitor:nodeUpdate' node.id %}" class="btn btn-info" role="button">Update details</a>
+  <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>
+ 
 </div>
 {% endblock %}
