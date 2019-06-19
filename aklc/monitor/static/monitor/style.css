@@ -2,6 +2,11 @@ body {
   font-family:Verdana, Geneva, Arial, sans-serif;
 }
 
+.iot_background{
+  /* background-image: url("/static/monitor/iot2.jpg"); */
+  background-color: lightblue;
+}
+
 .node_down {
   color: red;
   font-weight: bold;
@@ -45,6 +50,12 @@ table.node-details {
 
 td.node-details {
   border: 1px solid black;
+}
+
+.simple_list{
+  list-style-type: none;
+  /* margin: 4px;
+  padding: 10px; */
 }
 
 
