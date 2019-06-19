@@ -7,14 +7,8 @@ Node Details
 {% block web-body %}
 <div class="iot_background">
   <div id="logged_in">Logged in as {{ user.username }}</div>
-  <div id="node-header">Node information</div>
-  <div id="node_detail" class="row bg-info text-white">
-    <ul class="simple_list">
-      <li><span>Description:</span><span>{{ node.descr }}</span></li>
-    </ul>
-  </div>
-
-  <div>
+  <div id="node-header">This is the information currently held for <span class="nodename">{{ node.nodeID }}</span> </div>
+  <div id="node_detail">
     <div class="row">
       <div class="col-sm-3">Node ID:</div>
       <div class="col nodeup">{{ node.nodeID }}</div>

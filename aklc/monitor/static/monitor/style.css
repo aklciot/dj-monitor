@@ -3,7 +3,8 @@ body {
 }
 
 .iot_background{
-  background-image: url("/static/monitor/iot2.jpg");
+  /* background-image: url("/static/monitor/iot2.jpg"); */
+  background-color: lightblue;
 }
 
 .node_down {
@@ -49,6 +50,12 @@ table.node-details {
 
 td.node-details {
   border: 1px solid black;
+}
+
+.simple_list{
+  list-style-type: none;
+  /* margin: 4px;
+  padding: 10px; */
 }
 
 
