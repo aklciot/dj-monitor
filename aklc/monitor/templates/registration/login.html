@@ -1,0 +1,23 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Node Details
+{% endblock %}
+
+{% block web-body %}
+    <div id="content-main">
+        <form action="/admin/login/" method="post" id="login-form">
+            {% csrf_token %}
+            <div class="form-row">
+                <label class="required" for="id_username">Username:</label> <input type="text" name="username" autofocus="" required="" id="id_username">
+            </div>
+            <div class="form-row">
+                <label class="required" for="id_password">Password:</label> <input type="password" name="password" required="" id="id_password">
+                <input type="hidden" name="next" value="/admin/">
+            </div>      
+            <div class="submit-row">
+                <label>&nbsp;</label><input type="submit" value="Log in">
+            </div>
+        </form>        
+    </div>
+ {% endblock %}
