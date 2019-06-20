@@ -1,0 +1,48 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Node Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+  <div id="logged_in">
+    {% if user.is_authenticated %}
+    Hi {{ user.username }} <a href="{% url 'logout' %}">Logout</a>
+    {% else %}
+    Not logged in 
+    {% endif %}
+  </div>
+  <div id="node-header">Update Node information</div>
+  <div id="node_detail" class="content_block">
+    <div id="node_det_table">
+      <table>
+        <tr><th>NodeID: </th><th>{{ node.nodeID }}</th></tr>
+        <tr><td>Description: </td><td>{{ node.descr }}</td></tr>
+        <tr><td>Team: </td><td class="topic">{{ node.team.teamID }}</td></tr>
+        {% if node.hardware %}
+          <tr><td>Hardware: </td><td>{{ node.hardware }}</td></tr>
+        {% endif %}
+        {% if node.software %}
+          <tr><td>Software: </td><td>{{ node.software }}</td></tr>
+        {% endif %}
+        {% if node.battName %}
+          <tr><td>Battery attribute name: </td><td>{{ node.battName }}</td></tr>
+          <tr><td>Battery warning level: </td><td>{{ node.battWarn }}</td></tr>
+          <tr><td>Battery critical level: </td><td>{{ node.battCritical }}</td></tr>
+          <tr><td>Battery current value: </td><td class="lastseen">{{ node.battLevel }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+    <div id="node_det_button" class="action_button">
+      <a href="{% url 'monitor:nodeUpdate' node.id %}" class="btn btn-info" role="button">Update details</a>
+    </div>
+  </div>
+  
+  
+
+
+  <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>
+ 
+</div>
+{% endblock %}
