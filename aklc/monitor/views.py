@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.views import generic
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 from .models import Node, NodeUser
+from .forms import NodeDetailForm
 
 class IndexView(generic.ListView):
     template_name = "monitor/index.html"
@@ -31,8 +32,16 @@ def nodeDetail(request, node_ref):
 
 @login_required
 def nodeUpdate(request, node_ref):
-    node = Node.objects.get(id = node_ref)
-    context = {'node': node, 'user': request.user}
+    node = get_object_or_404(Node, pk=node_ref)
+    if request.method == 'POST':
+        nf = NodeDetailForm(request.POST, instance=node)
+        if nf.is_valid():
+            nf.save()
+            return HttpResponseRedirect(reverse('nodeDetail', args=[node.id]))
+     # if a GET (or any other method) we'll create a blank form
+    else:
+        form = NodeDetailForm(instance=node)
+    context = {'form': form, 'node': node}
     return render(request, 'monitor/nodeUpdate.html', context)
 
 @login_required
