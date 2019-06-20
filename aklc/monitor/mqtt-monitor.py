@@ -194,7 +194,7 @@ def missing_node(node, mqtt_client):
       nUser = User.objects.get(username = usr.username)
       print(nUser.email)
       sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, nUser)
-    print("Node {} marked as down and notification sent to {}".format(node.nodeID, nUser.username))
+      print("Node {} marked as down and notification sent to {}".format(node.nodeID, nUser.username))
   return
 
 # ******************************************************************************
