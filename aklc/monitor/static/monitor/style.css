@@ -3,10 +3,9 @@ body {
   background-color: lightblue;
 }
 
-.iot_background{
-  /* background-image: url("/static/monitor/iot2.jpg"); */
+ .iot_background{
   background-color: lightblue;
-}
+} 
 
 .lastseen {
   font-style: italic;
@@ -32,7 +31,7 @@ body {
 
 .content_block {
   border-style: groove;
-  border: 2px;
+  border: 5px;
   border-radius: 15px;
   padding: 10px;
   color: white;
@@ -42,6 +41,10 @@ body {
 
 .action_button{
   float: right;
+}
+
+.logo {
+  max-width: 30%;
 }
 
 /* -------------------------------------
@@ -64,7 +67,7 @@ body {
   .footer p,
   .footer span,
   .footer a {
-    color: #999999;
+    /*color: #999999;*/
     font-size: 12px;
     text-align: center; 
 }
