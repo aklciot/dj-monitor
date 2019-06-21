@@ -27,7 +27,7 @@ def index(request):
 
 @login_required
 def nodeDetail(request, node_ref):
-    node = Node.objects.get(id = node_ref)
+    node = get_object_or_404(Node, pk=node_ref)
     context = {'node': node, 'user': request.user}
     return render(request, 'monitor/nodeDetail.html', context)
 
