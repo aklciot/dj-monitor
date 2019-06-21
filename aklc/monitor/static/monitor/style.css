@@ -47,6 +47,15 @@ body {
   max-width: 30%;
 }
 
+.heading_text {
+  font-size: 2vw;
+  font-weight: bold;
+}
+
+#logged_in {
+  float: right;
+}
+
 /* -------------------------------------
     HEADER, FOOTER, MAIN
 ------------------------------------- */
