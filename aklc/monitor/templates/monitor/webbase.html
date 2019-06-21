@@ -18,13 +18,18 @@
   </head>
   <body class="iot_background">
     <div class="container-fluid">
+      <div id="logged_in">
+        {% if user.is_authenticated %}
+          Hi {{ user.username }} <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+          Not logged in 
+        {% endif %}
+      </div>
       <div id="pg_header">
         <img src="{% static 'monitor/LOGO.png' %}" class = "logo">
-        <span>Innovate Auckland Monitoring</span>
+        <span class="heading_text">Innovate Auckland Monitoring</span>
       </div>
-      <div id="pg_account">
 
-      </div>
       {% block web-body %}
         Node monitor
       {% endblock %}
