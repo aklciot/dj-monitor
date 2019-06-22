@@ -44,7 +44,7 @@ class Node(models.Model):
     
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
-    username = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.BooleanField(blank=True, default=False)
     sms  = models.BooleanField(blank=True, default=False)
     lastemail = models.DateTimeField(blank=True, null=True)

@@ -48,7 +48,7 @@ def nodeUpdate(request, node_ref):
 @login_required
 def nodeModNotify(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
-    nu, created = NodeUser.objects.get_or_create(nodeID = node, username = request.user)
+    nu, created = NodeUser.objects.get_or_create(nodeID = node, user = request.user)
     if request.method == 'POST':
         nf = NodeNotifyForm(request.POST)
         if nf.is_valid():

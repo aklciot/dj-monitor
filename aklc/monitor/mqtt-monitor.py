@@ -22,9 +22,9 @@ eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
-eMail_To = os.getenv("AKLC_MAIL_To", "westji@aklc.govt.nz")
+eMail_To = os.getenv("AKLC_MAIL_TO", "westji@aklc.govt.nz")
 
-eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz/admin")
+eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz")
 
 testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
 
@@ -61,7 +61,6 @@ def mqtt_on_message(client, userdata, msg):
     cTopic = msg.topic.split("/")
     cDict = {}
     sPayload = msg.payload.decode()
-
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
@@ -188,13 +187,19 @@ def missing_node(node, mqtt_client):
     node.status_sent = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     node.save()
     cDict = {'node': node}                      # dict to pass to template
-    aRecpients = {'jim@west.net.nz'}
     uNotify = NodeUser.objects.filter(nodeID=node.id)
     for usr in uNotify:
-      nUser = User.objects.get(username = usr.username)
-      print(nUser.email)
-      sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, nUser)
-      print("Node {} marked as down and notification sent to {}".format(node.nodeID, nUser.username))
+      if usr.email:
+        #print(usr.user.email)
+        sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, usr.user)
+        print("Node {} marked as down and email notification sent to {}".format(node.nodeID, usr.user.username))
+        usr.lastsms = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+      if usr.sms:
+        sendNotifySMS(node, "monitor/email-down.html", mqtt_client, usr.user)
+        print("Node {} marked as down and SMS notification sent to {}".format(node.nodeID, usr.user.username))
+        usr.smsSent = True
+        usr.lastsms = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+      usr.save()
   return
 
 # ******************************************************************************
@@ -229,6 +234,33 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
        
     return
 
+# ******************************************************************************
+def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
+    """A function to send email notification
+    """
+    print("Send an SMS to {} about {}".format(mailUser.username, inNode.nodeID))
+    payload = {}
+    dataDict = {'node': inNode}
+    # get to profile which has the phone number
+    try:
+      uProfile = Profile(user = mailUser)
+
+      dataDict['web_base_url'] = eWeb_Base_URL
+      dataDict['user'] = mailUser
+      t = template.loader.get_template(inTemplate)
+      body = t.render(dataDict)
+    
+      payload['Number'] = uProfile.phoneNumber
+      payload["Text"] = "{} appears to be down, last seen {}. {}".format(inNode.nodeID, inNode.lastseen, inNode.descr)
+        
+      mqtt_client.publish('AKLC/sms/send', json.dumps(payload))
+    except Exception as e:
+        print(e)
+        print("Houston, we have an error {}".format(e))  
+     
+    return
+
+
 #******************************************************************
 def sendReport(aNotifyUsers, mqttClient):
   """
@@ -240,7 +272,6 @@ def sendReport(aNotifyUsers, mqttClient):
   batCritList=[]
   nodeOKList = []
   nodeDownList = []
-  mailUser = User.objects.get(username="jim")
   for a in allNodes:
     if a.status == 'C':
       #print("Battery name is '{}'".format(a.battName))
@@ -316,7 +347,7 @@ def sys_monitor():
       allUsers = Profile.objects.all()
       uReport = []
       for usr in allUsers:
-        #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
+        #print("User is {}, email is {}".format(usr.user.user, usr.user.email))
         if usr.reportType == 'F':
             uReport.append(usr.user)
             print("Full report to {}".format(usr.user.email))
