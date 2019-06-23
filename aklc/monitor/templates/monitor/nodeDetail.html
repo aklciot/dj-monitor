@@ -72,6 +72,9 @@ Node Details
           {% if node.battName %} {% if node.battLevel > 0 %}
             <tr><td>Current battery level: </td><td>{{ node.battLevel }}</td></tr>
           {% endif %} {% endif %} 
+          {% if node.RSSI %}
+            <tr><td>Last RSSI level: </td><td>{{ node.RSSI }}</td></tr>
+          {% endif %}
         </table>
       </div>
     </div>
