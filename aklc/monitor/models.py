@@ -44,14 +44,13 @@ class Node(models.Model):
     
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.BooleanField(blank=True, default=False)
     sms  = models.BooleanField(blank=True, default=False)
     lastemail = models.DateTimeField(blank=True, null=True)
     lastsms = models.DateTimeField(blank=True, null=True)
     smsSent = models.BooleanField(blank=True, default=False)
-    jim = models.CharField(max_length=50, blank=True, null=True)
-
+    
     def __str__(self):
         return("{}: {}".format(self.nodeID, self.username))
 
