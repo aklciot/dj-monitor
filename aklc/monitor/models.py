@@ -50,6 +50,7 @@ class NodeUser(models.Model):
     lastemail = models.DateTimeField(blank=True, null=True)
     lastsms = models.DateTimeField(blank=True, null=True)
     smsSent = models.BooleanField(blank=True, default=False)
+    jim = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return("{}: {}".format(self.nodeID, self.username))
