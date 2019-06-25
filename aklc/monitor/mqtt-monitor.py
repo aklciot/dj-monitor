@@ -22,9 +22,12 @@ eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
-eMail_To = os.getenv("AKLC_MAIL_To", "westji@aklc.govt.nz")
+eMail_To = os.getenv("AKLC_MAIL_TO", "westji@aklc.govt.nz")
 
-eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz/admin")
+eMail_topic = os.getenv("AKLC_MAIL_TOPIC", "AKLC/email/send")
+sMs_topic = os.getenv("AKLC_SMS_TOPIC", "AKLC/sms/send")
+
+eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz")
 
 testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
 
@@ -61,7 +64,6 @@ def mqtt_on_message(client, userdata, msg):
     cTopic = msg.topic.split("/")
     cDict = {}
     sPayload = msg.payload.decode()
-
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
@@ -135,7 +137,7 @@ def mqtt_on_message(client, userdata, msg):
       jPayload = json.loads(msg.payload)
       if "NodeID" in jPayload:
         try:
-          nd = Node.objects.get(nodeID = jPayload["NodeID"])
+          nd, created = Node.objects.get_or_create(nodeID = jPayload["NodeID"])
           nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
           nd.textStatus = "Online"
           nd.status = "C"
@@ -181,20 +183,26 @@ def missing_node(node, mqtt_client):
   """
   
   if node.status == 'C':                        # only do something if node is currently marked as "C"urrent
-    print("Update node is down!")
+    print("Update node {} is down!".format(node.nodeID))
     node.textStatus = "Missing"
     node.status = "X"
     node.notification_sent = True
     node.status_sent = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     node.save()
     cDict = {'node': node}                      # dict to pass to template
-    aRecpients = {'jim@west.net.nz'}
     uNotify = NodeUser.objects.filter(nodeID=node.id)
     for usr in uNotify:
-      nUser = User.objects.get(username = usr.username)
-      print(nUser.email)
-      sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, nUser)
-      print("Node {} marked as down and notification sent to {}".format(node.nodeID, nUser.username))
+      if usr.email:
+        print(usr.user.email)
+        sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, usr.user)
+        print("Node {} marked as down and email notification sent to {}".format(node.nodeID, usr.user.username))
+        usr.lastsms = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+      if usr.sms:
+        sendNotifySMS(node, "monitor/sms-down.html", mqtt_client, usr.user)
+        print("Node {} marked as down and SMS notification sent to {}".format(node.nodeID, usr.user.username))
+        usr.smsSent = True
+        usr.lastsms = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+      usr.save()
   return
 
 # ******************************************************************************
@@ -216,12 +224,12 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         payload['To'] = mailUser.email
         payload['From'] = eMail_From
         #payload['Body'] = msg.as_string()
-        #mqtt_client.publish('AKLC/send/email', json.dumps(payload))
+        #mqtt_client.publish(eMail_topic, json.dumps(payload))
 
         # test if we can send the body as readable text
         payload['Body'] = body
         payload['Subject'] = inSubject
-        mqtt_client.publish('AKLC/send/email', json.dumps(payload))
+        mqtt_client.publish(eMail_topic, json.dumps(payload))
 
     except Exception as e:
         print(e)
@@ -229,40 +237,86 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
        
     return
 
+# ******************************************************************************
+def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
+    """A function to send email notification
+    """
+    print("Send an SMS to {} about {}".format(mailUser.username, inNode.nodeID))
+    payload = {}
+    dataDict = {'node': inNode}
+    # get to profile which has the phone number
+    try:
+      uProfile = Profile.objects.get(user = mailUser)
+      print("Send sms to {}, his number is {}".format(uProfile, uProfile.phoneNumber))
+      dataDict['web_base_url'] = eWeb_Base_URL 
+      dataDict['user'] = mailUser
+      t = template.loader.get_template(inTemplate)
+      body = t.render(dataDict)
+
+      payload['Number'] = uProfile.phoneNumber
+      payload["Text"] = body
+        
+      mqtt_client.publish(sMs_topic, json.dumps(payload))
+    except Exception as e:
+        print(e)
+        print("Houston, we have an error {}".format(e))  
+     
+    return
+
+
 #******************************************************************
 def sendReport(aNotifyUsers, mqttClient):
   """
   Function collates data and sends a full system report
   """
-  print("Sending full report")
+  print("Sending report")
+
+  # get users to send reports to
+  allUsers = Profile.objects.all()
+ 
+  # get all node data for reports
   allNodes = Node.objects.all()
   batWarnList = []
   batCritList=[]
   nodeOKList = []
   nodeDownList = []
-  mailUser = User.objects.get(username="jim")
+  gatewayOKList = []
+  gatewayDownList = []
   for a in allNodes:
-    if a.status == 'C':
-      #print("Battery name is '{}'".format(a.battName))
-      if a.battName == None or a.battLevel == 0:
-        nodeOKList.append(a)
+    if a.isGateway:
+      if a.status == 'C':
+        gatewayOKList.append(a)
       else:
-        if a.battLevel > a.battWarn:
+        gatewayDownList.append(a)
+    else:  
+      if a.status == 'C':
+        #print("Battery name is '{}'".format(a.battName))
+        if a.battName == None or a.battLevel == 0:
           nodeOKList.append(a)
-        elif a.battLevel > a.battCritical:
-          batWarnList.append(a)
         else:
-          batCritList.append(a)
-    elif a.status == 'X':
-      nodeDownList.append(a)
+          if a.battLevel > a.battWarn:
+            nodeOKList.append(a)
+          elif a.battLevel > a.battCritical:
+            batWarnList.append(a)
+          else:
+            batCritList.append(a)
+      elif a.status == 'X':
+        nodeDownList.append(a)
   cDict = {'nodes': allNodes,
      'nodeOK': nodeOKList,
      'nodeWarn': batWarnList,
      'nodeCrit': batCritList,
      'nodeDown': nodeDownList,
+     'gatewayOK': gatewayOKList,
+     'gatewayDown': gatewayDownList,
      'web_base_url': eWeb_Base_URL}
-  for u in aNotifyUsers:
-    sendNotifyEmail("Daily report", cDict, "monitor/email-full.html", mqttClient, u)
+  
+  #now iterate through users to see what report to send
+  for u in allUsers:
+    if u.reportType == "F":
+      sendNotifyEmail("Daily report", cDict, "monitor/email-full.html", mqttClient, u.user)
+    elif u.reportType == "S":
+      sendNotifyEmail("Daily summary report", cDict, "monitor/email-summary.html", mqttClient, u.user)
   return
 
 
@@ -316,7 +370,7 @@ def sys_monitor():
       allUsers = Profile.objects.all()
       uReport = []
       for usr in allUsers:
-        #print("User is {}, email is {}".format(usr.user.username, usr.user.email))
+        #print("User is {}, email is {}".format(usr.user.user, usr.user.email))
         if usr.reportType == 'F':
             uReport.append(usr.user)
             print("Full report to {}".format(usr.user.email))
@@ -345,7 +399,7 @@ def sys_monitor():
 
       #if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
         if (timezone.now().hour > 7):                                   # run at certain time of the day
-            print("Check 1 {}".format(notification_data["LastSummary"]))
+            #print("Check 1 {}".format(notification_data["LastSummary"]))
             if notification_data["LastSummary"].day != datetime.datetime.now().day:
               print("Send 8am messages")
 
