@@ -43,8 +43,18 @@ body {
   float: right;
 }
 
+.action_button{
+  ;
+}
+
+
 .logo {
   max-width: 30%;
+  padding: 10px 10px 10px 10px;
+}
+
+.wrap_cell {
+  width: 50%;
 }
 
 .heading_text {
