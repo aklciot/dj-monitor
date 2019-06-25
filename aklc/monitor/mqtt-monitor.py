@@ -134,6 +134,7 @@ def mqtt_on_message(client, userdata, msg):
 
     else:     # not AKLC, a team subscription
       # the payload is expected to be json
+      #print("Team message arrived, topic is {}, payload is {}".format(msg.topic, msg.payload))
       jPayload = json.loads(msg.payload)
       if "NodeID" in jPayload:
         try:
@@ -157,6 +158,7 @@ def mqtt_on_message(client, userdata, msg):
             print("team {} not found".format(cTopic[0]))
 
           nd.save()
+          #print(nd.team.teamID)
           #print("Processed data for {}".format(nd.nodeID))
         except Exception as e:
           print("NodeID error - {} not in database".format(jPayload["NodeID"]))
