@@ -24,6 +24,9 @@ eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
 eMail_To = os.getenv("AKLC_MAIL_TO", "westji@aklc.govt.nz")
 
+eMail_topic = os.getenv("AKLC_MAIL_TOPIC", "AKLC/email/send")
+sMs_topic = os.getenv("AKLC_SMS_TOPIC", "AKLC/sms/send")
+
 eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz")
 
 testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
@@ -221,12 +224,12 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         payload['To'] = mailUser.email
         payload['From'] = eMail_From
         #payload['Body'] = msg.as_string()
-        #mqtt_client.publish('AKLC/send/email', json.dumps(payload))
+        #mqtt_client.publish(eMail_topic, json.dumps(payload))
 
         # test if we can send the body as readable text
         payload['Body'] = body
         payload['Subject'] = inSubject
-        mqtt_client.publish('AKLC/send/email', json.dumps(payload))
+        mqtt_client.publish(eMail_topic, json.dumps(payload))
 
     except Exception as e:
         print(e)
@@ -253,7 +256,7 @@ def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
       payload['Number'] = uProfile.phoneNumber
       payload["Text"] = body
         
-      mqtt_client.publish('AKLC/sms/send', json.dumps(payload))
+      mqtt_client.publish(sMs_topic, json.dumps(payload))
     except Exception as e:
         print(e)
         print("Houston, we have an error {}".format(e))  
