@@ -34,13 +34,13 @@ Node Details
   </div>
   
   
-  <div id="node_notify" class="content_block">
+  <div id="node_notify" class="content_block"> 
     {% if node.nodeuser_set.all %}
       <div id="node_notify_table">
         <table>
           <tr><th>People </th><th>Notification method</th></tr>
           {% for person in node.nodeuser_set.all %}
-            <tr><td>{{ person.username }}</td>
+            <tr><td>{{ person.user.username }}</td>
               <td>
               {% if person.email %} Email {% endif %}
               {% if person.sms %} SMS {% endif %}
