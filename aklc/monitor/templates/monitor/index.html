@@ -13,11 +13,11 @@ Node and gateway list
     {% if nodeList %}
       <div class="list-group">
       {% for node in nodeList%}
-        {% if not node.isGateway %}
-          {% if node.status == 'X' %}
+        {% if not node.isGateway %} {% if not node.status == 'M' %}
+          {% if node.status == 'X' %} 
             <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (node not reporting in)</a>
           {% else %}
-            {% if node.battName %}
+            {% if node.battName %} 
               {% if node.battLevel > node.battWarn %}
                 <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
               {% else %}
@@ -30,8 +30,8 @@ Node and gateway list
             {% else %}
               <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
             {% endif %}  
-          {% endif %}
-        {% endif %}
+          {% endif %} 
+        {% endif %} {% endif %}
       {% endfor %}
       </div>
     {% else %}
@@ -39,24 +39,23 @@ Node and gateway list
     {% endif %}
   </div>
 
-  
   <div id="gateways">
       <h1>Gateway List</h1>
         {% if nodeList %}
           <div class="list-group">
           {% for node in nodeList%}
-            {% if node.isGateway %}
+            {% if node.isGateway %}  {% if not node.status == 'M' %}
               {% if node.status == 'X' %}
                 <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (gateway not reporting in)</a>
               {% else %}
                 <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
               {% endif %}
-            {% endif %}
+            {% endif %} {% endif %}
           {% endfor %}
           </div>
         {% else %}
           <p>No gateways defined</p>>
-        {% endif %}
+        {% endif %} 
       </div>
     
 

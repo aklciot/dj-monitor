@@ -7,12 +7,12 @@ Node Details
 {% block web-body %}
 <div class="iot_background">
 
-  <div id="node-header">Node information</div>
+  <div id="node-header"><H2>Node information</H2></div>
   <div id="node_detail" class="content_block">
     <div id="node_det_table">
       <table>
         <tr><th>NodeID: </th><th>{{ node.nodeID }}</th></tr>
-        <tr><td>Description: </td><td>{{ node.descr }}</td></tr>
+        <tr><td>Description: </td><td class = "wrap_cell">{{ node.descr }}</td></tr>
         <tr><td>Team: </td><td class="topic">{{ node.team.teamID }}</td></tr>
         {% if node.hardware %}
           <tr><td>Hardware: </td><td>{{ node.hardware }}</td></tr>
@@ -63,7 +63,7 @@ Node Details
         <table>
           <tr><th>Reported data: </th></tr>
           <tr><td>Current status: </td><td>{{ node.textStatus }}</td></tr>
-          <tr><td>Last data: </td><td>{{ node.lastData }}</td></tr>
+          <tr><td>Last data: </td><td class = "wrap_cell">{{ node.lastData }}</td></tr>
           <tr><td>Last seen at: </td><td class="lastseen">{{ node.lastseen }}</td></tr>
           {% if node.latitude %} {% if node.longitude %}
             <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
@@ -76,6 +76,11 @@ Node Details
             <tr><td>Last RSSI level: </td><td>{{ node.RSSI }}</td></tr>
           {% endif %}
         </table>
+        {% if node.status == 'X' %}
+          <div id="node_det_button" class="action_button">
+            <a href="{% url 'monitor:nodeRemove' node.id %}" class="btn btn-danger" role="button">Remove</a>
+          </div>
+        {% endif %}
       </div>
     </div>
  

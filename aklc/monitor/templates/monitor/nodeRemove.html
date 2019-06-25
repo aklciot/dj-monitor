@@ -1,0 +1,39 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Node Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="node-header"><h3>Remove Node</h3></div>
+    <div id="node_detail" class="content_block">
+      <div id="node_det_table">
+        <form action="{% url 'monitor:nodeRemove'  node.id %}" method="POST">
+          {% csrf_token %}  
+          <table>
+            <tr><th>NodeID: </th><th>{{ node.nodeID }}</th></tr>
+            <tr><td>Description: </td><td>{{ node.descr }}</td></tr>
+            <tr><td>Team: </td><td class="topic">{{ node.team.teamID }}</td></tr>
+          </table>
+          <div>
+            By selecting 'Remove' this node will disappear from the main menu and no notifications will be sent out<br>
+            If any messages are later received for this node it will return to an 'online' state<br>
+            If nothing has been heard for a month, it will be permamently deleted.
+          </div>
+          <input name="remove" value="Y" type="hidden">
+          <input type="submit" value="Remove">
+          <span id="node_cancel_button" class="cancel_button">
+            <a href="{% url 'monitor:nodeDetail' node.id %}" class="btn btn-link btn-outline-warning" role="button">Cancel</a>
+          </span>
+        </form>
+
+      </div>
+    </div>  
+  </div>
+
+  <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>
+ 
+</div>
+{% endblock %}
