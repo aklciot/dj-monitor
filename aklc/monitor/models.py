@@ -50,9 +50,9 @@ class NodeUser(models.Model):
     lastemail = models.DateTimeField(blank=True, null=True)
     lastsms = models.DateTimeField(blank=True, null=True)
     smsSent = models.BooleanField(blank=True, default=False)
-    
+        
     def __str__(self):
-        return("{}: {}".format(self.nodeID, self.username))
+        return("{}: {}".format(self.nodeID, self.user.username))
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

@@ -193,7 +193,7 @@ def missing_node(node, mqtt_client):
     uNotify = NodeUser.objects.filter(nodeID=node.id)
     for usr in uNotify:
       if usr.email:
-        #print(usr.user.email)
+        print(usr.user.email)
         sendNotifyEmail("Node down notification for {}".format(node.nodeID), cDict, "monitor/email-down.html", mqtt_client, usr.user)
         print("Node {} marked as down and email notification sent to {}".format(node.nodeID, usr.user.username))
         usr.lastsms = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
@@ -255,7 +255,8 @@ def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
 
       payload['Number'] = uProfile.phoneNumber
       payload["Text"] = body
-        
+      
+      #print("The topic used is {}".format(sMs_topic))
       mqtt_client.publish(sMs_topic, json.dumps(payload))
     except Exception as e:
         print(e)
