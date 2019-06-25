@@ -18,10 +18,11 @@ class IndexView(generic.ListView):
     context_object_name = "nodeList"
     
     def get_queryset(self):
-        return Node.objects.order_by('nodeID')
+        return Node.objects.order_by('nodeID').exclude(status = 'M')
     
 def index(request):
     nodeList = Node.objects.order_by('nodeID')
+    nodeList = nodeList.exclude(status = 'M')
     context = {'nodeList': nodeList}
     return render(request, 'monitor/index.html', context)
 
@@ -53,7 +54,7 @@ def nodeModNotify(request, node_ref):
     if request.method == 'POST':
         nf = NodeNotifyForm(request.POST)
         if nf.is_valid():
-            print("Get or create")
+            #print("Get or create")
             
             if nf.cleaned_data['notification'] == 'N':
                 nu.delete()
@@ -71,6 +72,22 @@ def nodeModNotify(request, node_ref):
 
     context = {'form': nf, 'node': node}
     return render(request, 'monitor/nodeModNotify.html', context)
+
+@login_required
+def nodeRemove(request, node_ref):
+    node = get_object_or_404(Node, pk=node_ref)
+    if request.method == 'POST':
+        removeMe = 'N'
+        try:
+            removeMe = request.POST['remove']
+        except:
+            return HttpResponseRedirect(reverse('monitor:nodeDetail', args=[node.id]))
+        if removeMe == 'Y':
+            node.status = 'M'
+            node.save()
+            return HttpResponseRedirect(reverse('monitor:index'))
+    context = {'node': node}
+    return render(request, 'monitor/nodeRemove.html', context)
 
 def tb1(request, node_ref):
     node = Node.objects.get(id = node_ref)
