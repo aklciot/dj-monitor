@@ -13,7 +13,7 @@ Node Details
       <table>
         <tr><th>NodeID: </th><th>{{ node.nodeID }}</th></tr>
         <tr><td>Description: </td><td class = "wrap_cell">{{ node.descr }}</td></tr>
-        <tr><td>Team: </td><td class="topic">{{ node.team.teamID }}</td></tr>
+        <tr><td>Team: </td><td>{{ node.team.teamID }}</td></tr>
         {% if node.hardware %}
           <tr><td>Hardware: </td><td>{{ node.hardware }}</td></tr>
         {% endif %}
