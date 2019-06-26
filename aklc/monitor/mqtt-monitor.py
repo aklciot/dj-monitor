@@ -66,7 +66,8 @@ def mqtt_on_message(client, userdata, msg):
     #separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
     cDict = {}
-
+    
+    
     # get the payload as a string
     sPayload = msg.payload.decode()
 
@@ -146,6 +147,7 @@ def mqtt_on_message(client, userdata, msg):
       if "NodeID" in jPayload:
         try:
           nd, created = Node.objects.get_or_create(nodeID = jPayload["NodeID"])
+
           nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
           nd.textStatus = "Online"
           nd.status = "C"
@@ -179,7 +181,7 @@ def node_validate(inNode):
     # Only the characters below are accepted in nodeID's
     for c in inNode:
         if c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-':
-          print("Invalid char {}".format(c))
+          print("Invalid char {}, the name '{}' is not valid".format(c, inNode))
           return(False)
     if inNode == "sys-monitor":     # we don't monitor ourself!
         return(False)
@@ -276,7 +278,7 @@ def sendReport(aNotifyUsers, mqttClient):
   allUsers = Profile.objects.all()
  
   # get all node data for reports
-  allNodes = Node.objects.all()
+  allNodes = Node.objects.all().order_by('nodeID')
   batWarnList = []
   batCritList=[]
   nodeOKList = []
