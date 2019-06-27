@@ -5,7 +5,7 @@ Node down notification
 {% endblock %}
 
 {% block email-body %}
-  <p>Hi {{ user.user.username }}</p>
+  <p>Hi {{ user.username|capfirst }}</p>
 
   <div id="devices">
 
