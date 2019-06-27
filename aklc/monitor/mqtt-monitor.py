@@ -125,13 +125,15 @@ def mqtt_on_message(client, userdata, msg):
                     bUpdate = False
             if bUpdate and node_validate(cTopic[2]):
                 #print("Processing network message")
+                print(jPayload)
                 nd, created = Node.objects.get_or_create(nodeID = cTopic[2])
                 nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.textStatus = "Online"
                 nd.status = "C"
                 nd.lastData = sPayload
                 if nd.battName in jPayload:
-                    nd.battValue = jPayload[nd.battName]
+                    print("Battery value found {}".format(jPayload[nd.battName]))
+                    nd.battLevel = jPayload[nd.battName]
                 if "latitude" in jPayload:
                   nd.latitude = jPayload["latitude"]
                 if "longitude" in jPayload:
