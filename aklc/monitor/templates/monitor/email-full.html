@@ -41,7 +41,7 @@ Node down notification
 
     <div id="nodeDown" class="devices">  
         {% if nodeDown %}
-        <p>Nodes that are DOWN are:</p>
+        <p>Nodes that are <b>DOWN</b> are:</p>
         <ul id = "nodeDown">
         {% for entry in nodeDown %}
           <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
@@ -77,7 +77,7 @@ Node down notification
   <div id="gateways">
     <div id="gatewayDown" class="devices">  
       {% if gatewayDown %}
-        <p>Gateways that are DOWN are:</p>
+        <p>Gateways that are <b>DOWN</b> are:</p>
         <ul id = "gatewayDown">
         {% for entry in gatewayDown %}
           <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
@@ -91,10 +91,10 @@ Node down notification
     </div>
 
     <div id="gatewayUp" class="devices">  
-      {% if gatewayOk %}
+      {% if gatewayOK %}
         <p>Gateways that are fine are:</p>
         <ul id = "nodeOK">
-        {% for entry in gatewayOk %}
+        {% for entry in gatewayOK %}
           <li><span class="nodeup"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
           {% if entry.descr %}
             <br><span class="descr">{{ entry.descr }}</span>
