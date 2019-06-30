@@ -55,6 +55,24 @@ Node down notification
           <p class="nodeup">All nodes are operational.</p>
         {% endif %}
     </div>
+
+    <div id="gatewayDown" class="devices">  
+      {% if gatewayDown %}
+        <p>Gateways that are DOWN are:</p>
+        <ul id = "gatewayDown">
+        {% for entry in gatewayDown %}
+          <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          {% if entry.descr %}
+            <br><span class="descr">{{ entry.descr }}</span>
+          {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="nodeup">All gateways are operational.</p>
+      {% endif %}
+  </div>
+
   </div>  
 
 {% endblock %}
