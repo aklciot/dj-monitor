@@ -51,6 +51,15 @@ body {
   color: red;
 }
 
+.battWarning{
+  color: orange;
+}
+
+.battCritical{
+  color: orangered;
+}
+
+
 .logo {
   max-width: 30%;
   padding: 10px 10px 10px 10px;
