@@ -38,6 +38,7 @@ class Node(models.Model):
     battCritical = models.FloatField(default = 0.0, help_text="The battery level, below which critical warning message are generated")
     RSSI = models.FloatField(default = 0.0)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
+    portal = models.URLField(max_length=100, blank=True, null=True, help_text="A link where more data on this node is available")
 
     def __str__(self):
         return self.nodeID

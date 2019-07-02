@@ -8,7 +8,7 @@ class ContactForm(forms.Form):
 class NodeDetailForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['descr', 'allowedDowntime', 'hardware', 'software', 'battName', 'battWarn', 'battCritical']
+        fields = ['descr', 'allowedDowntime', 'hardware', 'software', 'battName', 'battWarn', 'battCritical', 'portal']
         widgets = {
             'descr': forms.Textarea(attrs={'rows': 3}),
         }

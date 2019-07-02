@@ -372,15 +372,15 @@ def sys_monitor():
 
     if (testRunDaily == "T"):               # if this environment flag is true, run the daily report
       print("Send test daily report")
-      allUsers = Profile.objects.all()
-      uReport = []
-      for usr in allUsers:
+      allUsers = Profile.objects.filter(username__startswith = "jim")
+      #uReport = []
+      #for usr in allUsers:
         #print("User is {}, email is {}".format(usr.user.user, usr.user.email))
-        if usr.reportType == 'F':
-            uReport.append(usr.user)
-            print("Full report to {}".format(usr.user.email))
+      #  if usr.reportType == 'F':
+      #      uReport.append(usr.user)
+      #      print("Full report to {}".format(usr.user.email))
 
-      sendReport(uReport, client)
+      sendReport(allUsers, client)
 
     print("About to start loop")
 
@@ -416,7 +416,8 @@ def sys_monitor():
                   uReport.append(usr.user)
                   print("Full report to {}".format(usr.user.email))
 
-              sendReport(uReport, client)
+              #sendReport(uReport, client)
+              sendReport(allUsers, client)
 
               #update out notification data and save
               notification_data["LastSummary"] = datetime.datetime.now()
