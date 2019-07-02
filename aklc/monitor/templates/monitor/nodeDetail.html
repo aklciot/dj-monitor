@@ -29,7 +29,7 @@ Node Details
           <tr><td>Battery current value: </td><td class="lastseen">{{ node.battLevel }}</td></tr>
         {% endif %}
         {% if node.portal %}
-          <tr><td>Data link: </td><td><a href = {{node.portal}} >{{ node.portal }}</a></td></tr>
+          <tr><td>Data link: </td><td><span  class='yellow'><a href = {{node.portal}} >{{ node.portal }}</a></span></td></tr>
         {% endif %}
       </table>
     </div>
