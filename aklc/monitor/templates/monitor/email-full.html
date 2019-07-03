@@ -11,7 +11,7 @@ Node down notification
 
     <div id="critical" class="devices">  
       {% if nodeCrit %}
-        <p>Nodes that are critically low in battery levels are:</p>
+        <p>Nodes that are <b>critically low</b> in battery levels are:</p>
         <ul id = "nodeCritUL">
         {% for entry in nodeCrit %}
           <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="battCritical">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
@@ -26,7 +26,7 @@ Node down notification
         
     <div id="warning" class="devices">  
       {% if nodeWarn %}
-        <p>Nodes that have low battery levels are:</p>
+        <p>Nodes that have <b>low</b> battery levels are:</p>
         <ul id = "nodeWarnUL">
         {% for entry in nodeWarn %}
           <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="battWarning">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
@@ -61,7 +61,7 @@ Node down notification
         <p>Nodes that are fine are:</p>
         <ul id = "nodeOK">
         {% for entry in nodeOK %}
-          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="nodeup">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="nodeup">{{entry.nodeID}}</a></span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -95,7 +95,7 @@ Node down notification
         <p>Gateways that are fine are:</p>
         <ul id = "nodeOK">
         {% for entry in gatewayOK %}
-          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="nodeup">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="nodeup">{{entry.nodeID}}</a></span> 
           {% if entry.descr %}
             <br><span class="descr">{{ entry.descr }}</span>
           {% endif %}
