@@ -372,7 +372,8 @@ def sys_monitor():
 
     if (testRunDaily == "T"):               # if this environment flag is true, run the daily report
       print("Send test daily report")
-      allUsers = Profile.objects.filter(username__startswith = "jim")
+      allUsers = Profile.objects.filter(user__username__startswith = 'jim')
+      
       #uReport = []
       #for usr in allUsers:
         #print("User is {}, email is {}".format(usr.user.user, usr.user.email))
