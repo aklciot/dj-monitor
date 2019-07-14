@@ -393,7 +393,7 @@ def sys_monitor():
         # update the checkpoint timer
         checkTimer = timezone.now()                                 #reset timer
         
-        print("Timer check {}".format(timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())))
+        #print("Timer check {}".format(timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())))
         
         allNodes = Node.objects.all()
 
