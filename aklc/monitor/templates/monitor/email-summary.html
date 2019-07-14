@@ -5,16 +5,16 @@ Node down notification
 {% endblock %}
 
 {% block email-body %}
-  <p>Hi {{ user.user.username }}</p>
+  <p>Hi {{ user.username|capfirst }}</p>
 
   <div id="devices">
 
     <div id="critical" class="devices">  
       {% if nodeCrit %}
-        <p>Nodes that are critically low in battery levels are:</p>
+        <p>Nodes that are <b>critically low</b> in battery levels are:</p>
         <ul id = "nodeCritUL">
         {% for entry in nodeCrit %}
-          <li><span class="battCritical"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="battCritical">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -26,10 +26,10 @@ Node down notification
         
     <div id="warning" class="devices">  
       {% if nodeWarn %}
-        <p>Nodes that have low battery levels are:</p>
+        <p>Nodes that have <b>low</b> battery levels are:</p>
         <ul id = "nodeWarnUL">
         {% for entry in nodeWarn %}
-          <li><span class="battWarning"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="battWarning">{{entry.nodeID}}</a></span> <span class="lastseen">(Battery level {{entry.battLevel}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -41,10 +41,10 @@ Node down notification
 
     <div id="nodeDown" class="devices">  
         {% if nodeDown %}
-        <p>Nodes that are DOWN are:</p>
+        <p>Nodes that are <b>DOWN</b> are:</p>
         <ul id = "nodeDown">
         {% for entry in nodeDown %}
-          <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -55,6 +55,24 @@ Node down notification
           <p class="nodeup">All nodes are operational.</p>
         {% endif %}
     </div>
+
+    <div id="gatewayDown" class="devices">  
+      {% if gatewayDown %}
+        <p>Gateways that are <b>DOWN</b> are:</p>
+        <ul id = "gatewayDown">
+        {% for entry in gatewayDown %}
+          <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          {% if entry.descr %}
+            <br><span class="descr">{{ entry.descr }}</span>
+          {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="nodeup">All gateways are operational.</p>
+      {% endif %}
+  </div>
+
   </div>  
 
 {% endblock %}

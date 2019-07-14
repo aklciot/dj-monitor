@@ -66,7 +66,8 @@ def mqtt_on_message(client, userdata, msg):
     #separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
     cDict = {}
-
+    
+    
     # get the payload as a string
     sPayload = msg.payload.decode()
 
@@ -101,7 +102,7 @@ def mqtt_on_message(client, userdata, msg):
         if cTopic[1] == "Status":      # These are status messages sent by gateways. Data in CSV format
             cPayload = msg.payload.split(",")
             cNode = cPayload[0]             
-           
+            print("Status message received for {}".format(cNode))
             # Check and update the gateway data
             if node_validate(cPayload[0]):
                 gw, created = Node.objects.get_or_create(nodeID = cPayload[0])
@@ -124,13 +125,15 @@ def mqtt_on_message(client, userdata, msg):
                     bUpdate = False
             if bUpdate and node_validate(cTopic[2]):
                 #print("Processing network message")
+                #print(jPayload)
                 nd, created = Node.objects.get_or_create(nodeID = cTopic[2])
                 nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.textStatus = "Online"
                 nd.status = "C"
                 nd.lastData = sPayload
                 if nd.battName in jPayload:
-                    nd.battValue = jPayload[nd.battName]
+                    #print("Battery value found {}".format(jPayload[nd.battName]))
+                    nd.battLevel = jPayload[nd.battName]
                 if "latitude" in jPayload:
                   nd.latitude = jPayload["latitude"]
                 if "longitude" in jPayload:
@@ -146,6 +149,7 @@ def mqtt_on_message(client, userdata, msg):
       if "NodeID" in jPayload:
         try:
           nd, created = Node.objects.get_or_create(nodeID = jPayload["NodeID"])
+
           nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
           nd.textStatus = "Online"
           nd.status = "C"
@@ -179,7 +183,7 @@ def node_validate(inNode):
     # Only the characters below are accepted in nodeID's
     for c in inNode:
         if c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-':
-          print("Invalid char {}".format(c))
+          print("Invalid char {}, the name '{}' is not valid".format(c, inNode))
           return(False)
     if inNode == "sys-monitor":     # we don't monitor ourself!
         return(False)
@@ -276,7 +280,7 @@ def sendReport(aNotifyUsers, mqttClient):
   allUsers = Profile.objects.all()
  
   # get all node data for reports
-  allNodes = Node.objects.all()
+  allNodes = Node.objects.all().order_by('nodeID')
   batWarnList = []
   batCritList=[]
   nodeOKList = []
@@ -342,7 +346,7 @@ def sys_monitor():
 
     try:
 
-    # set up the local MQTT environment
+      # set up the MQTT environment
         client.username_pw_set(eMqtt_user, eMqtt_password)
         client.connect(eMqtt_host, int(eMqtt_port), 60)
     except Exception as e:
@@ -368,15 +372,16 @@ def sys_monitor():
 
     if (testRunDaily == "T"):               # if this environment flag is true, run the daily report
       print("Send test daily report")
-      allUsers = Profile.objects.all()
-      uReport = []
-      for usr in allUsers:
+      allUsers = Profile.objects.filter(user__username__startswith = 'jim')
+      
+      #uReport = []
+      #for usr in allUsers:
         #print("User is {}, email is {}".format(usr.user.user, usr.user.email))
-        if usr.reportType == 'F':
-            uReport.append(usr.user)
-            print("Full report to {}".format(usr.user.email))
+      #  if usr.reportType == 'F':
+      #      uReport.append(usr.user)
+      #      print("Full report to {}".format(usr.user.email))
 
-      sendReport(uReport, client)
+      sendReport(allUsers, client)
 
     print("About to start loop")
 
@@ -388,7 +393,7 @@ def sys_monitor():
         # update the checkpoint timer
         checkTimer = timezone.now()                                 #reset timer
         
-        print("Timer check")
+        print("Timer check {}".format(timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())))
         
         allNodes = Node.objects.all()
 
@@ -399,8 +404,8 @@ def sys_monitor():
                 missing_node(n, client)
 
       #if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
-        if (timezone.now().hour > 7):                                   # run at certain time of the day
-            #print("Check 1 {}".format(notification_data["LastSummary"]))
+        if (timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()).now().hour > 7):                                   # run at certain time of the day
+            #print("Time now {}".format(timezone.now()))
             if notification_data["LastSummary"].day != datetime.datetime.now().day:
               print("Send 8am messages")
 
@@ -412,7 +417,8 @@ def sys_monitor():
                   uReport.append(usr.user)
                   print("Full report to {}".format(usr.user.email))
 
-              sendReport(uReport, client)
+              #sendReport(uReport, client)
+              sendReport(allUsers, client)
 
               #update out notification data and save
               notification_data["LastSummary"] = datetime.datetime.now()
@@ -424,6 +430,15 @@ def sys_monitor():
               except Exception as e:
                   print(e)
                   print("Notification Pickle failed")
+
+              # function to remove old nodes in 'M'aintenance mode
+              print("Checking for maintenace nodes to purge")
+              dCutOff = timezone.now() - datetime.timedelta(days = 30)
+              print("Cutoff date is {}".format(dCutOff))
+              allMaint = Node.objects.filter(status = 'M').filter(lastseen__lt=dCutOff)
+              print("There are {} nodes in maintenance mode".format(len(allMaint)))
+              # delete all these nodes
+              allMaint.delete()
 
 
 

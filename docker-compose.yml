@@ -8,7 +8,6 @@ services:
       POSTGRES_USER: postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    restart: always
   web:
     image: aklciot/monitor
     build: .
@@ -16,13 +15,9 @@ services:
     volumes:
       - .:/code
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       - db
-    environment:
-      VIRTUAL_HOST: web.local
-      VIRTUAL_PORT: 8000
-    restart: always
   script:
     image: aklciot/mqtt-script
     build:
@@ -31,30 +26,30 @@ services:
     command: python mqtt-monitor.py
     volumes:
       - .:/code
-    restart: always
+    #restart: always
     depends_on:
       - db
-      - mqtt
+    #  - mqtt
     environment:
-      AKLC_MQTT_CLIENT_ID: mqtt_monitor
-      AKLC_MQTT_HOST: mqtt
-      AKLC_MAIL_FROM: info@innovateauckland.nz
+      AKLC_MQTT_CLIENT_ID: mqtt_monitor_home_test
+      AKLC_MQTT_HOST: aws2.innovateauckland.nz
+      AKLC_MQTT_USER: aklciot
+      AKLC_MQTT_PASSWORD: iotiscool
       AKLC_TEST_DAILY: T
-    restart: always
-  mqtt:
-    image: eclipse-mosquitto
-    ports:
-      - "1883:1883"
-    restart: always
-  nodered:
-    image: nodered/node-red-docker
-    ports:
-      - "1880:1880"
-    volumes:
-      - nodered-data:/data
-    restart: always
+      AKLC_WEB_BASE_URL: http://192.168.99.100:8001
+
+  #mqtt:
+  #  image: eclipse-mosquitto
+  #  ports:
+  #    - "1883:1883"
+  #nodered:
+  #  image: nodered/node-red-docker
+  #  ports:
+  #    - "1880:1880"
+  #  volumes:
+  #    - nodered-data:/data
 
 #networks:
 volumes:
   postgres-data:
-  nodered-data:
+  #nodered-data:

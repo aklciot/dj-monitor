@@ -47,6 +47,22 @@ body {
   ;
 }
 
+.nodeDownLink{
+  color: red;
+}
+
+.battWarning{
+  color: orange;
+}
+
+.battCritical{
+  color: orangered;
+}
+
+.yellow{
+  color: yellow
+}
+
 
 .logo {
   max-width: 30%;

@@ -1,5 +1,7 @@
 {% extends "monitor/webbase.html" %}
 
+{% block pagerefresh %}<meta http-equiv="refresh" content="60">{% endblock %}
+
 {% block title %}
 Node Details
 {% endblock %}
@@ -25,6 +27,9 @@ Node Details
           <tr><td>Battery warning level: </td><td>{{ node.battWarn }}</td></tr>
           <tr><td>Battery critical level: </td><td>{{ node.battCritical }}</td></tr>
           <tr><td>Battery current value: </td><td class="lastseen">{{ node.battLevel }}</td></tr>
+        {% endif %}
+        {% if node.portal %}
+          <tr><td>Data link: </td><td><span  class='yellow'><a href = {{node.portal}} >{{ node.portal }}</a></span></td></tr>
         {% endif %}
       </table>
     </div>
