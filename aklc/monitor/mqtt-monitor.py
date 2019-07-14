@@ -102,7 +102,7 @@ def mqtt_on_message(client, userdata, msg):
         if cTopic[1] == "Status":      # These are status messages sent by gateways. Data in CSV format
             cPayload = msg.payload.split(",")
             cNode = cPayload[0]             
-           
+            print("Status message received for {}".format(cNode))
             # Check and update the gateway data
             if node_validate(cPayload[0]):
                 gw, created = Node.objects.get_or_create(nodeID = cPayload[0])
