@@ -89,7 +89,7 @@ def mqtt_on_message(client, userdata, msg):
                 gw.isGateway = True
                 gw.textStatus = "Online"
                 gw.status = "C"
-                gw.lastData = sPayload
+                gw.lastStatus = sPayload
                 gw.save()
 
         elif cTopic[1] == "Gateway":
@@ -132,7 +132,7 @@ def mqtt_on_message(client, userdata, msg):
                 nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.textStatus = "Online"
                 nd.status = "C"
-                nd.lastData = sPayload
+                nd.lastStatus = sPayload
                 if nd.battName in jPayload:
                     #print("Battery value found {}".format(jPayload[nd.battName]))
                     nd.battLevel = jPayload[nd.battName]
