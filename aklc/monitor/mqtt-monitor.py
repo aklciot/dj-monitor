@@ -284,6 +284,7 @@ def sendReport(aNotifyUsers, mqttClient):
  
   # get all node data for reports
   allNodes = Node.objects.all().order_by('nodeID')
+  allNodes = allNodes.exclude(status = 'M')
   batWarnList = []
   batCritList=[]
   nodeOKList = []
