@@ -19,7 +19,11 @@ Node and gateway list
           {% else %}
             {% if node.battName %} 
               {% if node.battLevel > node.battWarn %}
-                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+                {% if node.descr %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}} ({{node.descr}})</a>
+                {% else %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+                {% endif %}
               {% else %}
                 {% if node.battLevel > node.battCritical %}
                   <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-warning">{{node.nodeID}} (battery level is low)</a>
@@ -28,7 +32,11 @@ Node and gateway list
                 {% endif %}
               {% endif %}
             {% else %}
-              <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+              {% if node.descr %}
+                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}} ({{node.descr}})</a>
+              {% else %}
+                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+              {% endif %}
             {% endif %}  
           {% endif %} 
         {% endif %} {% endif %}
@@ -48,7 +56,11 @@ Node and gateway list
               {% if node.status == 'X' %}
                 <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (gateway not reporting in)</a>
               {% else %}
-                <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+                {% if node.descr %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}} ({{node.descr}})</a>
+                {% else %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+                {% endif %}
               {% endif %}
             {% endif %} {% endif %}
           {% endfor %}
