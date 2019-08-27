@@ -122,7 +122,7 @@ def mqtt_on_message(client, userdata, msg):
             if (node_validate(cPayload[1]) and node_validate(cPayload[0])):
                 try:
                   lp = nd.passOnData()
-                  print("Data records {}".format(len(lp)))
+                  #print("Data records {}".format(len(lp)))
                   ngAll = NodeGateway.objects.filter(nodeID_id = nd.id)
                   #print("{} Node records found".format(len(ngAll)))
                   ngAll = ngAll.filter(gatewayID_id = gw.id)
@@ -149,8 +149,8 @@ def mqtt_on_message(client, userdata, msg):
                     #print("Picked up a status = missing message")
                     bUpdate = False
             if bUpdate and node_validate(cTopic[2]):
-                #print("Processing network message")
-                #print(jPayload)
+                print("Processing network message")
+                print(jPayload)
                 nd, created = Node.objects.get_or_create(nodeID = cTopic[2])
                 nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.textStatus = "Online"
@@ -159,10 +159,31 @@ def mqtt_on_message(client, userdata, msg):
                 if nd.battName in jPayload:
                     #print("Battery value found {}".format(jPayload[nd.battName]))
                     nd.battLevel = jPayload[nd.battName]
-                if "latitude" in jPayload:
-                  nd.latitude = jPayload["latitude"]
+                try:
+                  if "latitude" in jPayload:
+                    if isinstance(jPayload["latitude"], str):
+                      nd.latitude = float(jPayload["latitude"])
+                    else:
+                      nd.latitude = jPayload["latitude"]
+                  if "Latitude" in jPayload:
+                    if isinstance(jPayload["Latitude"], str):
+                      nd.latitude = float(jPayload["Latitude"])
+                    else:
+                      nd.latitude = jPayload["Latitude"]
+                except Exception as e:
+                  print(e)
+                  print("Houston, we have an error {}".format(e))  
                 if "longitude" in jPayload:
-                  nd.longitude = jPayload["longitude"]
+                  if isinstance(jPayload["longitude"], str):
+                    nd.longitude = float(jPayload["longitude"])
+                  else:
+                    nd.longitude = jPayload["longitude"]
+                if "Longitude" in jPayload:
+                  if isinstance(jPayload["Longitude"], str):
+                    nd.longitude = float(jPayload["Longitude"])
+                  else:
+                    nd.longitude = jPayload["Longitude"]
+ 
                 if "RSSI" in jPayload:
                   nd.RSSI = jPayload["RSSI"]
                 nd.save()

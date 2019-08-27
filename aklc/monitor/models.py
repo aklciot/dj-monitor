@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 import datetime
+from django.utils import timezone
 
 # Create your models here.
 class Team(models.Model):
@@ -49,7 +50,7 @@ class Node(models.Model):
             passAll = NodeGateway.objects.filter(gatewayID = self)
         else:
             passAll = NodeGateway.objects.filter(nodeID = self)
-        passAll = passAll.filter(lastdata__gte=(datetime.datetime.today() - datetime.timedelta(days=7)))
+        passAll = passAll.filter(lastdata__gte=(timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=7)))
         return(passAll)
     
 class NodeUser(models.Model):
