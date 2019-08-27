@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import datetime
 
 # Create your models here.
 class Team(models.Model):
@@ -42,6 +43,14 @@ class Node(models.Model):
 
     def __str__(self):
         return self.nodeID
+
+    def passOnData(self):
+        if self.isGateway:
+            passAll = NodeGateway.objects.filter(gatewayID = self)
+        else:
+            passAll = NodeGateway.objects.filter(nodeID = self)
+        passAll = passAll.filter(lastdata__gte=(datetime.datetime.today() - datetime.timedelta(days=7)))
+        return(passAll)
     
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
@@ -72,3 +81,11 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
 	instance.profile.save()
+
+class NodeGateway(models.Model):
+    nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
+    gatewayID = models.ForeignKey(Node, on_delete=models.CASCADE, related_name="gateway",)
+    lastdata = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return("Node : {}, Gateway : {}".format(self.nodeID, self.gatewayID))

@@ -18,7 +18,7 @@ sys.path.append("/code/aklc")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aklc.settings")
 django.setup()
 
-from monitor.models import Node, Profile, NodeUser, Team
+from monitor.models import Node, Profile, NodeUser, Team, NodeGateway
 from django.contrib.auth.models import User
 
 # all config parameters are set as environment variables, best practice in docker environment
@@ -100,14 +100,17 @@ def mqtt_on_message(client, userdata, msg):
             #print("Node {}, Gateway {}".format(cPayload[1], cPayload[0]))
             if node_validate(cPayload[1]):    # check if the nodeID is valid
                 #get the node, or create it if not found
+                #print("Valid node {}".format(cPayload[1]))
                 nd, created = Node.objects.get_or_create(nodeID = cPayload[1])
                 nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.textStatus = "Online"
                 nd.status = 'C'
                 nd.lastData = sPayload
                 nd.save()
+                
           	# Check and update the gateways info
             if node_validate(cPayload[0]): # payload[0] is the gateway
+                #print("Valid gateway {}".format(cPayload[0]))
                 gw, created = Node.objects.get_or_create(nodeID = cPayload[0])
                 gw.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 gw.isGateway = True
@@ -115,6 +118,26 @@ def mqtt_on_message(client, userdata, msg):
                 gw.status = "C"
                 gw.lastData = sPayload
                 gw.save()
+
+            if (node_validate(cPayload[1]) and node_validate(cPayload[0])):
+                try:
+                  lp = nd.passOnData()
+                  print("Data records {}".format(len(lp)))
+                  ngAll = NodeGateway.objects.filter(nodeID_id = nd.id)
+                  #print("{} Node records found".format(len(ngAll)))
+                  ngAll = ngAll.filter(gatewayID_id = gw.id)
+                  if len(ngAll) == 1:
+                    #print("NG rec found")
+                    ng = ngAll[0]
+                  else:
+                    #print("No NG rec")
+                    ng = NodeGateway(nodeID = nd, gatewayID = gw)
+                  ng.lastdata = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                  ng.save()
+                  
+                except Exception as e:
+                  print(e)
+                  print("Houston, we have an error {}".format(e))  
 
         elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
             #print("Network message received")

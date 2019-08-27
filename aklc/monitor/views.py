@@ -29,9 +29,19 @@ def index(request):
 @login_required
 def nodeDetail(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
+    passList = node.passOnData()
     aNodeUsers = NodeUser.objects.filter(nodeID = node)
-    context = {'node': node, 'user': request.user, 'aNodeUser': aNodeUsers}
+    context = {'node': node, 'user': request.user, 'aNodeUser': aNodeUsers, 'passData': passList}
     return render(request, 'monitor/nodeDetail.html', context)
+
+@login_required
+def gatewayDetail(request, gateway_ref):
+    gw = get_object_or_404(Node, pk=gateway_ref)
+    aNodeUsers = NodeUser.objects.filter(nodeID = gw)
+    passList = gw.passOnData()
+    context = {'gateway': gw, 'user': request.user, 'aNodeUser': aNodeUsers, 'passData': passList}
+    return render(request, 'monitor/gatewayDetail.html', context)
+
 
 @login_required
 def nodeUpdate(request, node_ref):

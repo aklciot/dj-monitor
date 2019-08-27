@@ -1,0 +1,96 @@
+{% extends "monitor/webbase.html" %}
+
+{% block pagerefresh %}<meta http-equiv="refresh" content="60">{% endblock %}
+
+{% block title %}
+Node Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="node-header"><H2>Gateway information</H2></div>
+  <div id="node_detail" class="content_block">
+    <div id="node_det_table">
+      <table>
+        <tr><th>NodeID: </th><th>{{ gateway.nodeID }}</th></tr>
+        <tr><td>Description: </td><td class = "wrap_cell">{{ gateway.descr }}</td></tr>
+        <tr><td>Team: </td><td>{{ gateway.team.teamID }}</td></tr>
+        {% if gateway.hardware %}
+          <tr><td>Hardware: </td><td>{{ gateway.hardware }}</td></tr>
+        {% endif %}
+        {% if gateway.software %}
+          <tr><td>Software: </td><td>{{ gateway.software }}</td></tr>
+        {% endif %}
+        {% if gateway.portal %}
+          <tr><td>Data link: </td><td><span  class='yellow'><a href = {{gateway.portal}} >{{ gateway.portal }}</a></span></td></tr>
+        {% endif %}
+      </table>
+    </div>
+    <div id="node_det_button" class="action_button">
+      <a href="{% url 'monitor:nodeUpdate' gateway.id %}" class="btn btn-info" role="button">Update details</a>
+    </div>
+  </div>
+  
+  
+  <div id="node_notify" class="content_block"> 
+    {% if gateway.nodeuser_set.all %}
+      <div id="node_notify_table">
+        <table>
+          <tr><th>People </th><th>Notification method</th></tr>
+          {% for person in gateway.nodeuser_set.all %}
+            <tr><td>{{ person.user.username }}</td>
+              <td>
+              {% if person.email %} Email {% endif %}
+              {% if person.sms %} SMS {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    {% else %}
+      Nobody is getting notified about this gateway!<br><br>
+    {% endif %}
+    <div id="node_notify_button" class="action_button">
+      <a href="{% url 'monitor:nodeModNotify' gateway.id %}" class="btn btn-info" role="button">Change your notification</a>
+    </div>
+  </div>
+  
+  
+  <div id="node_reported" class="content_block">
+      <div id="node_rep_table">
+        <table>
+          <tr><th>Reported data: </th></tr>
+          <tr><td>Current status: </td><td>{{ gateway.textStatus }}</td></tr>
+          <tr><td>Last data: </td><td class = "wrap_cell">{{ gateway.lastData }}</td></tr>
+          <tr><td>Last status: </td><td class = "wrap_cell">{{ gateway.lastStatus }}</td></tr>
+          <tr><td>Last seen at: </td><td class="lastseen">{{ gateway.lastseen }}</td></tr>
+          {% if gateway.latitude %} {% if gateway.longitude %}
+            <tr><td>Latitude: </td><td>{{ gateway.latitude }}</td></tr>
+            <tr><td>Longitude: </td><td>{{ gateway.longitude }}</td></tr>
+          {% endif %} {% endif %}
+          {% if gateway.RSSI %}
+            <tr><td>Last RSSI level: </td><td>{{ gateway.RSSI }}</td></tr>
+          {% endif %}
+        </table>
+        <P>Data has been received from the following nodes in the last 7 days</P>
+        <ul>
+        {% for pass in passData %}
+          <li>{{pass.nodeID}} {{pass.lastdata }}</li>
+        {% endfor %}
+        </ul>
+        {% if gateway.status == 'X' %}
+          <div id="node_det_button" class="action_button">
+            <a href="{% url 'monitor:nodeRemove' gateway.id %}" class="btn btn-danger" role="button">Remove</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+ 
+  
+  </div>
+
+  <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>
+ 
+</div>
+{% endblock %}
