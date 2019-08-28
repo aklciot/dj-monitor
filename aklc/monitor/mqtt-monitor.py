@@ -149,8 +149,8 @@ def mqtt_on_message(client, userdata, msg):
                     #print("Picked up a status = missing message")
                     bUpdate = False
             if bUpdate and node_validate(cTopic[2]):
-                print("Processing network message")
-                print(jPayload)
+                #print("Processing network message")
+                #print(jPayload)
                 nd, created = Node.objects.get_or_create(nodeID = cTopic[2])
                 nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.textStatus = "Online"
