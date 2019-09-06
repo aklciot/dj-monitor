@@ -1,4 +1,4 @@
-
+docker-compose.*
 *.pyc
 aklc/monitor/migrations/*.py
 aklc/monitor/__pycache__/admin.cpython-37.pyc
