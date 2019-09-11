@@ -18,6 +18,7 @@ class Team(models.Model):
 class Node(models.Model):
     nodeID = models.CharField(max_length=30)
     lastseen = models.DateTimeField(blank=True, null=True)
+    cameOnline = models.DateTimeField(blank=True, null=True)
     status_sent = models.DateTimeField(null=True, blank=True)
     isGateway = models.BooleanField(blank=True, default=False)
     notification_sent = models.BooleanField(default=False)
@@ -46,12 +47,28 @@ class Node(models.Model):
         return self.nodeID
 
     def passOnData(self):
+        """
+        This function returns data about items that have processed data, 
+        Gateways, the nodes they have processed data
+        Nodes, the gateways they have used
+        """
         if self.isGateway:
             passAll = NodeGateway.objects.filter(gatewayID = self)
         else:
             passAll = NodeGateway.objects.filter(nodeID = self)
         passAll = passAll.filter(lastdata__gte=(timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=7)))
         return(passAll)
+
+    def msgReceived(self):
+        """
+        This function updates data when a new message is received
+        """
+        self.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+        if self.status != "C":
+            self.textStatus = "Online"
+            self.status = "C"
+            self.cameOnline = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+        return()
     
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)

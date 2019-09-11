@@ -83,12 +83,9 @@ def mqtt_on_message(client, userdata, msg):
             print("Status message received for {}".format(cNode))
             # Check and update the gateway data
             if node_validate(cPayload[0]):
-                gw, created = Node.objects.get_or_create(nodeID = cNode)
-                        
-                gw.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                gw, created = Node.objects.get_or_create(nodeID = cNode)    
+                gw.msgReceived()
                 gw.isGateway = True
-                gw.textStatus = "Online"
-                gw.status = "C"
                 gw.lastStatus = sPayload
                 gw.save()
 
@@ -102,9 +99,7 @@ def mqtt_on_message(client, userdata, msg):
                 #get the node, or create it if not found
                 #print("Valid node {}".format(cPayload[1]))
                 nd, created = Node.objects.get_or_create(nodeID = cPayload[1])
-                nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
-                nd.textStatus = "Online"
-                nd.status = 'C'
+                nd.msgReceived()
                 nd.lastData = sPayload
                 nd.save()
                 
@@ -112,10 +107,8 @@ def mqtt_on_message(client, userdata, msg):
             if node_validate(cPayload[0]): # payload[0] is the gateway
                 #print("Valid gateway {}".format(cPayload[0]))
                 gw, created = Node.objects.get_or_create(nodeID = cPayload[0])
-                gw.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                gw.msgReceived()                
                 gw.isGateway = True
-                gw.textStatus = "Online"
-                gw.status = "C"
                 gw.lastData = sPayload
                 gw.save()
 
@@ -152,9 +145,7 @@ def mqtt_on_message(client, userdata, msg):
                 #print("Processing network message")
                 #print(jPayload)
                 nd, created = Node.objects.get_or_create(nodeID = cTopic[2])
-                nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
-                nd.textStatus = "Online"
-                nd.status = "C"
+                nd.msgReceived()
                 nd.lastStatus = sPayload
                 if nd.battName in jPayload:
                     #print("Battery value found {}".format(jPayload[nd.battName]))
@@ -196,10 +187,7 @@ def mqtt_on_message(client, userdata, msg):
       if "NodeID" in jPayload:
         try:
           nd, created = Node.objects.get_or_create(nodeID = jPayload["NodeID"])
-
-          nd.lastseen = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
-          nd.textStatus = "Online"
-          nd.status = "C"
+          nd.msgReceived()
           nd.lastData = sPayload
           if nd.battName in jPayload:
             nd.battLevel = jPayload[nd.battName]
