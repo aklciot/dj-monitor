@@ -72,6 +72,7 @@ Node Details
           {% if gateway.latitude %} {% if gateway.longitude %}
             <tr><td>Latitude: </td><td>{{ gateway.latitude }}</td></tr>
             <tr><td>Longitude: </td><td>{{ gateway.longitude }}</td></tr>
+            <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ gateway.latitude }}&mlon={{ gateway.longitude }}&zoom=12">Click here</a></td></tr>
           {% endif %} {% endif %}
           {% if gateway.RSSI %}
             <tr><td>Last RSSI level: </td><td>{{ gateway.RSSI }}</td></tr>
