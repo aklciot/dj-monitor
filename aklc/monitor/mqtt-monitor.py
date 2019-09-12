@@ -394,6 +394,9 @@ def sys_monitor():
     #initialise the checkpoint timer
     checkTimer = timezone.now()   
 
+    # remember when we started
+    startedTime = timezone.now()
+
     notification_data = {"LastSummary": datetime.datetime.now() + datetime.timedelta(days = -3)}
 
     #get any pickled notification data
@@ -433,11 +436,13 @@ def sys_monitor():
         
         allNodes = Node.objects.all()
 
-        for n in allNodes:
+        tdRunning = timezone.now() - startedTime
+        if tdRunning.total_seconds() > 3600:    # dont check if nodes are down until you have been running for at least an hour       
+          for n in allNodes:
             #if nothing then our 'patience' will run out
             if (timezone.now() - n.lastseen) > datetime.timedelta(minutes=n.allowedDowntime):
-                #print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
-                missing_node(n, client)
+              #print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
+              missing_node(n, client)
 
       #if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
         if (timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()).now().hour > 7):                                   # run at certain time of the day

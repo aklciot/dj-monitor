@@ -69,6 +69,7 @@ class Node(models.Model):
             self.status = "C"
             self.cameOnline = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
         return()
+
     
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
