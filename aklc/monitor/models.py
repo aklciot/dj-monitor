@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import datetime
 from django.utils import timezone
+import json
 
 # Create your models here.
 class Team(models.Model):
@@ -70,7 +71,48 @@ class Node(models.Model):
             self.cameOnline = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
         return()
 
-    
+    def jsonLoad(self, sInput):
+        """
+        Process as JSON string and updates any relevant node/gateway attributes
+        """
+        #print("JSON update run")
+        jPayload = json.loads(sInput)
+        # Set battery level
+        if self.battName in jPayload:
+            #print("Battery value found {}".format(jPayload[nd.battName]))
+            self.battLevel = jPayload[self.battName]
+        try:
+            if "latitude" in jPayload:
+                if isinstance(jPayload["latitude"], str):
+                    self.latitude = float(jPayload["latitude"])
+                else:
+                    self.latitude = jPayload["latitude"]
+            if "Latitude" in jPayload:
+                if isinstance(jPayload["Latitude"], str):
+                    self.latitude = float(jPayload["Latitude"])
+                else:
+                    self.latitude = jPayload["Latitude"]
+        except Exception as e:
+            print(e)
+            print("Houston, we have an error {}".format(e))  
+        if "longitude" in jPayload:
+            if isinstance(jPayload["longitude"], str):
+                self.longitude = float(jPayload["longitude"])
+            else:
+                self.longitude = jPayload["longitude"]
+        if "Longitude" in jPayload:
+            if isinstance(jPayload["Longitude"], str):
+                self.longitude = float(jPayload["Longitude"])
+            else:
+                self.longitude = jPayload["Longitude"]
+ 
+        if "RSSI" in jPayload:
+            if isinstance(jPayload["RSSI"], int) or isinstance(jPayload["RSSI"], float):
+                self.RSSI = jPayload["RSSI"]
+            else:
+                print("Invalid data for RSSI, recieved '{}'".format(jPayload["RSSI"]))
+        return()
+
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
