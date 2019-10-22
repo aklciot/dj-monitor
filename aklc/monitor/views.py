@@ -23,8 +23,23 @@ class IndexView(generic.ListView):
 def index(request):
     nodeList = Node.objects.order_by('nodeID')
     nodeList = nodeList.exclude(status = 'M')
+    #print("B1 {}".format(len(nodeList)))
+    nodeList = nodeList.exclude(isGateway = True)
+    #print("B2 {}".format(len(nodeList)))
+
     context = {'nodeList': nodeList}
     return render(request, 'monitor/index.html', context)
+
+def index_gw(request):
+    nodeList = Node.objects.order_by('nodeID')
+    nodeList = nodeList.exclude(status = 'M')
+    #print("B1 {}".format(len(nodeList)))
+    nodeList = nodeList.exclude(isGateway = False)
+    #print("B2 {}".format(len(nodeList)))
+
+    context = {'nodeList': nodeList}
+    return render(request, 'monitor/index_gw.html', context)
+
 
 @login_required
 def nodeDetail(request, node_ref):

@@ -150,3 +150,19 @@ class NodeGateway(models.Model):
 
     def __str__(self):
         return("Node : {}, Gateway : {}".format(self.nodeID, self.gatewayID))
+
+class MessageType(models.Model):
+    msgName = models.CharField(max_length=30)
+    descr = models.TextField(blank=True, null=True, help_text="")
+            
+    def __str__(self):
+        return("{}".format(self.msgName))
+
+class MessageItem(models.Model):
+    msgID = models.ForeignKey(MessageType, on_delete=models.CASCADE)
+    name = models.CharField(max_length=15, help_text="The element name, will be used in JSON messages")
+    order = models.IntegerField()
+    fieldType = models.CharField(max_length=1, help_text="Field type can be 'S': string, 'I': integer, 'F': float")
+            
+    def __str__(self):
+        return("{}: {}".format(self.msgID.msgName, self.name))

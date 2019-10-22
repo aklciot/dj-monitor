@@ -1,0 +1,56 @@
+{% extends "monitor/webbase.html" %}
+
+{% block pagerefresh %}<meta http-equiv="refresh" content="30">{% endblock %}
+
+{% block title %}
+Gateway list
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-md bg-dark navbar-dark">
+ 
+  <!-- Toggler/collapsibe Button -->
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <!-- Navbar links -->
+  <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'monitor:index' %}">Data nodes</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+{% endblock %}
+
+{% block web-body %}
+
+  <div id="gateways">
+          {% if nodeList %}
+          <div class="list-group">
+          {% for node in nodeList%}
+            {% if node.isGateway %}  {% if not node.status == 'M' %}
+              {% if node.status == 'X' %}
+                <a href="{% url 'monitor:gatewayDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (gateway not reporting in)</a>
+              {% else %}
+                {% if node.descr %}
+                  <a href="{% url 'monitor:gatewayDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}} ({{node.descr}})</a>
+                {% else %}
+                  <a href="{% url 'monitor:gatewayDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
+                {% endif %}
+              {% endif %}
+            {% endif %} {% endif %}
+          {% endfor %}
+          </div>
+        {% else %}
+          <p>No gateways defined</p>>
+        {% endif %} 
+      </div>
+    
+
+{% endblock %}
