@@ -47,6 +47,11 @@
             <li class="nav-item">
               <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
             </li>
+            {% if perms.monitor.change_messagetype %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'monitor:index_msg' %}">Message Types</a>
+              </li>
+            {% endif %}
           </ul>
         </div>
       </nav>

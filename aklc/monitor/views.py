@@ -10,7 +10,7 @@ from django.urls import reverse
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 
-from .models import Node, NodeUser
+from .models import Node, NodeUser, MessageType
 from .forms import NodeDetailForm, NodeNotifyForm
 
 class IndexView(generic.ListView):
@@ -23,7 +23,7 @@ class IndexView(generic.ListView):
 def index(request):
     nodeList = Node.objects.order_by('nodeID')
     nodeList = nodeList.exclude(status = 'M')
-    #print("B1 {}".format(len(nodeList)))
+    print("B1 {}".format(request.user.get_all_permissions()))
     nodeList = nodeList.exclude(isGateway = True)
     #print("B2 {}".format(len(nodeList)))
 
@@ -39,6 +39,13 @@ def index_gw(request):
 
     context = {'nodeList': nodeList}
     return render(request, 'monitor/index_gw.html', context)
+
+@login_required
+def index_msg(request):
+    msgList = MessageType.objects.order_by('msgName')
+
+    context = {'msgList': msgList}
+    return render(request, 'monitor/index_msg.html', context)
 
 
 @login_required

@@ -15,4 +15,5 @@ urlpatterns = [
     path('node/remove/<int:node_ref>/', views.nodeRemove, name='nodeRemove'),
     path('node/tb1/<int:node_ref>/', views.tb1, name='tb1'),
     path('node/tb2/<int:node_ref>/', views.tb2, name='tb2'),
+    path('index_msg/', views.index_msg, name='index_msg'),
 ]
