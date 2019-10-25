@@ -10,8 +10,9 @@ from django.urls import reverse
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 
-from .models import Node, NodeUser, MessageType
-from .forms import NodeDetailForm, NodeNotifyForm
+from .models import Node, NodeUser, MessageType, MessageItem
+from .forms import NodeDetailForm, NodeNotifyForm, MessageTypeDetailForm, MessageItemDetailForm
+from django.forms import modelformset_factory
 
 class IndexView(generic.ListView):
     template_name = "monitor/index.html"
@@ -27,7 +28,7 @@ def index(request):
     nodeList = nodeList.exclude(isGateway = True)
     #print("B2 {}".format(len(nodeList)))
 
-    context = {'nodeList': nodeList}
+    context = {'nodeList': nodeList, 'nodeactive': 'Y'}
     return render(request, 'monitor/index.html', context)
 
 def index_gw(request):
@@ -37,7 +38,7 @@ def index_gw(request):
     nodeList = nodeList.exclude(isGateway = False)
     #print("B2 {}".format(len(nodeList)))
 
-    context = {'nodeList': nodeList}
+    context = {'nodeList': nodeList, 'gatewayactive': 'Y'}
     return render(request, 'monitor/index_gw.html', context)
 
 @login_required
@@ -45,6 +46,7 @@ def index_msg(request):
     msgList = MessageType.objects.order_by('msgName')
 
     context = {'msgList': msgList}
+    context['msgactive'] = 'Y'
     return render(request, 'monitor/index_msg.html', context)
 
 
@@ -53,7 +55,7 @@ def nodeDetail(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
     passList = node.passOnData()
     aNodeUsers = NodeUser.objects.filter(nodeID = node)
-    context = {'node': node, 'user': request.user, 'aNodeUser': aNodeUsers, 'passData': passList}
+    context = {'node': node, 'user': request.user, 'aNodeUser': aNodeUsers, 'passData': passList, 'nodeactive': 'Y'}
     return render(request, 'monitor/nodeDetail.html', context)
 
 @login_required
@@ -61,7 +63,7 @@ def gatewayDetail(request, gateway_ref):
     gw = get_object_or_404(Node, pk=gateway_ref)
     aNodeUsers = NodeUser.objects.filter(nodeID = gw)
     passList = gw.passOnData()
-    context = {'gateway': gw, 'user': request.user, 'aNodeUser': aNodeUsers, 'passData': passList}
+    context = {'gateway': gw, 'user': request.user, 'aNodeUser': aNodeUsers, 'passData': passList, 'gatewayactive': 'Y'}
     return render(request, 'monitor/gatewayDetail.html', context)
 
 
@@ -77,6 +79,10 @@ def nodeUpdate(request, node_ref):
     else:
         nf = NodeDetailForm(instance=node)
     context = {'form': nf, 'node': node}
+    if node.isGateway:
+        context['gatewayactive'] = 'Y'
+    else:
+        context['nodeactive'] = 'Y'
     return render(request, 'monitor/nodeUpdate.html', context)
 
 @login_required
@@ -103,6 +109,10 @@ def nodeModNotify(request, node_ref):
         nf = NodeNotifyForm({'email': nu.email, 'sms': nu.sms, 'notification': 'Y'})
 
     context = {'form': nf, 'node': node}
+    if node.isGateway:
+        context['gatewayactive'] = 'Y'
+    else:
+        context['nodeactive'] = 'Y'
     return render(request, 'monitor/nodeModNotify.html', context)
 
 @login_required
@@ -119,6 +129,10 @@ def nodeRemove(request, node_ref):
             node.save()
             return HttpResponseRedirect(reverse('monitor:index'))
     context = {'node': node}
+    if node.isGateway:
+        context['gatewayactive'] = 'Y'
+    else:
+        context['nodeactive'] = 'Y'
     return render(request, 'monitor/nodeRemove.html', context)
 
 def tb1(request, node_ref):
@@ -131,3 +145,81 @@ def tb2(request, node_ref):
     context = {'node': node}
     return render(request, 'monitor/tb2.html', context)
         
+@login_required
+def msgDetail(request, msg_ref):
+    msg = get_object_or_404(MessageType, pk=msg_ref)
+    msgItems = msg.messageitem_set.all()
+    context = {'msg': msg, 'msgItems': msgItems}
+    context['msgactive'] = 'Y'
+    return render(request, 'monitor/msgDetail.html', context)
+
+@login_required
+def msgUpdate(request, msg_ref):
+    msg = get_object_or_404(MessageType, pk=msg_ref)
+
+    MsgItemFormSet = modelformset_factory(MessageItem, form=MessageItemDetailForm, extra = 1, can_delete = True)
+    
+    if request.method == 'POST':
+        nf = MessageTypeDetailForm(request.POST, instance=msg)
+        fItems = MsgItemFormSet(request.POST, queryset = msg.messageitem_set.all(), prefix='ITEMS', initial=[{'msgID': msg}])
+        if nf.is_valid() and fItems.is_valid():
+            nf.save()
+            #if fItems.is_valid():
+            #    fItems.save()
+            #else:
+            #    print(fItems.errors)
+            for i in fItems:
+                if i.is_valid() and i.cleaned_data:
+                    i.instance.msgID = msg
+                    #print(i.__dict__)
+                    print("Order is {}".format(i.cleaned_data))
+                    if i.cleaned_data['DELETE']:
+                        print("Delete this record")
+                        i.instance.delete()
+                    else:
+                        i.save()
+                    
+                else:
+                    print("{} is NOT OK".format(i))
+            return HttpResponseRedirect(reverse('monitor:msgDetail', args=[msg.id]))
+     # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = MessageTypeDetailForm(instance=msg)
+        fItems = MsgItemFormSet(queryset = msg.messageitem_set.all(), prefix='ITEMS', initial=[{'msgID': msg}])
+    context = {'form': nf, 'msg': msg, 'fItems': fItems}
+
+    context['msgactive'] = 'Y'
+    return render(request, 'monitor/msgUpdate.html', context) 
+
+@login_required
+def msgAdd(request):
+    
+    MsgItemFormSet = modelformset_factory(MessageItem, form=MessageItemDetailForm, extra = 2)
+    
+    if request.method == 'POST':
+        nf = MessageTypeDetailForm(request.POST, )
+        fItems = MsgItemFormSet(request.POST, queryset = MessageItem.objects.none())
+        if nf.is_valid() and fItems.is_valid():
+            nf.save()
+            #if fItems.is_valid():
+            #    fItems.save()
+            #else:
+            #    print(fItems.errors)
+            for i in fItems:
+                if i.is_valid() and i.cleaned_data:
+                    i.instance.msgID = nf.instance
+                    #print(i.__dict__)
+                    print("Order is {}".format(i.cleaned_data))
+                    i.save()
+                    
+                else:
+                    print("{} is NOT OK".format(i))
+            return HttpResponseRedirect(reverse('monitor:msgDetail', args=[nf.instance.id]))
+     # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = MessageTypeDetailForm()
+        fItems = MsgItemFormSet(queryset = MessageItem.objects.none())
+    context = {'form': nf, 'fItems': fItems}
+
+    context['msgactive'] = 'Y'
+    return render(request, 'monitor/msgAdd.html', context) 

@@ -6,45 +6,21 @@
 Message Type list
 {% endblock %}
 
-{% block navbar %}
-<nav class="navbar navbar-expand-md bg-dark navbar-dark">
- 
-  <!-- Toggler/collapsibe Button -->
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <!-- Navbar links -->
-  <div class="collapse navbar-collapse" id="collapsibleNavbar">
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'monitor:index' %}">Data nodes</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
-      </li>
-      {% if perms.monitor.change_messagetype %}
-        <li class="nav-item active">
-          <a class="nav-link" href="{% url 'monitor:index_msg' %}">Message Types</a>
-        </li>
-      {% endif %}
-    </ul>
-  </div>
-</nav>
-{% endblock %}
-
 {% block web-body %}
 
   <div id="msgtypes">
     {% if msgList %}
       <div class="list-group">
         {% for msg in msgList%}
-          {{ msg.msgName }}
+          <a href="{% url 'monitor:msgDetail' msg.id %}">{{ msg.msgName }}</a>
         {% endfor %}
       </div>
     {% else %}
       <p>No gateways defined</p>>
     {% endif %} 
   </div>
+  <div id="msg_add_button" class="action_button">
+      <a href="{% url 'monitor:msgAdd' %}" class="btn btn-info" role="button">Add message</a>
+    </div>
   
 {% endblock %}

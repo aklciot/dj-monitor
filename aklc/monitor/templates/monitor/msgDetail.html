@@ -1,0 +1,30 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Node Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="node-header"><H2>Node information</H2></div>
+    <div id="node_detail" class="content_block">
+      <div id="node_det_table">
+        <table>
+          <tr><th>Messge Name: </th><th>{{ msg.msgName }}</th></tr>
+          <tr><td>Description: </td><td class = "wrap_cell">{{ msg.descr }}</td></tr>
+          <tr><td>Data items: </td></tr>
+          {% for item in msgItems %}
+            <tr><td>{{ item.order }}</td><td>{{ item.name }}</td><td>{{ item.fieldType }}</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div id="node_det_button" class="action_button">
+        <a href="{% url 'monitor:msgUpdate' msg.id %}" class="btn btn-info" role="button">Update details</a>
+      </div>
+    </div>
+  </div>
+
+  <a href="{% url 'monitor:index_msg' %}" class="btn btn-info" role="button">Home</a>
+</div>
+{% endblock %}

@@ -41,14 +41,28 @@
         <!-- Navbar links -->
         <div class="collapse navbar-collapse" id="collapsibleNavbar">
           <ul class="navbar-nav">
-            <li class="nav-item active">
+            {% if nodeactive %}
+              <li class="nav-item active">
+            {% else %}
+              <li class="nav-item"></li>
+            {% endif %}
               <a class="nav-link" href="{% url 'monitor:index' %}">Data nodes</a>
             </li>
-            <li class="nav-item">
+
+            {% if gatewayactive %}
+              <li class="nav-item active">
+            {% else %}
+              <li class="nav-item"></li>
+            {% endif %}
               <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
             </li>
+
             {% if perms.monitor.change_messagetype %}
-              <li class="nav-item">
+              {% if msgactive %}
+                <li class="nav-item active">
+              {% else %}
+                <li class="nav-item"></li>
+              {% endif %}
                 <a class="nav-link" href="{% url 'monitor:index_msg' %}">Message Types</a>
               </li>
             {% endif %}

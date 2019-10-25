@@ -1,0 +1,35 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Message type update
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+  <div id="node-header"><h3>Update Node information</h3></div>
+    <div id="node_detail" class="content_block">
+      <div id="node_det_table">
+        <form action="{% url 'monitor:msgUpdate' msg.id %}" method="POST">
+          {% csrf_token %}
+          {{ fItems.management_form }}
+          {{ form.non_field_errors}}
+          <table>
+            {{ form.as_table }}
+
+            <tr><th>Order</th><th>Name</th><th>Type of Data</th></tr>
+
+            {% for itm in fItems %}
+              <tr><td>{{ itm.order }}</td><td>{{ itm.name }}</td><td>{{ itm.fieldType }}</td><td>{{ itm.DELETE }}</td><td>{{ itm.id }}</td><td>{{ itm.errors }}</td></tr>
+            {% endfor %}
+
+          </table>
+        <input type="submit" value="Submit">
+        <span id="node_cancel_button" class="cancel_button">
+          <a href="{% url 'monitor:msgDetail' msg.id %}" class="btn btn-link btn-outline-warning" role="button">Cancel</a>
+        </span>
+      </form>
+    </div>
+  </div>
+ 
+</div>
+{% endblock %}
