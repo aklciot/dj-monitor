@@ -11,7 +11,7 @@ Node Details
     <div id="node_detail" class="content_block">
       <div id="node_det_table">
         <table>
-          <tr><th>Messge Name: </th><th>{{ msg.msgName }}</th></tr>
+          <tr><th>Message Name: </th><th>{{ msg.msgName }}</th></tr>
           <tr><td>Description: </td><td class = "wrap_cell">{{ msg.descr }}</td></tr>
           <tr><td>Data items: </td></tr>
           {% for item in msgItems %}
@@ -22,6 +22,15 @@ Node Details
       <div id="node_det_button" class="action_button">
         <a href="{% url 'monitor:msgUpdate' msg.id %}" class="btn btn-info" role="button">Update details</a>
       </div>
+      <div id="message_usage_table">
+        <h3>Nodes using this message</h3>
+        <table>
+          <tr><th>Node</th></tr>
+          {% for node in msgNodes %}
+            <tr><td>{{node.nodeID}}</td></tr>
+          {% endfor %}
+        </table>
+      </div>      
     </div>
   </div>
 

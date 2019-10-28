@@ -149,7 +149,8 @@ def tb2(request, node_ref):
 def msgDetail(request, msg_ref):
     msg = get_object_or_404(MessageType, pk=msg_ref)
     msgItems = msg.messageitem_set.all()
-    context = {'msg': msg, 'msgItems': msgItems}
+    msgNodes = msg.node_set.all()
+    context = {'msg': msg, 'msgItems': msgItems, 'msgNodes': msgNodes}
     context['msgactive'] = 'Y'
     return render(request, 'monitor/msgDetail.html', context)
 
@@ -164,17 +165,14 @@ def msgUpdate(request, msg_ref):
         fItems = MsgItemFormSet(request.POST, queryset = msg.messageitem_set.all(), prefix='ITEMS', initial=[{'msgID': msg}])
         if nf.is_valid() and fItems.is_valid():
             nf.save()
-            #if fItems.is_valid():
-            #    fItems.save()
-            #else:
-            #    print(fItems.errors)
+
             for i in fItems:
                 if i.is_valid() and i.cleaned_data:
                     i.instance.msgID = msg
                     #print(i.__dict__)
-                    print("Order is {}".format(i.cleaned_data))
+                    #print("Order is {}".format(i.cleaned_data))
                     if i.cleaned_data['DELETE']:
-                        print("Delete this record")
+                        #print("Delete this record")
                         i.instance.delete()
                     else:
                         i.save()
@@ -201,15 +199,12 @@ def msgAdd(request):
         fItems = MsgItemFormSet(request.POST, queryset = MessageItem.objects.none())
         if nf.is_valid() and fItems.is_valid():
             nf.save()
-            #if fItems.is_valid():
-            #    fItems.save()
-            #else:
-            #    print(fItems.errors)
+
             for i in fItems:
                 if i.is_valid() and i.cleaned_data:
                     i.instance.msgID = nf.instance
                     #print(i.__dict__)
-                    print("Order is {}".format(i.cleaned_data))
+                    #print("Order is {}".format(i.cleaned_data))
                     i.save()
                     
                 else:

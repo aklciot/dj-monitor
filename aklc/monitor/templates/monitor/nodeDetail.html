@@ -100,7 +100,22 @@ Node Details
         {% endif %}
       </div>
     </div>
- 
+    {% if "MessageClassEditor" in user.groups.all.0.name %}
+      <div id="node_notify" class="content_block"> 
+        <div id="node_message_table">
+          <table>
+            <tr><td>Update Thingsboard : </td><td>{{node.thingsboardUpload}}</td></tr>
+            <tr><td>Thingsboard credentials: </td><td>{{node.thingsboardCred}}</td></tr>
+          </table>
+        </div>
+
+        <div id="node_notify_button" class="action_button">
+          <a href="{% url 'monitor:nodeModNotify' node.id %}" class="btn btn-info" role="button">Message type update</a>
+        </div>
+      </div>
+      
+    
+    {% endif %}
   
   </div>
 

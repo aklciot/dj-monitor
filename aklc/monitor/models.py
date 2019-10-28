@@ -15,6 +15,33 @@ class Team(models.Model):
     def __str__(self):
         return self.teamID
 
+class MessageType(models.Model):
+    msgName = models.CharField(max_length=30)
+    descr = models.TextField(blank=True, null=True, help_text="")
+            
+    class Meta:
+        ordering = ["msgName"]
+
+    def __str__(self):
+        return("{}".format(self.msgName))
+
+class MessageItem(models.Model):
+    FIELD_TYPE_CHOICES = [
+        ('S', 'String'),
+        ('I', 'Integer'),
+        ('F', 'Float'),
+    ]
+    msgID = models.ForeignKey(MessageType, on_delete=models.CASCADE)
+    name = models.CharField(max_length=15, help_text="The element name, will be used in JSON messages")
+    order = models.IntegerField()
+    fieldType = models.CharField(max_length=1, help_text="Field type can be 'S': string, 'I': integer, 'F': float", choices= FIELD_TYPE_CHOICES )
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self):
+        return("{}: {}".format(self.msgID.msgName, self.name)) 
+
 
 class Node(models.Model):
     nodeID = models.CharField(max_length=30)
@@ -43,6 +70,15 @@ class Node(models.Model):
     RSSI = models.FloatField(default = 0.0)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
     portal = models.URLField(max_length=100, blank=True, null=True, help_text="A link where more data on this node is available")
+    messagetype = models.ForeignKey(MessageType, blank=True, null=True, on_delete = models.SET_NULL)
+    influxUpload = models.BooleanField(default=False)
+    thingsboardUpload = models.BooleanField(default=False)
+    locationOverride = models.BooleanField(default=False)
+    projectOverride = models.BooleanField(default=False)
+    thingsboardCred = models.CharField(max_length=40, blank=True, null=True, help_text="The credentials needed for thingsboard data load")
+
+    class Meta:
+        ordering = ["nodeID"]
 
     def __str__(self):
         return self.nodeID
@@ -81,30 +117,33 @@ class Node(models.Model):
         if self.battName in jPayload:
             #print("Battery value found {}".format(jPayload[nd.battName]))
             self.battLevel = jPayload[self.battName]
-        try:
-            if "latitude" in jPayload:
-                if isinstance(jPayload["latitude"], str):
-                    self.latitude = float(jPayload["latitude"])
+        #try:
+        #    if not self.locationOverride:
+        #        if "latitude" in jPayload:
+        #            if isinstance(jPayload["latitude"], str):
+        #                self.latitude = float(jPayload["latitude"])
+        #            else:
+        #                self.latitude = jPayload["latitude"]
+        #        if "Latitude" in jPayload:
+        #            if isinstance(jPayload["Latitude"], str):
+        #                self.latitude = float(jPayload["Latitude"])
+        #            else:
+        #                self.latitude = jPayload["Latitude"]
+        #except Exception as e:
+        #    print(e)
+        #    print("Houston, we have an error {}".format(e))  
+        
+        if not self.locationOverride:
+            if "longitude" in jPayload:
+                if isinstance(jPayload["longitude"], str):
+                    self.longitude = float(jPayload["longitude"])
                 else:
-                    self.latitude = jPayload["latitude"]
-            if "Latitude" in jPayload:
-                if isinstance(jPayload["Latitude"], str):
-                    self.latitude = float(jPayload["Latitude"])
+                    self.longitude = jPayload["longitude"]
+            if "Longitude" in jPayload:
+                if isinstance(jPayload["Longitude"], str):
+                    self.longitude = float(jPayload["Longitude"])
                 else:
-                    self.latitude = jPayload["Latitude"]
-        except Exception as e:
-            print(e)
-            print("Houston, we have an error {}".format(e))  
-        if "longitude" in jPayload:
-            if isinstance(jPayload["longitude"], str):
-                self.longitude = float(jPayload["longitude"])
-            else:
-                self.longitude = jPayload["longitude"]
-        if "Longitude" in jPayload:
-            if isinstance(jPayload["Longitude"], str):
-                self.longitude = float(jPayload["Longitude"])
-            else:
-                self.longitude = jPayload["Longitude"]
+                    self.longitude = jPayload["Longitude"]
  
         if "RSSI" in jPayload:
             if isinstance(jPayload["RSSI"], int) or isinstance(jPayload["RSSI"], float):
@@ -151,26 +190,5 @@ class NodeGateway(models.Model):
     def __str__(self):
         return("Node : {}, Gateway : {}".format(self.nodeID, self.gatewayID))
 
-class MessageType(models.Model):
-    msgName = models.CharField(max_length=30)
-    descr = models.TextField(blank=True, null=True, help_text="")
-            
-    def __str__(self):
-        return("{}".format(self.msgName))
 
-class MessageItem(models.Model):
-    FIELD_TYPE_CHOICES = [
-        ('S', 'String'),
-        ('I', 'Integer'),
-        ('F', 'Float'),
-    ]
-    msgID = models.ForeignKey(MessageType, on_delete=models.CASCADE)
-    name = models.CharField(max_length=15, help_text="The element name, will be used in JSON messages")
-    order = models.IntegerField()
-    fieldType = models.CharField(max_length=1, help_text="Field type can be 'S': string, 'I': integer, 'F': float", choices= FIELD_TYPE_CHOICES )
 
-    class Meta:
-        ordering = ["order"]
-
-    def __str__(self):
-        return("{}: {}".format(self.msgID.msgName, self.name)) 

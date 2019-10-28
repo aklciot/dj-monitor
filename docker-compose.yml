@@ -38,16 +38,25 @@ services:
       AKLC_TEST_DAILY: T
       AKLC_WEB_BASE_URL: http://localhost:8001
 
-  #mqtt:
-  #  image: eclipse-mosquitto
-  #  ports:
-  #    - "1883:1883"
-  #nodered:
-  #  image: nodered/node-red-docker
-  #  ports:
-  #    - "1880:1880"
-  #  volumes:
-  #    - nodered-data:/data
+  updater:
+    image: aklciot/mqtt-updater
+    build:
+      context: .
+      dockerfile: script-dockerfile
+    command: python mqtt-updater.py
+    volumes:
+      - .:/code
+    #restart: always
+    depends_on:
+      - db
+
+    environment:
+      AKLC_MQTT_CLIENT_ID: mqtt_monitor_updater_test
+      AKLC_MQTT_HOST: aws2.innovateauckland.nz
+      AKLC_MQTT_USER: aklciot
+      AKLC_MQTT_PASSWORD: iotiscool
+      AKLC_TEST_DAILY: T
+      AKLC_WEB_BASE_URL: http://localhost:8001
 
 #networks:
 volumes:
