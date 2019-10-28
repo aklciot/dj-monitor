@@ -353,7 +353,7 @@ def sys_monitor():
     print(eMqtt_port)
 
     #The mqtt client is initialised
-    client = mqtt.Client(client_id=eMqtt_client_id)
+    client = mqtt.Client()
 
     #functions called by mqtt client
     client.on_connect = mqtt_on_connect
