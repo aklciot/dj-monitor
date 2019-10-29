@@ -12,6 +12,9 @@ class Team(models.Model):
     teamID = models.CharField(max_length=50)
     descr = models.TextField(blank=True, null=True)
     
+    class Meta:
+        verbose_name = "Project"
+        
     def __str__(self):
         return self.teamID
 
@@ -21,6 +24,7 @@ class MessageType(models.Model):
             
     class Meta:
         ordering = ["msgName"]
+        verbose_name = "Message Type"
 
     def __str__(self):
         return("{}".format(self.msgName))
@@ -38,6 +42,7 @@ class MessageItem(models.Model):
 
     class Meta:
         ordering = ["order"]
+        verbose_name = "Message Item"
 
     def __str__(self):
         return("{}: {}".format(self.msgID.msgName, self.name)) 
@@ -70,12 +75,12 @@ class Node(models.Model):
     RSSI = models.FloatField(default = 0.0)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
     portal = models.URLField(max_length=100, blank=True, null=True, help_text="A link where more data on this node is available")
-    messagetype = models.ForeignKey(MessageType, blank=True, null=True, on_delete = models.SET_NULL)
-    influxUpload = models.BooleanField(default=False)
-    thingsboardUpload = models.BooleanField(default=False)
-    locationOverride = models.BooleanField(default=False)
-    projectOverride = models.BooleanField(default=False)
-    thingsboardCred = models.CharField(max_length=40, blank=True, null=True, help_text="The credentials needed for thingsboard data load")
+    messagetype = models.ForeignKey(MessageType, blank=True, null=True, help_text="This message type will be used to convert incoming CSV data to JSON format", on_delete = models.SET_NULL)
+    influxUpload = models.BooleanField("Upload to InfluxDB", default=False, help_text="Select this if you want data uploaded to InfluxDB.")
+    thingsboardUpload = models.BooleanField("Upload to Thingsboard", default=False, help_text="Select this if you want data uploaded to Thingsboard on AWS2. NB Thingsboard cred also needs to be completed.")
+    locationOverride = models.BooleanField("Location override", default=False, help_text="If selected, incoming location data will be ignored and stored data passed on")
+    projectOverride = models.BooleanField("Project override", default=False, help_text="If selected, any incoming Project name will be ignored and stored Project passed on")
+    thingsboardCred = models.CharField("Thingsboard credentials", max_length=40, blank=True, null=True, help_text="The credentials needed for thingsboard data load")
 
     class Meta:
         ordering = ["nodeID"]

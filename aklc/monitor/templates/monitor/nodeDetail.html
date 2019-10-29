@@ -28,6 +28,11 @@ Node Details
           <tr><td>Battery critical level: </td><td>{{ node.battCritical }}</td></tr>
           <tr><td>Battery current value: </td><td class="lastseen">{{ node.battLevel }}</td></tr>
         {% endif %}
+        {% if node.locationOverride %}
+          <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
+         <tr><td>Longitude: </td><td>{{ node.longitude }}</td></tr>
+          <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ node.latitude }}&mlon={{ node.longitude }}&zoom=14" target="_blank">View in OpenStreetMap</a></td></tr>
+        {% endif %}
         {% if node.portal %}
           <tr><td>Data link: </td><td><span  class='yellow'><a href = {{node.portal}} >{{ node.portal }}</a></span></td></tr>
         {% endif %}
@@ -74,11 +79,13 @@ Node Details
           {% if node.status == "C" %}
             <tr><td>Online for : </td><td class="lastseen">{{ node.cameOnline|timesince }}</td></tr>
           {% endif %}
-          {% if node.latitude %} {% if node.longitude %}
-            <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
-            <tr><td>Longitude: </td><td>{{ node.longitude }}</td></tr>
-            <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ node.latitude }}&mlon={{ node.longitude }}&zoom=14" target="_blank">View in OpenStreetMap</a></td></tr>
-          {% endif %} {% endif %}
+          {% if not node.locationOverride %}
+            {% if node.latitude %} {% if node.longitude %}
+              <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
+              <tr><td>Longitude: </td><td>{{ node.longitude }}</td></tr>
+              <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ node.latitude }}&mlon={{ node.longitude }}&zoom=14" target="_blank">View in OpenStreetMap</a></td></tr>
+            {% endif %} {% endif %}
+          {% endif %}
           {% if node.battName %} {% if node.battLevel > 0 %}
             <tr><td>Current battery level: </td><td>{{ node.battLevel }}</td></tr>
           {% endif %} {% endif %} 

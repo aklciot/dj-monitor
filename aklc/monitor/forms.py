@@ -8,7 +8,7 @@ class ContactForm(forms.Form):
 class NodeDetailForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['descr', 'allowedDowntime', 'hardware', 'software', 'battName', 'battWarn', 'battCritical', 'portal']
+        fields = ['descr', 'allowedDowntime', 'hardware', 'software', 'battName', 'battWarn', 'battCritical', 'portal', 'team', 'latitude', 'longitude']
         widgets = {
             'descr': forms.Textarea(attrs={'rows': 3}),
         }
@@ -41,8 +41,8 @@ class MessageItemDetailForm(forms.ModelForm):
 class NodeMessageForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['messagetype', 'thingsboardUpload', 'thingsboardCred', 'influxUpload', 'locationOverride', 'projectOverride']
+        fields = ['messagetype', 'thingsboardUpload', 'thingsboardCred', 'locationOverride', 'projectOverride']
         #widgets = {
-        #    'descr': forms.Textarea(attrs={'rows': 3}),
+        #    'thingsboardCred': forms.Textarea(attrs={'rows': 3}),
         #}
 
