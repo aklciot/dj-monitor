@@ -19,4 +19,5 @@ urlpatterns = [
     path('message/<int:msg_ref>/', views.msgDetail, name='msgDetail'),
     path('message/add/', views.msgAdd, name='msgAdd'),
     path('message/update/<int:msg_ref>/', views.msgUpdate, name='msgUpdate'),
+    path('node/msgupdate/<int:node_ref>/', views.nodeMsgUpdate, name='nodeMsgUpdate'),
 ]

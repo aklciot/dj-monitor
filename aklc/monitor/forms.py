@@ -37,3 +37,12 @@ class MessageItemDetailForm(forms.ModelForm):
         widgets = {
             'fieldType': forms.TextInput(attrs={'size': 1}),
         }
+
+class NodeMessageForm(forms.ModelForm):
+    class Meta:
+        model = Node
+        fields = ['messagetype', 'thingsboardUpload', 'thingsboardCred', 'influxUpload', 'locationOverride', 'projectOverride']
+        #widgets = {
+        #    'descr': forms.Textarea(attrs={'rows': 3}),
+        #}
+

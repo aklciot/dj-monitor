@@ -104,13 +104,17 @@ Node Details
       <div id="node_notify" class="content_block"> 
         <div id="node_message_table">
           <table>
+            <tr><th>Auto update information: </th></tr>
+            <tr><td>Message Type : </td><td>{{node.messagetype.msgName}}</td></tr>
             <tr><td>Update Thingsboard : </td><td>{{node.thingsboardUpload}}</td></tr>
             <tr><td>Thingsboard credentials: </td><td>{{node.thingsboardCred}}</td></tr>
+            <tr><td>Location override: </td><td>{{node.locationOverride}}</td></tr>
+            <tr><td>Project override: </td><td>{{node.projectOverride}}</td></tr>
           </table>
         </div>
 
         <div id="node_notify_button" class="action_button">
-          <a href="{% url 'monitor:nodeModNotify' node.id %}" class="btn btn-info" role="button">Message type update</a>
+          <a href="{% url 'monitor:nodeMsgUpdate' node.id %}" class="btn btn-info" role="button">Auto Update control</a>
         </div>
       </div>
       

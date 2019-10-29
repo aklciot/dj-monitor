@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 
 from .models import Node, NodeUser, MessageType, MessageItem
-from .forms import NodeDetailForm, NodeNotifyForm, MessageTypeDetailForm, MessageItemDetailForm
+from .forms import NodeDetailForm, NodeNotifyForm, MessageTypeDetailForm, MessageItemDetailForm, NodeMessageForm
 from django.forms import modelformset_factory
 
 class IndexView(generic.ListView):
@@ -71,10 +71,13 @@ def gatewayDetail(request, gateway_ref):
 def nodeUpdate(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
     if request.method == 'POST':
+
         nf = NodeDetailForm(request.POST, instance=node)
         if nf.is_valid():
             nf.save()
             return HttpResponseRedirect(reverse('monitor:nodeDetail', args=[node.id]))
+        else:
+            print("Invalid form")
      # if a GET (or any other method) we'll create a blank form
     else:
         nf = NodeDetailForm(instance=node)
@@ -89,6 +92,7 @@ def nodeUpdate(request, node_ref):
 def nodeModNotify(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
     nu, created = NodeUser.objects.get_or_create(nodeID = node, user = request.user)
+
     if request.method == 'POST':
         nf = NodeNotifyForm(request.POST)
         if nf.is_valid():
@@ -114,6 +118,30 @@ def nodeModNotify(request, node_ref):
     else:
         context['nodeactive'] = 'Y'
     return render(request, 'monitor/nodeModNotify.html', context)
+
+@login_required
+def nodeMsgUpdate(request, node_ref):
+    node = get_object_or_404(Node, pk=node_ref)
+    print("BP1")
+    if request.method == 'POST':
+        print("Post message received")
+        nf = NodeMessageForm(request.POST, instance=node)
+        if nf.is_valid():
+            print("Valid BK 1")
+            nf.save()
+            
+            return HttpResponseRedirect(reverse('monitor:nodeDetail', args=[node.id]))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = NodeMessageForm(instance=node)
+
+    context = {'form': nf, 'node': node}
+    if node.isGateway:
+        context['gatewayactive'] = 'Y'
+    else:
+        context['nodeactive'] = 'Y'
+    return render(request, 'monitor/nodeMsgUpdate.html', context)
+
 
 @login_required
 def nodeRemove(request, node_ref):

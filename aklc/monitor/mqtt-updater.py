@@ -12,7 +12,6 @@ import pickle
 from django.utils import timezone
 from django import template
 from email.mime.text import MIMEText
-#timezone.make_aware(yourdate, timezone.get_current_timezone())
 
 # need this to access django models and templates
 sys.path.append("/code/aklc")
@@ -34,6 +33,9 @@ eTB_port = os.getenv("AKLC_TB_PORT", 8080)
 eTB_topic = "v1/devices/me/telemetry"
 
 # ********************************************************************
+"""
+This function is called when the MQTT client connects to the MQTT broker
+"""
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -52,7 +54,13 @@ def mqtt_on_connect(client, userdata, flags, rc):
     #  print(sub_topic)
     #  client.subscribe(sub_topic)
 
+
+#********************************************************************
+
 def is_json(myjson):
+  """
+  Function to check if an input is a valid JSON message
+  """
   try:
     json_object = json.loads(myjson)
   except ValueError as e:
@@ -61,7 +69,14 @@ def is_json(myjson):
     
 #********************************************************************
 def mqtt_on_message(client, userdata, msg):
-    """This procedure is called each time a mqtt message is received"""
+    """This procedure is called each time a mqtt message is received
+
+    | AKLC | Gateway | Data message passed on by gateway, data in CSV format
+    | AKLC | Status  | Status messages from Gateways, data in CSV format
+    | AKLC | Network | Data & status messages from Gateways, data in JSON format
+    | AKLC | Node    | Data & Status direct from a Node, data in JSON format
+
+    """
 
     #print("mqtt message received {} : {}".format(msg.topic, msg.payload))
     #separate the topic up so we can work with it
@@ -70,22 +85,19 @@ def mqtt_on_message(client, userdata, msg):
     
     # get the payload as a string
     sPayload = msg.payload.decode()
-    
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
         #print("Aklc message received, topic {}, payload {}".format(msg.topic, msg.payload))
         # Check types of message from the topic
         #print("Subtopic = |{}|".format(cTopic[1]))
-        if cTopic[1] == "Status":         # These are status messages sent by gateways. Data in CSV format
-          x = 1
-        elif cTopic[1] == "Gateway":      # Messages sent on by gateway, in CSV format
-          #NodeID = cTopic[2] 
-          #print("mqtt message received {} : {}".format(msg.topic, msg.payload))
+        if cTopic[1] == "Status":         # Status messages from Gateways, data in CSV format
+          x = 1                           # Just a placeholder at this time
+        elif cTopic[1] == "Gateway":      # Data message passed on by gateway, data in CSV format
+
           cPayload = sPayload.split(",")   # the payload should be CSV
-          #print(cPayload)
           try:
-            node = Node.objects.get(nodeID = cPayload[1])
+            node = Node.objects.get(nodeID = cPayload[1])   # Lets 
             print("Node {} found".format(node.nodeID))
 
             if node.messagetype:
@@ -118,9 +130,6 @@ def mqtt_on_message(client, userdata, msg):
                 mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
                     hostname = eTB_host, port = eTB_port, 
                     auth = {'username':node.thingsboardCred})
-
-
-
 
           except Exception as e:
             print(e)
@@ -183,7 +192,6 @@ def mqtt_updater():
 
     # used to manage mqtt subscriptions
     client.loop_start()
-
 
     while True:
       time.sleep(1)
