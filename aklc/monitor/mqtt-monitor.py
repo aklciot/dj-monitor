@@ -100,6 +100,7 @@ def mqtt_on_message(client, userdata, msg):
                 nd, created = Node.objects.get_or_create(nodeID = cPayload[1])
                 nd.msgReceived()
                 nd.lastData = sPayload
+                nd.dataMsgCount = nd.dataMsgCount + 1
                 nd.save()
                 
           	# Check and update the gateways info
@@ -109,6 +110,7 @@ def mqtt_on_message(client, userdata, msg):
                 gw.msgReceived()                
                 gw.isGateway = True
                 gw.lastData = sPayload
+                gw.dataMsgCount = gw.dataMsgCount + 1
                 gw.save()
 
             if (node_validate(cPayload[1]) and node_validate(cPayload[0])):
@@ -150,6 +152,7 @@ def mqtt_on_message(client, userdata, msg):
                     nd.msgReceived()
                     nd.lastStatus = sPayload
                     nd.jsonLoad(sPayload)
+                    nd.dataMsgCount = nd.dataMsgCount + 1
                     nd.save()
                 else:
                   #print("Gateway not in topic")
@@ -160,6 +163,8 @@ def mqtt_on_message(client, userdata, msg):
                       gw.msgReceived()
                       gw.lastStatus = sPayload
                       gw.jsonLoad(sPayload)
+                      gw.dataMsgCount = gw.dataMsgCount + 1
+                      
                       gw.save()
             except Exception as e:
               print(e)
@@ -176,6 +181,7 @@ def mqtt_on_message(client, userdata, msg):
           nd.msgReceived()
           nd.lastData = sPayload
           nd.jsonLoad(sPayload)
+          nd.dataMsgCount = nd.dataMsgCount + 1
 
           try:
             tm = Team.objects.get(teamID = cTopic[0])
