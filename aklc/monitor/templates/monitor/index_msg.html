@@ -15,9 +15,7 @@ Message Type list
           <a href="{% url 'monitor:msgDetail' msg.id %}">{{ msg.msgName }}</a>
         {% endfor %}
       </div>
-    {% else %}
-      <p>No gateways defined</p>>
-    {% endif %} 
+    {% endif %}
   </div>
   <div id="msg_add_button" class="action_button">
       <a href="{% url 'monitor:msgAdd' %}" class="btn btn-info" role="button">Add message</a>

@@ -92,9 +92,50 @@ def mqtt_on_message(client, userdata, msg):
         # Check types of message from the topic
         #print("Subtopic = |{}|".format(cTopic[1]))
         if cTopic[1] == "Status":         # Status messages from Gateways, data in CSV format
-          x = 1                           # Just a placeholder at this time
-        elif cTopic[1] == "Gateway":      # Data message passed on by gateway, data in CSV format
+          print("Gateway status message received")
+          cPayload = sPayload.split(",")   # the payload should be CSV
+          try:
+            node = Node.objects.get(nodeID = cPayload[0])   # Lets 
+            print("Gateway {} found".format(node.nodeID))
 
+            if node.messagetype:
+              print("Messagetype found")
+
+              jStr = {}   # create empty dict
+              print(cPayload)
+              for mItem in node.messagetype.messageitem_set.all():
+                #print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
+                # some validation here
+
+                if mItem.order > len(cPayload):
+                  print("Too many items in message type record for the payload, oder is {}".format(mItem.order))
+                  break
+
+                try:
+                  if mItem.fieldType == 'I':
+                    jStr[mItem.name] = int(cPayload[mItem.order-1])
+                  elif mItem.fieldType == 'F':
+                    jStr[mItem.name] = float(cPayload[mItem.order-1])
+                  else:
+                    jStr[mItem.name] = cPayload[mItem.order-1]
+                except Exception as e:
+                  print(e)
+
+              #print(jStr)
+              print("Heres the JSON string {}".format(json.dumps(jStr)))
+
+              if node.thingsboardUpload:
+                mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
+                    hostname = eTB_host, port = eTB_port, 
+                    auth = {'username':node.thingsboardCred})
+
+          except Exception as e:
+            print(e)
+            print("Cant find {} in database, error is {}".format(cPayload[1], e))  
+
+
+        elif cTopic[1] == "Gateway":      # Data message passed on by gateway, data in CSV format
+          
           cPayload = sPayload.split(",")   # the payload should be CSV
           try:
             node = Node.objects.get(nodeID = cPayload[1])   # Lets 
@@ -168,7 +209,7 @@ def mqtt_updater():
     """ The main program that sends updates to the MQTT system
     """
 
-    print("Start Updater")
+    print("Start Updater v1.1")
 
     print(eMqtt_client_id)
     print(eMqtt_host)

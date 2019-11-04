@@ -107,6 +107,7 @@ Node Details
         {% endif %}
       </div>
     </div>
+    
     {% if "MessageClassEditor" in user.groups.all.0.name %}
       <div id="node_notify" class="content_block"> 
         <div id="node_message_table">
@@ -124,8 +125,7 @@ Node Details
           <a href="{% url 'monitor:nodeMsgUpdate' node.id %}" class="btn btn-info" role="button">Auto Update control</a>
         </div>
       </div>
-      
-    
+  
     {% endif %}
   
   </div>

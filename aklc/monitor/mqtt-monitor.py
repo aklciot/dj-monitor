@@ -89,7 +89,7 @@ def mqtt_on_message(client, userdata, msg):
                 gw.save()
 
         elif cTopic[1] == "Gateway":
-            # These are messages from nodes sent on by a gateway, payload should be CSV
+            # These are data messages from nodes sent on by a gateway, payload should be CSV
             #print("Gateway message received")
             cPayload = sPayload.split(",")   # the payload should be CSV
             

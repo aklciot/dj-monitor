@@ -91,9 +91,27 @@ Node Details
         {% endif %}
       </div>
     </div>
- 
-  
   </div>
+
+  {% if "MessageClassEditor" in user.groups.all.0.name %}
+  <div id="node_notify" class="content_block"> 
+    <div id="node_message_table">
+      <table>
+        <tr><th>Auto update information: </th></tr>
+        <tr><td>Message Type : </td><td>{{gateway.messagetype.msgName}}</td></tr>
+        <tr><td>Update Thingsboard : </td><td>{{gateway.thingsboardUpload}}</td></tr>
+        <tr><td>Thingsboard credentials: </td><td>{{gateway.thingsboardCred}}</td></tr>
+        <tr><td>Location override: </td><td>{{gateway.locationOverride}}</td></tr>
+        <tr><td>Project override: </td><td>{{gateway.projectOverride}}</td></tr>
+      </table>
+    </div>
+
+    <div id="node_notify_button" class="action_button">
+      <a href="{% url 'monitor:nodeMsgUpdate' gateway.id %}" class="btn btn-info" role="button">Auto Update control</a>
+    </div>
+  </div>
+  
+{% endif %}
 
   <a href="{% url 'monitor:index_gw' %}" class="btn btn-info" role="button">Home</a>
  

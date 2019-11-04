@@ -39,7 +39,8 @@ class MessageItem(models.Model):
     name = models.CharField(max_length=15, help_text="The element name, will be used in JSON messages")
     order = models.IntegerField()
     fieldType = models.CharField(max_length=1, help_text="Field type can be 'S': string, 'I': integer, 'F': float", choices= FIELD_TYPE_CHOICES )
-
+    isTag = models.BooleanField(blank=True, default=False, help_text="Use as a tag when uploading to Influx")
+    
     class Meta:
         ordering = ["order"]
         verbose_name = "Message Item"
