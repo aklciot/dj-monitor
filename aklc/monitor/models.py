@@ -73,8 +73,7 @@ class Node(models.Model):
     battLevel = models.FloatField(default = 0.0)
     battWarn = models.FloatField(default = 0.0, help_text="The battery level, below which warning message are generated")
     battCritical = models.FloatField(default = 0.0, help_text="The battery level, below which critical warning message are generated")
-    dataMsgCount = models.IntegerField(default=0)
-    dataMsgCountSinceStart = models.IntegerField(default=0)
+    #dataMsgCount = models.IntegerField(default=0)
     uptime = models.FloatField(default=0)
     RSSI = models.FloatField(default = 0.0)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
@@ -160,6 +159,26 @@ class Node(models.Model):
             else:
                 print("Invalid data for RSSI, recieved '{}'".format(jPayload["RSSI"]))
         return()
+    
+    def incrementMsgCnt(self):
+        """
+        Function increases message count for current node by 1
+        If new hour send update to influxdb
+        """
+        
+        tDate = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+        aStat = self.nodemsgstats_set.all().filter(dt = tDate, hr = tDate.hour)
+               
+        if len(aStat) == 0:
+            nMsg = NodeMsgStats(node=self, dt = tDate, hr = tDate.hour)
+            nMsg.msgCount = 1
+            nMsg.save()
+        else:
+            nMsg = aStat[0]
+            nMsg.msgCount = nMsg.msgCount + 1
+            nMsg.save()
+
+        return()
 
 class NodeUser(models.Model):
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
@@ -200,4 +219,14 @@ class NodeGateway(models.Model):
         return("Node : {}, Gateway : {}".format(self.nodeID, self.gatewayID))
 
 
+class NodeMsgStats(models.Model):
+    """
+    This message type collects data on the number of messages sent or relayed by a node or gateway
+    """
+    node = models.ForeignKey(Node, on_delete=models.CASCADE)
+    dt = models.DateField()
+    hr = models.IntegerField()
+    msgCount = models.IntegerField(default = 0)
 
+    def __str__(self):
+        return("{}: {} : {}".format(self.node.nodeID, self.dt, self.hr))
