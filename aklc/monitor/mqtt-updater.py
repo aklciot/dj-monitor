@@ -273,7 +273,8 @@ def mqtt_updater():
         #print("No need to send updates")
         x = 1
       else:
-        print("Time to send radio stats")    
+        print("Time to send radio stats")
+        tDate2 = timezone.make_aware(datetime.datetime.now() - datetime.timedelta(minutes=5), timezone.get_current_timezone())
         aStat = NodeMsgStats.objects.all().filter(dt = tDate, hr = tDate.hour)
 
         #aStats = NodeMsgStats.objects.all().filter()
