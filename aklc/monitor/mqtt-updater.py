@@ -5,6 +5,8 @@ from django.conf import settings
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 
+from influxdb import InfluxDBClient
+
 import json
 import datetime
 import time
@@ -18,7 +20,7 @@ sys.path.append("/code/aklc")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aklc.settings")
 django.setup()
 
-from monitor.models import Node, Profile, NodeUser, Team, NodeGateway, MessageType, MessageItem
+from monitor.models import Node, Profile, NodeUser, Team, NodeGateway, MessageType, MessageItem, NodeMsgStats
 from django.contrib.auth.models import User
 
 # all config parameters are set as environment variables, best practice in docker environment
@@ -31,6 +33,12 @@ eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "iotiscool")
 eTB_host = os.getenv("AKLC_TB_HOST", "thingsboard.innovateauckland.nz")
 eTB_port = os.getenv("AKLC_TB_PORT", 8080)
 eTB_topic = "v1/devices/me/telemetry"
+
+eInflux_host = os.getenv("AKLC_INFLUX_HOST", "172.20.0.2")
+eInflux_port = os.getenv("AKLC_INFLUX_PORT", 8086)
+eInflux_user = os.getenv("AKLC_INFLUX_USER", "aklciot")
+eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
+eInflux_db = os.getenv("AKLC_INFLUX_DB", "influx")
 
 # ********************************************************************
 """
@@ -234,9 +242,87 @@ def mqtt_updater():
     # used to manage mqtt subscriptions
     client.loop_start()
 
+
+    #get any pickled stats update data
+    try:
+        statsPfile = open("stats.pkl", 'rb')
+        stats_data = pickle.load(statsPfile)
+        print("Pickled statsn read")
+        statsPfile.close()
+    except:
+        print("Stats pickle file not found")
+        # not found, set last date in the past so we get an update now
+        stats_data = {"LastStats": datetime.datetime.now() + datetime.timedelta(days = -3)}
+
+    #InClient = InfluxDBClient(host='influxdb', port=8086, username='aklciot', password='iotiscool', database='aklc')
+    InClient = InfluxDBClient(host=eInflux_host, port=eInflux_port, username=eInflux_user, password=eInflux_pw, database=eInflux_db)
+    print("Influx connection details - host: {}, port: {}, user: {}, password: {}, database: {}".format(eInflux_host, 
+        eInflux_port, eInflux_user, eInflux_pw, eInflux_db))
+    aDb = InClient.get_list_database()
+    print(aDb)
+    InClient.switch_database('aklc')
+
+
     while True:
       time.sleep(1)
-      
+
+      #check if we need to send stats
+      tDate = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+
+      if (stats_data["LastStats"].day == tDate.day) and (stats_data["LastStats"].hour == tDate.hour):
+        #print("No need to send updates")
+        x = 1
+      else:
+        print("Time to send radio stats")    
+        aStat = NodeMsgStats.objects.all().filter(dt = tDate, hr = tDate.hour)
+
+        #aStats = NodeMsgStats.objects.all().filter()
+        radioTot = 0
+        radioNodes = 0
+        for s in aStat:
+          json_body = [
+            {
+            "measurement": "radio_stats",
+            "tags": {
+              "nodeID": s.node.nodeID,
+             },
+            "fields": {
+                "radioCount": s.msgCount,
+              },
+            }
+          ]
+          print(json_body)
+          InClient.write_points(json_body)
+          radioTot = radioTot + s.msgCount
+          radioNodes = radioNodes + 1
+
+        # Now send totals
+        json_body = [
+          {
+           "measurement": "radio_stats",
+           "tags": {
+            "nodeID": "AllNodes",
+           },
+            "fields": {
+              "radioCount": radioTot,
+              "radioNodes": radioNodes,
+            },
+          }
+        ]
+        # Write the totals
+        InClient.write_points(json_body)
+
+        # Save the time we sent to stats
+        stats_data["LastStats"] = tDate
+        try:
+          statsPfile = open("stats.pkl", 'wb')
+          pickle.dump(stats_data, statsPfile)
+          statsPfile.close()
+        except Exception as e:
+          print(e)
+          print("Stats Pickle failed")
+
+
 
 #********************************************************************
 if __name__ == "__main__":
