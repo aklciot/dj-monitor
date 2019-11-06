@@ -159,7 +159,7 @@ def mqtt_on_message(client, userdata, msg):
                 # some validation here
 
                 if mItem.order > len(cPayload):
-                  print("Too many items in message type record for the payload, oder is {}".format(mItem.order))
+                  print("Too many items in message type record for the payload, order is {}".format(mItem.order))
                   break
 
                 try:
@@ -296,6 +296,13 @@ def mqtt_updater():
           InClient.write_points(json_body)
           radioTot = radioTot + s.msgCount
           radioNodes = radioNodes + 1
+
+          if s.node.thingsboardUpload:
+            jStr = {}   # create empty dict
+            jStr['radioCount'] = s.msgCount
+            mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
+                hostname = eTB_host, port = eTB_port, 
+                auth = {'username':s.node.thingsboardCred})
 
         # Now send totals
         json_body = [
