@@ -275,7 +275,7 @@ def mqtt_updater():
       else:
         print("Time to send radio stats")
         tDate2 = timezone.make_aware(datetime.datetime.now() - datetime.timedelta(minutes=5), timezone.get_current_timezone())
-        aStat = NodeMsgStats.objects.all().filter(dt = tDate, hr = tDate.hour)
+        aStat = NodeMsgStats.objects.all().filter(dt = tDate2, hr = tDate2.hour)
 
         #aStats = NodeMsgStats.objects.all().filter()
         radioTot = 0
@@ -323,7 +323,7 @@ def mqtt_updater():
         InClient.write_points(json_body)
 
         # Save the time we sent to stats
-        stats_data["LastStats"] = tDate
+        stats_data["LastStats"] = tDate2
         try:
           statsPfile = open("stats.pkl", 'wb')
           pickle.dump(stats_data, statsPfile)
