@@ -280,6 +280,9 @@ def mqtt_updater():
         #aStats = NodeMsgStats.objects.all().filter()
         radioTot = 0
         radioNodes = 0
+        gatewayTot = 0
+        radioGw = 0
+        print("Number of stat nodes is {}".format(len(aStat)))
         for s in aStat:
           json_body = [
             {
@@ -294,19 +297,31 @@ def mqtt_updater():
           ]
           print(json_body)
           InClient.write_points(json_body)
-          radioTot = radioTot + s.msgCount
-          radioNodes = radioNodes + 1
+          if s.node.isGateway:
+            radioTot = radioTot + s.msgCount
+            radioNodes = radioNodes + 1
+          else:
+            gatewayTot = gatewayTot + s.msgCount
+            radioGw = radioGw + 1
 
-          if s.node.thingsboardUpload:
-            print("Send radio stat message to {}".format(s.node.nodeID))
-            jStr = {}   # create empty dict
-            jStr['radioCount'] = s.msgCount
-            print("Payload is {}".format(json.dumps(jStr)))
-            mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
-                hostname = eTB_host, port = eTB_port, 
-                auth = {'username':s.node.thingsboardCred})
+          
+          try:
+            if s.node.thingsboardUpload:
+              print("Send radio stat message to {}".format(s.node.nodeID))
+              jStr = {}   # create empty dict
+              jStr['radioCount'] = s.msgCount
+              
+              print("Heres the JSON string {}".format(json.dumps(jStr)))
+
+              #mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
+              #      hostname = eTB_host, port = eTB_port, 
+              #      auth = {'username':s.node.thingsboardCred})
+          except Exception as e:
+            print(e)
+          
 
         # Now send totals
+        print("Send totals now")
         json_body = [
           {
            "measurement": "radio_stats",
@@ -316,11 +331,15 @@ def mqtt_updater():
             "fields": {
               "radioCount": radioTot,
               "radioNodes": radioNodes,
+              "gatewayCount": gatewayTot,
+              "radioGateways": radioGw,
             },
           }
         ]
         # Write the totals
+        
         InClient.write_points(json_body)
+        print(json_body)
 
         # Save the time we sent to stats
         stats_data["LastStats"] = tDate2
@@ -328,6 +347,7 @@ def mqtt_updater():
           statsPfile = open("stats.pkl", 'wb')
           pickle.dump(stats_data, statsPfile)
           statsPfile.close()
+          print("Write date {} to pickle file".format(tDate2))
         except Exception as e:
           print(e)
           print("Stats Pickle failed")
