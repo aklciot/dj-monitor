@@ -298,8 +298,10 @@ def mqtt_updater():
           radioNodes = radioNodes + 1
 
           if s.node.thingsboardUpload:
+            print("Send radio stat message to {}".format(s.node.nodeID))
             jStr = {}   # create empty dict
             jStr['radioCount'] = s.msgCount
+            print("Payload is {}".format(json.dumps(jStr)))
             mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
                 hostname = eTB_host, port = eTB_port, 
                 auth = {'username':s.node.thingsboardCred})
