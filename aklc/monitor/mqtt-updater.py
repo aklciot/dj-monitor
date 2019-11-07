@@ -56,11 +56,11 @@ def mqtt_on_connect(client, userdata, flags, rc):
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
-    #aTeams = Team.objects.all()
-    #for t in aTeams:
-    #  sub_topic = t.teamID + "/#"
-    #  print(sub_topic)
-    #  client.subscribe(sub_topic)
+    aTeams = Team.objects.all()
+    for t in aTeams:
+      sub_topic = t.teamID + "/#"
+      print("MQTT Subscribed to {}".format(sub_topic))
+      client.subscribe(sub_topic)
 
 
 #********************************************************************
@@ -116,7 +116,7 @@ def mqtt_on_message(client, userdata, msg):
                 # some validation here
 
                 if mItem.order > len(cPayload):
-                  print("Too many items in message type record for the payload, oder is {}".format(mItem.order))
+                  print("Too many items in message type record for the payload, order is {}".format(mItem.order))
                   break
 
                 try:
@@ -210,7 +210,31 @@ def mqtt_on_message(client, userdata, msg):
 
     else:     # not AKLC, a team subscription
       x = 1
+      
+      # the payload is expected to be json
+      jPayload = json.loads(sPayload)
+      #print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
+      #print("The NodeID is {}".format(jPayload["NodeID"]))
+      if "NodeID" in jPayload:
+        try:
+          nd, created = Node.objects.get_or_create(nodeID = jPayload["NodeID"])
+          nd.msgReceived()
+          nd.lastData = sPayload
+          nd.jsonLoad(sPayload)
+          nd.incrementMsgCnt()
+          try:
+            tm = Team.objects.get(teamID = cTopic[0])
+            nd.team = tm
+          except:
+            print("team {} not found".format(cTopic[0]))
 
+          nd.save()
+          #print(nd.team.teamID)
+          #print("Processed data for {}".format(nd.nodeID))
+        except Exception as e:
+          print("Team error ".format())
+          print(e)
+        
 
 #******************************************************************
 def mqtt_updater():
@@ -273,16 +297,16 @@ def mqtt_updater():
         #print("No need to send updates")
         x = 1
       else:
-        print("Time to send radio stats")
+        print("Time to send radio stats, pickle date is {}, current date is {}".format(stats_data["LastStats"], tDate))
         tDate2 = timezone.make_aware(datetime.datetime.now() - datetime.timedelta(minutes=5), timezone.get_current_timezone())
         aStat = NodeMsgStats.objects.all().filter(dt = tDate2, hr = tDate2.hour)
-
+        print("Date used to get data is {}".format(tDate2))
         #aStats = NodeMsgStats.objects.all().filter()
         radioTot = 0
         radioNodes = 0
         gatewayTot = 0
         radioGw = 0
-        print("Number of stat nodes is {}".format(len(aStat)))
+        #print("Number of stat nodes is {}".format(len(aStat)))
         for s in aStat:
           json_body = [
             {
@@ -295,7 +319,7 @@ def mqtt_updater():
               },
             }
           ]
-          print(json_body)
+          #print(json_body)
           InClient.write_points(json_body)
           if s.node.isGateway:
             radioTot = radioTot + s.msgCount
@@ -307,7 +331,7 @@ def mqtt_updater():
           
           try:
             if s.node.thingsboardUpload:
-              print("Send radio stat message to {}".format(s.node.nodeID))
+              print("Send radio stat message to Thingsboard for {}".format(s.node.nodeID))
               jStr = {}   # create empty dict
               jStr['radioCount'] = s.msgCount
               
@@ -339,15 +363,15 @@ def mqtt_updater():
         # Write the totals
         
         InClient.write_points(json_body)
-        print(json_body)
+        #print(json_body)
 
         # Save the time we sent to stats
-        stats_data["LastStats"] = tDate2
+        stats_data["LastStats"] = tDate
         try:
           statsPfile = open("stats.pkl", 'wb')
           pickle.dump(stats_data, statsPfile)
           statsPfile.close()
-          print("Write date {} to pickle file".format(tDate2))
+          print("Write date {} to pickle file".format(tDate))
         except Exception as e:
           print(e)
           print("Stats Pickle failed")
