@@ -33,7 +33,7 @@ class MessageTypeDetailForm(forms.ModelForm):
 class MessageItemDetailForm(forms.ModelForm):
     class Meta:
         model = MessageItem
-        fields = ['order', 'name', 'fieldType']
+        fields = ['order', 'name', 'isTag', 'fieldType',  ]
         widgets = {
             'fieldType': forms.TextInput(attrs={'size': 1}),
         }

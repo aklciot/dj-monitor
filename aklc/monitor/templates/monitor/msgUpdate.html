@@ -16,10 +16,10 @@ Message type update
           <table>
             {{ form.as_table }}
 
-            <tr><th>Order</th><th>Name</th><th>Type of Data</th></tr>
+            <tr><th>Order</th><th>Name</th><th>Type of Data</th><th>Influx tag</th><th>Delete</th></tr>
 
             {% for itm in fItems %}
-              <tr><td>{{ itm.order }}</td><td>{{ itm.name }}</td><td>{{ itm.fieldType }}</td><td>{{ itm.DELETE }}</td><td>{{ itm.id }}</td><td>{{ itm.errors }}</td></tr>
+              <tr><td>{{ itm.order }}</td><td>{{ itm.name }}</td><td>{{ itm.fieldType }}</td><td>{{ itm.isTag }}</td><td>{{ itm.DELETE }}</td><td>{{ itm.id }}</td><td>{{ itm.errors }}</td></tr>
             {% endfor %}
 
           </table>

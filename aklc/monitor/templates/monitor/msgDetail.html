@@ -14,8 +14,9 @@ Node Details
           <tr><th>Message Name: </th><th>{{ msg.msgName }}</th></tr>
           <tr><td>Description: </td><td class = "wrap_cell">{{ msg.descr }}</td></tr>
           <tr><td>Data items: </td></tr>
+          <tr><th>Order</th><th>Name</th><th>Field type</th><th>Influx tag</th></tr>
           {% for item in msgItems %}
-            <tr><td>{{ item.order }}</td><td>{{ item.name }}</td><td>{{ item.fieldType }}</td></tr>
+            <tr><td>{{ item.order }}</td><td>{{ item.name }}</td><td>{{ item.fieldType }}</td><td>{{ item.isTag }}</td></tr>
           {% endfor %}
         </table>
       </div>

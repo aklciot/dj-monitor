@@ -100,17 +100,17 @@ def mqtt_on_message(client, userdata, msg):
         # Check types of message from the topic
         #print("Subtopic = |{}|".format(cTopic[1]))
         if cTopic[1] == "Status":         # Status messages from Gateways, data in CSV format
-          print("Gateway status message received")
+          #print("Gateway status message received")
           cPayload = sPayload.split(",")   # the payload should be CSV
           try:
             node = Node.objects.get(nodeID = cPayload[0])   # Lets 
-            print("Gateway {} found".format(node.nodeID))
+            #print("Gateway {} found".format(node.nodeID))
 
             if node.messagetype:
-              print("Messagetype found")
+              #print("Messagetype found")
 
               jStr = {}   # create empty dict
-              print(cPayload)
+              #print(cPayload)
               for mItem in node.messagetype.messageitem_set.all():
                 #print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
                 # some validation here
@@ -130,7 +130,7 @@ def mqtt_on_message(client, userdata, msg):
                   print(e)
 
               #print(jStr)
-              print("Heres the JSON string {}".format(json.dumps(jStr)))
+              #print("Heres the JSON string {}".format(json.dumps(jStr)))
 
               if node.thingsboardUpload:
                 mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
@@ -147,13 +147,13 @@ def mqtt_on_message(client, userdata, msg):
           cPayload = sPayload.split(",")   # the payload should be CSV
           try:
             node = Node.objects.get(nodeID = cPayload[1])   # Lets 
-            print("Node {} found".format(node.nodeID))
+            #print("Node {} found".format(node.nodeID))
 
             if node.messagetype:
               #print("Messagetype found")
 
               jStr = {}   # create empty dict
-              print(cPayload)
+              #print(cPayload)
               for mItem in node.messagetype.messageitem_set.all():
                 #print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
                 # some validation here
@@ -173,7 +173,7 @@ def mqtt_on_message(client, userdata, msg):
                   print(e)
 
               #print(jStr)
-              print("Heres the JSON string {}".format(json.dumps(jStr)))
+              #print("Heres the JSON string {}".format(json.dumps(jStr)))
 
               if node.thingsboardUpload:
                 mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
@@ -210,31 +210,41 @@ def mqtt_on_message(client, userdata, msg):
 
     else:     # not AKLC, a team subscription
       x = 1
-      
+      print("TEAM message received")
       # the payload is expected to be json
       jPayload = json.loads(sPayload)
       #print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
       #print("The NodeID is {}".format(jPayload["NodeID"]))
       if "NodeID" in jPayload:
         try:
-          nd, created = Node.objects.get_or_create(nodeID = jPayload["NodeID"])
-          nd.msgReceived()
-          nd.lastData = sPayload
-          nd.jsonLoad(sPayload)
-          nd.incrementMsgCnt()
-          try:
-            tm = Team.objects.get(teamID = cTopic[0])
-            nd.team = tm
-          except:
-            print("team {} not found".format(cTopic[0]))
-
-          nd.save()
-          #print(nd.team.teamID)
-          #print("Processed data for {}".format(nd.nodeID))
+          nd = Node.objects.get(nodeID = jPayload["NodeID"])
+          influx_body(sPayload, nd)
         except Exception as e:
-          print("Team error ".format())
+          print("Team error {}".format())
           print(e)
-        
+
+def influx_body(inPayload, inNode):
+  """
+  Function to generate a influx JSON update message
+  """
+  jsonBody = ""
+  jPayload = json.loads(inPayload)
+  tags = {}
+  # Check if there is a message type for this node
+  if inNode.messagetype:
+    x = 1
+    print("Has associated message type")
+  else:
+    #print("Incoming payload is |{}|".format(inPayload))
+    print("Incoming JSON payload is |{}|".format(jPayload))
+    if "Gateway" in jPayload:
+      tags["Gateway"] = jPayload["Gateway"]
+      jPayload.pop["Gateway"]
+      print("Convert gateway")
+    print("JSON payload is now |{}|, and tags is {}".format(jPayload, tags))
+
+
+  return(jsonBody)
 
 #******************************************************************
 def mqtt_updater():
@@ -322,12 +332,11 @@ def mqtt_updater():
           #print(json_body)
           InClient.write_points(json_body)
           if s.node.isGateway:
-            radioTot = radioTot + s.msgCount
-            radioNodes = radioNodes + 1
-          else:
             gatewayTot = gatewayTot + s.msgCount
             radioGw = radioGw + 1
-
+          else:
+            radioTot = radioTot + s.msgCount
+            radioNodes = radioNodes + 1
           
           try:
             if s.node.thingsboardUpload:
@@ -363,7 +372,7 @@ def mqtt_updater():
         # Write the totals
         
         InClient.write_points(json_body)
-        #print(json_body)
+        print(json_body)
 
         # Save the time we sent to stats
         stats_data["LastStats"] = tDate
