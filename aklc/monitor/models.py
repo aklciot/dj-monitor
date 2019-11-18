@@ -98,9 +98,9 @@ class Node(models.Model):
         Nodes, the gateways they have used
         """
         if self.isGateway:
-            passAll = NodeGateway.objects.filter(gatewayID = self)
+            passAll = NodeGateway.objects.filter(gatewayID = self).order_by('-lastdata')
         else:
-            passAll = NodeGateway.objects.filter(nodeID = self)
+            passAll = NodeGateway.objects.filter(nodeID = self).order_by('-lastdata')
         passAll = passAll.filter(lastdata__gte=(timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=7)))
         return(passAll)
 

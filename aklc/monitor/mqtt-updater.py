@@ -93,49 +93,41 @@ def mqtt_on_message(client, userdata, msg):
     
     # get the payload as a string
     sPayload = msg.payload.decode()
+    cPayload = sPayload.split(",")   # should the payload should be CSV
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
         #print("Aklc message received, topic {}, payload {}".format(msg.topic, msg.payload))
         # Check types of message from the topic
-        #print("Subtopic = |{}|".format(cTopic[1]))
+
         if cTopic[1] == "Status":         # Status messages from Gateways, data in CSV format
-          #print("Gateway status message received")
-          cPayload = sPayload.split(",")   # the payload should be CSV
+          print("AKLC Status message received, payload is {}".format(sPayload))
+          
           try:
             node = Node.objects.get(nodeID = cPayload[0])   # Lets 
             #print("Gateway {} found".format(node.nodeID))
 
             if node.messagetype:
+              jOut = csv_to_json(cPayload, node)
               #print("Messagetype found")
 
-              jStr = {}   # create empty dict
-              #print(cPayload)
-              for mItem in node.messagetype.messageitem_set.all():
-                #print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
-                # some validation here
-
-                if mItem.order > len(cPayload):
-                  print("Too many items in message type record for the payload, order is {}".format(mItem.order))
-                  break
-
-                try:
-                  if mItem.fieldType == 'I':
-                    jStr[mItem.name] = int(cPayload[mItem.order-1])
-                  elif mItem.fieldType == 'F':
-                    jStr[mItem.name] = float(cPayload[mItem.order-1])
-                  else:
-                    jStr[mItem.name] = cPayload[mItem.order-1]
-                except Exception as e:
-                  print(e)
-
-              #print(jStr)
-              #print("Heres the JSON string {}".format(json.dumps(jStr)))
-
               if node.thingsboardUpload:
-                mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
+                #print("Thingsboard upload")
+                mRes = publish.single(topic = eTB_topic, payload = json.dumps(jOut['jStr']), 
                     hostname = eTB_host, port = eTB_port, 
                     auth = {'username':node.thingsboardCred})
+
+              if node.influxUpload:
+                #print("Influx gateway upload")
+                json_body = [
+                  {
+                    "measurement": "Gateway",
+                    "tags": jOut['jTags'],
+                    "fields": jOut['jData'],
+                  }
+                ]
+
+                InClient.write_points(json_body)
 
           except Exception as e:
             print(e)
@@ -143,40 +135,34 @@ def mqtt_on_message(client, userdata, msg):
 
 
         elif cTopic[1] == "Gateway":      # Data message passed on by gateway, data in CSV format
+          print("AKLC Gateway message received, payload is {}".format(sPayload))
           
-          cPayload = sPayload.split(",")   # the payload should be CSV
           try:
             node = Node.objects.get(nodeID = cPayload[1])   # Lets 
             #print("Node {} found".format(node.nodeID))
 
             if node.messagetype:
               #print("Messagetype found")
+              jOut = csv_to_json(cPayload, node)
 
-              jStr = {}   # create empty dict
-              #print(cPayload)
-              for mItem in node.messagetype.messageitem_set.all():
-                #print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
-                # some validation here
+              if node.influxUpload:
+                if node.team:
+                  cTeam = node.team.teamID
+                else:
+                  cTeam = "unknown"
+                json_body = [
+                  {
+                    "measurement": cTeam,
+                    "tags": jOut['jTags'],
+                    "fields": jOut['jData'],
+                  }
+                ]
 
-                if mItem.order > len(cPayload):
-                  print("Too many items in message type record for the payload, order is {}".format(mItem.order))
-                  break
-
-                try:
-                  if mItem.fieldType == 'I':
-                    jStr[mItem.name] = int(cPayload[mItem.order-1])
-                  elif mItem.fieldType == 'F':
-                    jStr[mItem.name] = float(cPayload[mItem.order-1])
-                  else:
-                    jStr[mItem.name] = cPayload[mItem.order-1]
-                except Exception as e:
-                  print(e)
-
-              #print(jStr)
-              #print("Heres the JSON string {}".format(json.dumps(jStr)))
+                InClient.write_points(json_body)
 
               if node.thingsboardUpload:
-                mRes = publish.single(topic = eTB_topic, payload = json.dumps(jStr), 
+                #print("Thingsboard upload")
+                mRes = publish.single(topic = eTB_topic, payload = json.dumps(jOut['jStr']), 
                     hostname = eTB_host, port = eTB_port, 
                     auth = {'username':node.thingsboardCred})
 
@@ -184,72 +170,155 @@ def mqtt_on_message(client, userdata, msg):
             print(e)
             print("Cant find {} in database, error is {}".format(cPayload[1], e))  
 
-        elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
-          x =1
-        elif cTopic[1] == "Node":         # These are data messages sent by directly by nodes. Data in JSON format
-          #print("NODE type message received, topic: {}, payload: {}".format(msg.topic, sPayload))
+        #elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
+        #  x =1
+        elif cTopic[1] == "Node" or cTopic[1] == "Network":         # These are JSON messages, both data & status
+          print("NODE/NETWORK type message received, topic: {}, payload: {}".format(msg.topic, sPayload))
 
-          try:
-            node = Node.objects.get(nodeID = cTopic[2])
-            #print("Node {} found".format(node.nodeID))
-            if node.thingsboardUpload and is_json(sPayload):
-              #print("Publish to TB")
-              if node.locationOverride:
-                jStr = json.loads(sPayload)
-                jStr['latitude'] = node.latitude
-                jStr['longitude'] = node.longitude
-                sPayload = json.dumps(jStr)
-              publish.single(topic = eTB_topic, payload = sPayload, 
-                    hostname = eTB_host, port = eTB_port, 
-                    auth = {'username':node.thingsboardCred})
-            else:
-              print("Data not published for {}".format(node.nodeID))
-          except Exception as e:
-            print(e)
+          if is_json(sPayload):           # these messages should always be JSON
+
+            try:
+              node = Node.objects.get(nodeID = cTopic[2])
+              if node.thingsboardUpload:
+                #print("Publish to TB")
+                if node.locationOverride:
+                  jStr = json.loads(sPayload)
+                  jStr['latitude'] = node.latitude
+                  jStr['longitude'] = node.longitude
+                  sPayload = json.dumps(jStr)
+                publish.single(topic = eTB_topic, payload = sPayload, 
+                      hostname = eTB_host, port = eTB_port, 
+                      auth = {'username':node.thingsboardCred})
+
+              if node.influxUpload:
+                jOut = json_for_influx(sPayload, node)
+                if node.team:
+                  sMeasure = node.team.teamID
+                elif 'project' in sPayload:
+                  sMeasure = sPayload['project']
+                else:
+                  sMeasure = "AKLC"
+                json_body = [
+                  {
+                    "measurement": sMeasure,
+                    "tags": jOut['jTags'],
+                    "fields": jOut['jData'],
+                  }
+                ]
+                #print("The payload for Influx is {}".format(json_body))
+                InClient.write_points(json_body)
+
+            except Exception as e:
+              print(e)
 
 
     else:     # not AKLC, a team subscription
-      x = 1
-      print("TEAM message received")
+      #print("TEAM message received")
       # the payload is expected to be json
+
       jPayload = json.loads(sPayload)
-      #print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
-      #print("The NodeID is {}".format(jPayload["NodeID"]))
+      print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
+      
       if "NodeID" in jPayload:
+        #print("The NodeID is {}".format(jPayload["NodeID"]))
         try:
-          nd = Node.objects.get(nodeID = jPayload["NodeID"])
-          influx_body(sPayload, nd)
+          node = Node.objects.get(nodeID = jPayload["NodeID"])
+
+          jOut = json_for_influx(sPayload, node)
+          json_body = [
+                  {
+                    "measurement": cTopic[0],
+                    "tags": jOut['jTags'],
+                    "fields": jOut['jData'],
+                  }
+                ]
+          #print("The payload for Influx is {}".format(json_body))
+          
+          InClient.write_points(json_body)
+          
+
         except Exception as e:
           print("Team error {}".format())
           print(e)
+        
 
-def influx_body(inPayload, inNode):
+#******************************************************************
+def json_for_influx(sPayload, nNode):
   """
-  Function to generate a influx JSON update message
+  Function evaluates a jason input and splits it into tags & fierlds for influx upload
   """
-  jsonBody = ""
-  jPayload = json.loads(inPayload)
-  tags = {}
-  # Check if there is a message type for this node
-  if inNode.messagetype:
-    x = 1
-    print("Has associated message type")
-  else:
-    #print("Incoming payload is |{}|".format(inPayload))
-    print("Incoming JSON payload is |{}|".format(jPayload))
-    if "Gateway" in jPayload:
-      tags["Gateway"] = jPayload["Gateway"]
-      jPayload.pop["Gateway"]
-      print("Convert gateway")
-    print("JSON payload is now |{}|, and tags is {}".format(jPayload, tags))
+  cTags = ['gateway', 'nodeid', 'location', 'latitude', 'longitude', 'repeater', 'project', 'software', 'version']
+  jTags = {}
+  jData = {}
+
+  jPayload = json.loads(sPayload)
+  
+  #print("json_for_influx entered, payload is {}".format(sPayload))
+
+  for jD in list(jPayload):
+    if jD.lower() in cTags:             #Then this must be a tag
+      jTags[jD] = jPayload[jD]
+    else:
+      jData[jD] = jPayload[jD]
+   
+  jOutput = {'jTags': jTags, 'jData': jData}
+  #print("jTags is {}\njData is {}".format(jOutput['jTags'], jOutput['jData'] ))
+  return(jOutput)
 
 
-  return(jsonBody)
+
+#******************************************************************
+def csv_to_json(cPayload, nNode):
+  """
+  Function converts a CSV payload to JSON for thingsboard & Influx based on data in the MesssageType record if it exists
+  """
+  
+  jStr = {}
+  jTags = {}
+  jData = {}
+  
+  #print("csv_to_json entered, payload is {}".format(cPayload))
+  for mItem in nNode.messagetype.messageitem_set.all():
+    #print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
+    # some validation here
+
+    if mItem.order > len(cPayload):
+      print("Too many items in message type record for the payload, order is {}".format(mItem.order))
+      break
+
+    try:
+      if mItem.fieldType == 'I':
+        val =  int(float(cPayload[mItem.order-1]))
+      elif mItem.fieldType == 'F':
+        val = float(cPayload[mItem.order-1])
+      else:
+        val = cPayload[mItem.order-1]
+      if nNode.locationOverride:
+        if mItem.name == 'latitude' or mItem.name == 'Latitude':
+          val = nNode.latitude
+        if mItem.name == 'longitude' or mItem.name == 'Longitude':
+          val = nNode.longitude
+    except Exception as e:
+      print(e)
+
+    jStr[mItem.name] = val
+    if mItem.isTag:
+      jTags[mItem.name] = val
+    else:
+      jData[mItem.name] = val
+
+  jOutput = {'jStr': jStr, 'jTags': jTags, 'jData': jData}
+  #print("jStr is {}\njTags is {}\njData is {}".format(jOutput['jStr'], jOutput['jTags'], jOutput['jData'] ))
+  return(jOutput)
+
+
+
 
 #******************************************************************
 def mqtt_updater():
     """ The main program that sends updates to the MQTT system
     """
+    global InClient
 
     print("Start Updater v1.1")
 
@@ -281,7 +350,7 @@ def mqtt_updater():
     try:
         statsPfile = open("stats.pkl", 'rb')
         stats_data = pickle.load(statsPfile)
-        print("Pickled statsn read")
+        print("Pickled stats read")
         statsPfile.close()
     except:
         print("Stats pickle file not found")

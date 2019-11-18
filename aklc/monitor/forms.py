@@ -41,7 +41,7 @@ class MessageItemDetailForm(forms.ModelForm):
 class NodeMessageForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['messagetype', 'thingsboardUpload', 'thingsboardCred', 'locationOverride', 'projectOverride']
+        fields = ['messagetype', 'thingsboardUpload', 'thingsboardCred', 'influxUpload', 'locationOverride', 'projectOverride']
         #widgets = {
         #    'thingsboardCred': forms.Textarea(attrs={'rows': 3}),
         #}
