@@ -232,7 +232,7 @@ def mqtt_on_message(client, userdata, msg):
                     "fields": jOut['jData'],
                   }
                 ]
-          #print("The payload for Influx is {}".format(json_body))
+          print("The payload for Influx is {}".format(json_body))
           
           InClient.write_points(json_body)
           
