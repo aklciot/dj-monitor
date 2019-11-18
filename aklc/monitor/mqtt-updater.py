@@ -217,7 +217,7 @@ def mqtt_on_message(client, userdata, msg):
       # the payload is expected to be json
 
       jPayload = json.loads(sPayload)
-      print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
+      #print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
       
       if "NodeID" in jPayload:
         #print("The NodeID is {}".format(jPayload["NodeID"]))
@@ -232,9 +232,9 @@ def mqtt_on_message(client, userdata, msg):
                     "fields": jOut['jData'],
                   }
                 ]
-          print("The payload for Influx is {}".format(json_body))
           
           InClient.write_points(json_body)
+          print("Influx updated from TEAM message, package is {}".format(json_body))
           
 
         except Exception as e:
