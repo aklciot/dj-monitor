@@ -101,7 +101,7 @@ def mqtt_on_message(client, userdata, msg):
         # Check types of message from the topic
 
         if cTopic[1] == "Status":         # Status messages from Gateways, data in CSV format
-          print("AKLC Status message received, payload is {}".format(sPayload))
+          #print("AKLC Status message received, payload is {}".format(sPayload))
           
           try:
             node = Node.objects.get(nodeID = cPayload[0])   # Lets 
@@ -135,7 +135,7 @@ def mqtt_on_message(client, userdata, msg):
 
 
         elif cTopic[1] == "Gateway":      # Data message passed on by gateway, data in CSV format
-          print("AKLC Gateway message received, payload is {}".format(sPayload))
+          #print("AKLC Gateway message received, payload is {}".format(sPayload))
           
           try:
             node = Node.objects.get(nodeID = cPayload[1])   # Lets 
