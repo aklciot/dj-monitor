@@ -173,16 +173,27 @@ def mqtt_on_message(client, userdata, msg):
         #elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
         #  x =1
         elif cTopic[1] == "Node" or cTopic[1] == "Network":         # These are JSON messages, both data & status
-          print("NODE/NETWORK type message received, topic: {}, payload: {}".format(msg.topic, sPayload))
+          #print("NODE/NETWORK type message received, topic: {}, payload: {}".format(msg.topic, sPayload))
 
           if is_json(sPayload):           # these messages should always be JSON
+            jStr = json.loads(sPayload)
+            # lets find the node name
+            if len(cTopic) > 2:
+              cNode = cTopic[2]
+            elif "Gateway" in jStr:
+              cNode = jStr["Gateway"]
+            elif "nodeID" in jStr:
+              cNode = jStr["Gateway"]
+            else:
+              print("No node info could be found, ignore message")
+              cNode = "XXXXXXXXX"
 
             try:
-              node = Node.objects.get(nodeID = cTopic[2])
+              node = Node.objects.get(nodeID = cNode)
+              print("Found node {}".format(cNode))
               if node.thingsboardUpload:
                 #print("Publish to TB")
                 if node.locationOverride:
-                  jStr = json.loads(sPayload)
                   jStr['latitude'] = node.latitude
                   jStr['longitude'] = node.longitude
                   sPayload = json.dumps(jStr)
@@ -210,6 +221,8 @@ def mqtt_on_message(client, userdata, msg):
 
             except Exception as e:
               print(e)
+          else:
+            print("Payload not JSON")
 
 
     else:     # not AKLC, a team subscription
@@ -234,9 +247,8 @@ def mqtt_on_message(client, userdata, msg):
                 ]
           
           InClient.write_points(json_body)
-          print("Influx updated from TEAM message, package is {}".format(json_body))
+          #print("Influx updated from TEAM message, package is {}".format(json_body))
           
-
         except Exception as e:
           print("Team error {}".format())
           print(e)
@@ -247,7 +259,7 @@ def json_for_influx(sPayload, nNode):
   """
   Function evaluates a jason input and splits it into tags & fierlds for influx upload
   """
-  cTags = ['gateway', 'nodeid', 'location', 'latitude', 'longitude', 'repeater', 'project', 'software', 'version']
+  cTags = ['gateway', 'nodeid', 'location', 'latitude', 'longitude', 'repeater', 'project', 'software', 'version', 'type']
   jTags = {}
   jData = {}
 
@@ -260,7 +272,24 @@ def json_for_influx(sPayload, nNode):
       jTags[jD] = jPayload[jD]
     else:
       jData[jD] = jPayload[jD]
-   
+  
+  #Location correction
+  if nNode.locationOverride:
+    if 'latitude' in jData:
+      jTags['latitude'] = nNode.latitude
+    elif 'Latitude' in jData:
+      jTags['Latitude'] = nNode.latitude
+    elif 'longitude' in jData:
+      jTags['longitude'] = nNode.longitude
+    elif 'Longitude' in jData:
+      jTags['Longitude'] = nNode.longitude
+  
+  if nNode.projectOverride:
+    if 'project' in jData:
+      jTags['project'] = nNode.topic
+    if 'Project' in jData:
+      jTags['Project'] = nNode.topic
+
   jOutput = {'jTags': jTags, 'jData': jData}
   #print("jTags is {}\njData is {}".format(jOutput['jTags'], jOutput['jData'] ))
   return(jOutput)
