@@ -230,10 +230,10 @@ def mqtt_on_message(client, userdata, msg):
       # the payload is expected to be json
 
       jPayload = json.loads(sPayload)
-      print("Team message arrived, topic is {}".format(msg.topic))
+      print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
       
       if "NodeID" in jPayload:
-        #print("The NodeID is {}".format(jPayload["NodeID"]))
+        print("The NodeID is {}".format(jPayload["NodeID"]))
         try:
           node = Node.objects.get(nodeID = jPayload["NodeID"])
 
