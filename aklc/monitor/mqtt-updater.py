@@ -325,7 +325,7 @@ def csv_to_json(cPayload, nNode):
 
     try:
       if mItem.fieldType == 'I':
-        val =  int(float(cPayload[mItem.order-1]))
+        val =  float(cPayload[mItem.order-1])
       elif mItem.fieldType == 'F':
         val = float(cPayload[mItem.order-1])
       else:
