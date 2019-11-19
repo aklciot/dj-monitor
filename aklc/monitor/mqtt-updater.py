@@ -203,7 +203,7 @@ def mqtt_on_message(client, userdata, msg):
                 print("Publish to TB {}".format(sPayload))
 
               if node.influxUpload:
-                print("Publish to Influx")
+                #print("Publish to Influx")
                 jOut = json_for_influx(sPayload, node)
                 if node.team:
                   sMeasure = node.team.teamID
@@ -232,13 +232,13 @@ def mqtt_on_message(client, userdata, msg):
       # the payload is expected to be json
 
       jPayload = json.loads(sPayload)
-      print("Team message arrived, topic is {}".format(msg.topic))
+      #print("Team message arrived, topic is {}".format(msg.topic))
       
       if "NodeID" in jPayload:
         print("The NodeID is {}".format(jPayload["NodeID"]))
         try:
           node = Node.objects.get(nodeID = jPayload["NodeID"])
-          print("Node retrieved")
+          #print("Node retrieved")
           jOut = json_for_influx(sPayload, node)
           json_body = [
                   {
@@ -275,7 +275,7 @@ def json_for_influx(sPayload, nNode):
     val = jPayload[jD]
     # convert all integers to float, better for Influx
     if val is int:
-      val = float(val)
+      val = val * 1.0
     if jD.lower() in cTags:             #Then this must be a tag
       jTags[jD] = val
     else:
