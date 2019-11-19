@@ -247,7 +247,7 @@ def mqtt_on_message(client, userdata, msg):
                 ]
           
           InClient.write_points(json_body)
-          #print("Influx updated from TEAM message, package is {}".format(json_body))
+          print("Influx updated from TEAM message, package is {}".format(json_body))
 
         except Exception as e:
           print("Team error {}".format())
