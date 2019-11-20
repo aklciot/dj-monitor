@@ -218,9 +218,10 @@ def mqtt_on_message(client, userdata, msg):
                     "fields": jOut['jData'],
                   }
                 ]
-                print("Publish to Influx {}".format(json_body))
+                
                 InClient.write_points(json_body)
-
+                print("Publish to Influx {}".format(json_body))
+                
             except Exception as e:
               print(e)
           else:
@@ -235,7 +236,7 @@ def mqtt_on_message(client, userdata, msg):
       #print("Team message arrived, topic is {}".format(msg.topic))
       
       if "NodeID" in jPayload:
-        print("The NodeID is {}".format(jPayload["NodeID"]))
+        #print("The NodeID is {}".format(jPayload["NodeID"]))
         try:
           node = Node.objects.get(nodeID = jPayload["NodeID"])
           #print("Node retrieved")
