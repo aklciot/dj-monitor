@@ -62,6 +62,7 @@ class Node(models.Model):
     topic = models.CharField(max_length=50, blank=True, null=True)
     descr = models.TextField(blank=True, null=True, help_text="")
     lastData = models.TextField(blank=True, null=True)
+    lastJSON = models.TextField(blank=True, null=True)
     lastStatus = models.TextField(blank=True, null=True)
     allowedDowntime = models.IntegerField(default=60, help_text="Minutes that the node can be 'unheard' before being marked as Offline")
     hardware = models.CharField(max_length=50, blank=True, null=True)

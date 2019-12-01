@@ -173,7 +173,7 @@ def mqtt_on_message(client, userdata, msg):
         #elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
         #  x =1
         elif cTopic[1] == "Node" or cTopic[1] == "Network":         # These are JSON messages, both data & status
-          #print("NODE/NETWORK type message received, topic: {}, payload: {}".format(msg.topic, sPayload))
+          print("NODE/NETWORK type message received, topic: {}, payload: {}".format(msg.topic, sPayload))
 
           if is_json(sPayload):           # these messages should always be JSON
             jStr = json.loads(sPayload)
@@ -358,9 +358,9 @@ def mqtt_updater():
     """
     global InClient
 
-    print("Start Updater v1.1")
+    print("Start Updater v1.2")
 
-    print(eMqtt_client_id)
+    #print(eMqtt_client_id)
     print(eMqtt_host)
     print(eMqtt_port)
 
