@@ -272,7 +272,7 @@ def json_for_influx(sPayload, nNode):
   """
   Function evaluates a jason input and splits it into tags & fierlds for influx upload
   """
-  cTags = ['gateway', 'nodeid', 'location', 'latitude', 'longitude', 'repeater', 'project', 'software', 'version', 'type']
+  cTags = ['gateway', 'nodeid', 'location', 'repeater', 'project', 'software', 'type']
   jTags = {}
   jData = {}
 
