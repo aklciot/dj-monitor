@@ -219,10 +219,8 @@ def mqtt_on_message(client, userdata, msg):
                   }
                 ]
 
-                print("Publish to Influx {}".format(json_body))                
-                if InClient.write_points(json_body):
-                  print("Influx update successful")
-                else:
+                #print("Publish to Influx {}".format(json_body))                
+                if not InClient.write_points(json_body):
                   print("Influx update failed")
 
                 
@@ -253,12 +251,9 @@ def mqtt_on_message(client, userdata, msg):
                   }
                 ]
 
-          print("Influx updated from TEAM message, package is {}".format(json_body))          
-          if InClient.write_points(json_body):
-            print("Influx update successful")
-          else:
+          #print("Influx updated from TEAM message, package is {}".format(json_body))          
+          if not InClient.write_points(json_body):
             print("Influx update failed")
-
 
         except Exception as e:
           print("Team error {}".format())
@@ -283,10 +278,14 @@ def json_for_influx(sPayload, nNode):
   for jD in list(jPayload):
     val = jPayload[jD]
     # convert all integers to float, better for Influx
-    if val is int:
+    if type(val) is int:
       val = val * 1.0
     if jD.lower() in cTags:             #Then this must be a tag
-      jTags[jD] = val
+      if type(val) is str:
+        jTags[jD] = val
+      else:
+        print("Tag value should be a string, {} vas a value of {} which is {}".format(jD, val, type(val)))
+        #jTags[jD] = val
     else:
       jData[jD] = val
   
