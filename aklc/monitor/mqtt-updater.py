@@ -185,7 +185,7 @@ def mqtt_on_message(client, userdata, msg):
             elif "nodeID" in jStr:
               cNode = jStr["Gateway"]
             else:
-              print("No node info could be found, ignore message")
+              #print("No node info could be found, ignore message")
               cNode = "XXXXXXXXX"
 
             try:
@@ -200,7 +200,7 @@ def mqtt_on_message(client, userdata, msg):
                 publish.single(topic = eTB_topic, payload = sPayload, 
                       hostname = eTB_host, port = eTB_port, 
                       auth = {'username':node.thingsboardCred})
-                print("Publish to TB {}".format(sPayload))
+                #print("Publish to TB {}".format(sPayload))
 
               if node.influxUpload:
                 #print("Publish to Influx")
@@ -218,9 +218,13 @@ def mqtt_on_message(client, userdata, msg):
                     "fields": jOut['jData'],
                   }
                 ]
-                
-                InClient.write_points(json_body)
-                print("Publish to Influx {}".format(json_body))
+
+                print("Publish to Influx {}".format(json_body))                
+                if InClient.write_points(json_body):
+                  print("Influx update successful")
+                else:
+                  print("Influx update failed")
+
                 
             except Exception as e:
               print(e)
@@ -248,9 +252,13 @@ def mqtt_on_message(client, userdata, msg):
                     "fields": jOut['jData'],
                   }
                 ]
-          
-          InClient.write_points(json_body)
-          print("Influx updated from TEAM message, package is {}".format(json_body))
+
+          print("Influx updated from TEAM message, package is {}".format(json_body))          
+          if InClient.write_points(json_body):
+            print("Influx update successful")
+          else:
+            print("Influx update failed")
+
 
         except Exception as e:
           print("Team error {}".format())
@@ -400,7 +408,7 @@ def mqtt_updater():
     print("Influx connection details - host: {}, port: {}, user: {}, password: {}, database: {}".format(eInflux_host, 
         eInflux_port, eInflux_user, eInflux_pw, eInflux_db))
     aDb = InClient.get_list_database()
-    print(aDb)
+    #print(aDb)
     InClient.switch_database('aklc')
 
 
