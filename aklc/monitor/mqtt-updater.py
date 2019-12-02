@@ -293,13 +293,13 @@ def json_for_influx(sPayload, nNode):
   #Location correction
   if nNode.locationOverride:
     if 'latitude' in jData:
-      jTags['latitude'] = nNode.latitude
+      jData['latitude'] = nNode.latitude
     elif 'Latitude' in jData:
-      jTags['Latitude'] = nNode.latitude
+      jData['Latitude'] = nNode.latitude
     elif 'longitude' in jData:
-      jTags['longitude'] = nNode.longitude
+      jData['longitude'] = nNode.longitude
     elif 'Longitude' in jData:
-      jTags['Longitude'] = nNode.longitude
+      jData['Longitude'] = nNode.longitude
   
   if nNode.projectOverride:
     if 'project' in jData:
