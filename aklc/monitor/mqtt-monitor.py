@@ -255,6 +255,7 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         payload['Body'] = body
         payload['Subject'] = inSubject
         mqtt_client.publish(eMail_topic, json.dumps(payload))
+        print("Email sent to {}".format(mailUser.email))
 
     except Exception as e:
         print(e)
