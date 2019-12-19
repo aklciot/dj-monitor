@@ -1,5 +1,5 @@
 FIELD_TYPE_CHOICES = (
-    ('S', _("String")),
-    ('I', _("Integer")),
-    ('F', _("Float")),
+    ("S", _("String")),
+    ("I", _("Integer")),
+    ("F", _("Float")),
 )
