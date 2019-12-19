@@ -9,6 +9,9 @@ import json
 
 # Create your models here.
 class Team(models.Model):
+    """
+    Model for a Team, usually referred to as a Project by the IoT team.
+    """
     teamID = models.CharField(max_length=50)
     descr = models.TextField(blank=True, null=True)
 
@@ -160,7 +163,7 @@ class Node(models.Model):
         ordering = ["nodeID"]
 
     def __str__(self):
-        return self.nodeID
+        return(self.nodeID)
 
     def passOnData(self):
         """
@@ -240,7 +243,7 @@ class Node(models.Model):
             if isinstance(jPayload["RSSI"], int) or isinstance(jPayload["RSSI"], float):
                 self.RSSI = jPayload["RSSI"]
             else:
-                print(f"Invalid data for RSSI, recieved '{jPayload["RSSI"]}'")
+                print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
         return ()
 
     def incrementMsgCnt(self):
@@ -270,6 +273,9 @@ class Node(models.Model):
 
 
 class NodeUser(models.Model):
+    """
+    Model for relationship between a user and a node.
+    """
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.BooleanField(blank=True, default=False)
@@ -279,7 +285,7 @@ class NodeUser(models.Model):
     smsSent = models.BooleanField(blank=True, default=False)
 
     def __str__(self):
-        return "{}: {}".format(self.nodeID, self.user.username)
+        return(f"{self.nodeID}: {self.user.username}")
 
 
 class Profile(models.Model):
