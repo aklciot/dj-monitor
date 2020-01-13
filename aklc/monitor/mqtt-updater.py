@@ -281,7 +281,7 @@ def mqtt_on_message(client, userdata, msg):
                     }
                 ]
 
-                # print("Influx updated from TEAM message, package is {}".format(json_body))
+                print(f"Influx updated from TEAM message, package is {json_body}")
                 if not InClient.write_points(json_body):
                     print("Influx update failed")
 

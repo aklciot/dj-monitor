@@ -7,7 +7,6 @@ app_name = "monitor"
 urlpatterns = [
     path("", views.index, name="index"),
     path("index_gw/", views.index_gw, name="index_gw"),
-    # path('', views.IndexView.as_view(), name='index'),
     path("node/<int:node_ref>/", views.nodeDetail, name="nodeDetail"),
     path("gateway/<int:gateway_ref>/", views.gatewayDetail, name="gatewayDetail"),
     path("node/update/<int:node_ref>/", views.nodeUpdate, name="nodeUpdate"),

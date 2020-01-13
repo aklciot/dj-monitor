@@ -23,6 +23,12 @@ class Team(models.Model):
 
 
 class MessageType(models.Model):
+    """
+    Model to define different CSV message types.
+
+    The message type consists of this header model and a number of MessageItem
+    elements which need to be ordered as in the incoming payload.
+    """
     msgName = models.CharField(max_length=30)
     descr = models.TextField(blank=True, null=True, help_text="")
 
@@ -31,10 +37,13 @@ class MessageType(models.Model):
         verbose_name = "Message Type"
 
     def __str__(self):
-        return "{}".format(self.msgName)
+        return self.msgName
 
 
 class MessageItem(models.Model):
+    """
+    Model for message items which are part og the MessageType element.
+    """
     FIELD_TYPE_CHOICES = [
         ("S", "String"),
         ("I", "Integer"),
@@ -51,7 +60,7 @@ class MessageItem(models.Model):
         choices=FIELD_TYPE_CHOICES,
     )
     isTag = models.BooleanField(
-        blank=True, default=False, help_text="Use as a tag when uploading to Influx"
+        blank=True, default=False, help_text="Use as a field tag when uploading to Influx"
     )
 
     class Meta:
@@ -59,7 +68,7 @@ class MessageItem(models.Model):
         verbose_name = "Message Item"
 
     def __str__(self):
-        return "{}: {}".format(self.msgID.msgName, self.name)
+        return f"{self.msgID.msgName}: {self.name}"
 
 
 class Node(models.Model):
@@ -67,10 +76,10 @@ class Node(models.Model):
     Model definition for the Node object.
 
     Functions:
-    passOnData - send info about associated nodes/gateways
-    msgReceived - updates the node when a new message arrives
-    jsonLoad(input) - processes JSON input
-    incrementMsgCnt - increments message count for node
+        passOnData - send info about associated nodes/gateways
+        msgReceived - updates the node when a new message arrives
+        jsonLoad(input) - processes JSON input
+        incrementMsgCnt - increments message count for node
     """
     nodeID = models.CharField(max_length=30)
     lastseen = models.DateTimeField(blank=True, null=True)
@@ -289,6 +298,13 @@ class NodeUser(models.Model):
 
 
 class Profile(models.Model):
+    """
+    This model is used to extend the user model.
+
+    Current uses are:
+        Record a mobile phone number which is used for SMS alerts
+        Record what type of email report a user gets
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phoneNumber = models.CharField(max_length=50, blank=True, null=True)
     reportType = models.CharField(max_length=1, blank=True, null=True, default="S")
@@ -299,16 +315,25 @@ class Profile(models.Model):
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
+    """
+    Function to automatically create a profile when a new user is created
+    """
     if created:
         Profile.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
+    """
+    Function to automatically save a profile when the associated user is save
+    """
     instance.profile.save()
 
 
 class NodeGateway(models.Model):
+    """
+    This model stores the date/time the last message from a node was passed on by a gateway.
+    """
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
     gatewayID = models.ForeignKey(
         Node, on_delete=models.CASCADE, related_name="gateway",
@@ -316,7 +341,7 @@ class NodeGateway(models.Model):
     lastdata = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return "Node : {}, Gateway : {}".format(self.nodeID, self.gatewayID)
+        return f"Node : {self.nodeID}, Gateway : {self.gatewayID}"
 
 
 class NodeMsgStats(models.Model):
@@ -330,5 +355,5 @@ class NodeMsgStats(models.Model):
     msgCount = models.IntegerField(default=0)
 
     def __str__(self):
-        return "{}: {} : {}".format(self.node.nodeID, self.dt, self.hr)
+        return f"{self.node.nodeID}: {self.dt} : {self.hr}"
 

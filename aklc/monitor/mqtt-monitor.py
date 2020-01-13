@@ -48,7 +48,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
     print(f"Connected to mqtt with result code {str(rc)}")
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
-    print("mqtt Subscribed to " + sub_topic)
+    print(f"MQTT Subscribed to {sub_topic}")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
@@ -83,7 +83,7 @@ def mqtt_on_message(client, userdata, msg):
             # print("Status message received")
             cPayload = sPayload.split(",")
             cNode = cPayload[0]
-            print("Status message received for {}".format(cNode))
+            print(f"Status message received for {cNode}")
             # Check and update the gateway data
             if node_validate(cPayload[0]):
                 gw, created = Node.objects.get_or_create(nodeID=cNode)
@@ -121,15 +121,11 @@ def mqtt_on_message(client, userdata, msg):
             if node_validate(cPayload[1]) and node_validate(cPayload[0]):
                 try:
                     lp = nd.passOnData()
-                    # print("Data records {}".format(len(lp)))
                     ngAll = NodeGateway.objects.filter(nodeID_id=nd.id)
-                    # print("{} Node records found".format(len(ngAll)))
                     ngAll = ngAll.filter(gatewayID_id=gw.id)
                     if len(ngAll) == 1:
-                        # print("NG rec found")
                         ng = ngAll[0]
                     else:
-                        # print("No NG rec")
                         ng = NodeGateway(nodeID=nd, gatewayID=gw)
                     ng.lastdata = timezone.make_aware(
                         datetime.datetime.now(), timezone.get_current_timezone()
@@ -138,7 +134,7 @@ def mqtt_on_message(client, userdata, msg):
 
                 except Exception as e:
                     print(e)
-                    print("Houston, we have an error {}".format(e))
+                    print(f"Houston, we have an error {e}")
 
         elif (
             cTopic[1] == "Network"
@@ -167,7 +163,7 @@ def mqtt_on_message(client, userdata, msg):
                         # print("Gateway not in topic")
                         if "Gateway" in jPayload:
                             if node_validate(jPayload["Gateway"]):
-                                print("Process gateway {}".format(jPayload["Gateway"]))
+                                print(f"Process gateway {jPayload['Gateway']}")
                                 gw, created = Node.objects.get_or_create(
                                     nodeID=jPayload["Gateway"]
                                 )
@@ -179,7 +175,7 @@ def mqtt_on_message(client, userdata, msg):
                                 gw.save()
             except Exception as e:
                 print(e)
-                print("Houston, we have an error {}".format(e))
+                print(f"Houston, we have an error {e}")
 
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
@@ -203,8 +199,8 @@ def mqtt_on_message(client, userdata, msg):
                 # print(nd.team.teamID)
                 # print("Processed data for {}".format(nd.nodeID))
             except Exception as e:
-                print("Team error ".format())
-                print(e)
+                print(f"Team error {e}")
+
 
 
 # ********************************************************************
@@ -213,7 +209,7 @@ def node_validate(inNode):
     # Only the characters below are accepted in nodeID's
     for c in inNode:
         if c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-":
-            print("Invalid char {}, the name '{}' is not valid".format(c, inNode))
+            print(f"Invalid char {c}, the name '{inNode}' is not valid")
             return False
     if inNode == "sys-monitor":  # we don't monitor ourself!
         return False
@@ -227,7 +223,7 @@ def missing_node(node, mqtt_client):
   """
 
     if node.status == "C":  # only do something if node is currently marked as "C"urrent
-        print("Update node {} is down!".format(node.nodeID))
+        print(f"Update node {node.nodeID} is down!")
         node.textStatus = "Missing"
         node.status = "X"
         node.notification_sent = True
@@ -249,21 +245,13 @@ def missing_node(node, mqtt_client):
                     mqtt_client,
                     usr.user,
                 )
-                print(
-                    "Node {} marked as down and email notification sent to {}".format(
-                        node.nodeID, usr.user.username
-                    )
-                )
+                print(f"Node {node.nodeID} marked as down and email notification sent to {usr.user.username}")
                 usr.lastemail = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
             if usr.sms:
                 sendNotifySMS(node, "monitor/sms-down.html", mqtt_client, usr.user)
-                print(
-                    "Node {} marked as down and SMS notification sent to {}".format(
-                        node.nodeID, usr.user.username
-                    )
-                )
+                print(f"Node {node.nodeID} marked as down and SMS notification sent to {usr.user.username}")
                 usr.smsSent = True
                 usr.lastsms = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
@@ -288,11 +276,11 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         payload["Body"] = body
         payload["Subject"] = inSubject
         mqtt_client.publish(eMail_topic, json.dumps(payload))
-        print("Email sent to {}".format(mailUser.email))
+        print(f"Email sent to {mailUser.email}")
 
     except Exception as e:
         print(e)
-        print("Houston, we have an error {}".format(e))
+        print(f"Houston, we have an error {e}")
 
     return
 
@@ -301,13 +289,13 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
 def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
     """A function to send email notification
     """
-    print("Send an SMS to {} about {}".format(mailUser.username, inNode.nodeID))
+    print(f"Send an SMS to {mailUser.username} about {inNode.nodeID}")
     payload = {}
     dataDict = {"node": inNode}
     # get to profile which has the phone number
     try:
         uProfile = Profile.objects.get(user=mailUser)
-        print("Send sms to {}, the number is {}".format(uProfile, uProfile.phoneNumber))
+        print(f"Send sms to {uProfile}, the number is {uProfile.phoneNumber}")
         dataDict["web_base_url"] = eWeb_Base_URL
         dataDict["user"] = mailUser
         t = template.loader.get_template(inTemplate)
@@ -320,7 +308,7 @@ def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
         mqtt_client.publish(sMs_topic, json.dumps(payload))
     except Exception as e:
         print(e)
-        print("Houston, we have an error {}".format(e))
+        print(f"Houston, we have an error {e}")
 
     return
 
@@ -352,7 +340,6 @@ def sendReport(aNotifyUsers, mqttClient):
                 gatewayDownList.append(a)
         else:
             if a.status == "C":
-                # print("Battery name is '{}'".format(a.battName))
                 if a.battName == None or a.battLevel == 0:
                     nodeOKList.append(a)
                 else:
@@ -496,10 +483,7 @@ def sys_monitor():
                     > 7
                 ):  # run at certain time of the day
                     # print("Time now {}".format(timezone.now()))
-                    if (
-                        notification_data["LastSummary"].day
-                        != datetime.datetime.now().day
-                    ):
+                    if (notification_data["LastSummary"].day != datetime.datetime.now().day ):
                         print("Send 8am messages")
 
                         allUsers = Profile.objects.all()
@@ -508,7 +492,7 @@ def sys_monitor():
                             # print("User is {}, email is {}".format(usr.user.username, usr.user.email))
                             if usr.reportType == "F":
                                 uReport.append(usr.user)
-                                print("Full report to {}".format(usr.user.email))
+                                print(f"Full report to {usr.user.email}")
 
                         # sendReport(uReport, client)
                         sendReport(allUsers, client)
@@ -521,27 +505,21 @@ def sys_monitor():
                             pickle.dump(notification_data, notificationPfile)
                             notificationPfile.close()
                         except Exception as e:
-                            print(e)
-                            print("Notification Pickle failed")
+                            print(f"Notification Pickle failed {e}")
 
                         # function to remove old nodes in 'M'aintenance mode
                         print("Checking for maintenace nodes to purge")
                         dCutOff = timezone.now() - datetime.timedelta(days=30)
-                        print("Cutoff date is {}".format(dCutOff))
+                        print(f"Cutoff date is {dCutOff}")
                         allMaint = Node.objects.filter(status="M").filter(
                             lastseen__lt=dCutOff
                         )
-                        print(
-                            "There are {} nodes in maintenance mode".format(
-                                len(allMaint)
-                            )
-                        )
+                        print(f"There are {len(allMaint)} nodes in maintenance mode")
                         # delete all these nodes
                         allMaint.delete()
 
         except Exception as e:
-            print(e)
-            print("Houston, we have an error {}".format(e))
+            print(f"Houston, we have an error {e}")
 
 
 # ********************************************************************

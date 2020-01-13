@@ -6,7 +6,7 @@ Node Details
 
 {% block web-body %}
 <div class="iot_background">
-  <div id="node-header"><h3>Update Node information</h3></div>
+  <div id="node-header"><h3>Update Node information for {{ node.nodeID }}</h3></div>
     <div id="node_detail" class="content_block">
       <div id="node_det_table">
         <form action="{% url 'monitor:nodeUpdate'  node.id %}" method="POST">

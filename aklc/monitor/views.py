@@ -21,50 +21,57 @@ from .forms import (
 from django.forms import modelformset_factory
 
 
-class IndexView(generic.ListView):
-    template_name = "monitor/index.html"
-    context_object_name = "nodeList"
-
-    def get_queryset(self):
-        return Node.objects.order_by("nodeID").exclude(status="M")
+#class IndexView(generic.ListView):
+#    template_name = "monitor/index.html"
+#    context_object_name = "nodeList"
+#
+#    def get_queryset(self):
+#        return Node.objects.order_by("nodeID").exclude(status="M")
 
 
 def index(request):
-    nodeList = Node.objects.order_by("nodeID")
-    nodeList = nodeList.exclude(status="M")
-    print("B1 {}".format(request.user.get_all_permissions()))
+    """
+    View that displays all current nodes.
+    """
+    # get all the nodes
+    nodeList = Node.objects.order_by("nodeID").exclude(status="M")
+    # remove any Gateways
     nodeList = nodeList.exclude(isGateway=True)
-    # print("B2 {}".format(len(nodeList)))
-
+    
     context = {"nodeList": nodeList, "nodeactive": "Y"}
     return render(request, "monitor/index.html", context)
 
 
 def index_gw(request):
-    nodeList = Node.objects.order_by("nodeID")
-    nodeList = nodeList.exclude(status="M")
-    # print("B1 {}".format(len(nodeList)))
+    """
+    View for Gateways.
+    """
+    nodeList = Node.objects.order_by("nodeID").exclude(status="M")
+    # Remove anything that is not a gateway
     nodeList = nodeList.exclude(isGateway=False)
-    # print("B2 {}".format(len(nodeList)))
-
+    
     context = {"nodeList": nodeList, "gatewayactive": "Y"}
     return render(request, "monitor/index_gw.html", context)
 
 
 @login_required
 def index_msg(request):
+    """
+    View for message types.
+    """
     msgList = MessageType.objects.order_by("msgName")
-
-    context = {"msgList": msgList}
-    context["msgactive"] = "Y"
+    context = {"msgList": msgList, "msgactive": "Y"}
     return render(request, "monitor/index_msg.html", context)
 
 
 @login_required
 def nodeDetail(request, node_ref):
+    """
+    View to display details of a node
+    """
     node = get_object_or_404(Node, pk=node_ref)
-    passList = node.passOnData()
-    aNodeUsers = NodeUser.objects.filter(nodeID=node)
+    passList = node.passOnData()                            # gateways that have processed msg from this node
+    aNodeUsers = NodeUser.objects.filter(nodeID=node)       # users that have an 'interest' in this node
     context = {
         "node": node,
         "user": request.user,
@@ -77,9 +84,12 @@ def nodeDetail(request, node_ref):
 
 @login_required
 def gatewayDetail(request, gateway_ref):
+    """
+    View to display Gateway details
+    """
     gw = get_object_or_404(Node, pk=gateway_ref)
-    aNodeUsers = NodeUser.objects.filter(nodeID=gw)
-    passList = gw.passOnData()
+    aNodeUsers = NodeUser.objects.filter(nodeID=gw)         # users that have an 'interest' in this gateway
+    passList = gw.passOnData()                              # nodes that have been processed by this gateway
     context = {
         "gateway": gw,
         "user": request.user,
@@ -92,10 +102,13 @@ def gatewayDetail(request, gateway_ref):
 
 @login_required
 def nodeUpdate(request, node_ref):
+    """
+    View to process info update form from nodes or gateways
+    """
     node = get_object_or_404(Node, pk=node_ref)
     if request.method == "POST":
 
-        nf = NodeDetailForm(request.POST, instance=node)
+        nf = NodeDetailForm(request.POST, instance=node)    # NodeDetailForm defines in forms.py
         if nf.is_valid():
             nf.save()
             return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
@@ -105,6 +118,7 @@ def nodeUpdate(request, node_ref):
     else:
         nf = NodeDetailForm(instance=node)
     context = {"form": nf, "node": node}
+    2
     if node.isGateway:
         context["gatewayactive"] = "Y"
     else:
@@ -114,6 +128,9 @@ def nodeUpdate(request, node_ref):
 
 @login_required
 def nodeModNotify(request, node_ref):
+    """
+    View to process the form that manages peoples notification preferences for a specific node
+    """
     node = get_object_or_404(Node, pk=node_ref)
     nu, created = NodeUser.objects.get_or_create(nodeID=node, user=request.user)
 
