@@ -47,7 +47,7 @@ eInflux_host = os.getenv("AKLC_INFLUX_HOST", "172.20.0.2")
 eInflux_port = os.getenv("AKLC_INFLUX_PORT", 8086)
 eInflux_user = os.getenv("AKLC_INFLUX_USER", "aklciot")
 eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
-eInflux_db = os.getenv("AKLC_INFLUX_DB", "influx")
+eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
 # ********************************************************************
 """
@@ -444,9 +444,7 @@ def mqtt_updater():
         database=eInflux_db,
     )
     print(
-        "Influx connection details - host: {}, port: {}, user: {}, password: {}, database: {}".format(
-            eInflux_host, eInflux_port, eInflux_user, eInflux_pw, eInflux_db
-        )
+        f"Influx connection details - host: {eInflux_host}, port: {eInflux_port}, user: {eInflux_user}, password: {eInflux_pw}, database: {eInflux_db}"
     )
     aDb = InClient.get_list_database()
     # print(aDb)
