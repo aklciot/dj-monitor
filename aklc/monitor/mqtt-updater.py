@@ -143,7 +143,7 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-
+                        print(f"Influx json for a Status message {json_body}")
                         InClient.write_points(json_body)
 
             except Exception as e:
