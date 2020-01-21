@@ -175,7 +175,7 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-
+                        print(f"Influx JSON {json_body}")
                         InClient.write_points(json_body)
 
                     if node.thingsboardUpload:
