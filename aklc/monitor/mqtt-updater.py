@@ -122,7 +122,7 @@ def mqtt_on_message(client, userdata, msg):
 
                 if node.messagetype:
                     jOut = csv_to_json(cPayload, node)
-                    # print("Messagetype found")
+                    print("Messagetype found")
 
                     if node.thingsboardUpload:
                         # print("Thingsboard upload")
@@ -153,7 +153,7 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
-            print(f"AKLC Gateway message received, payload is {sPayload}")
+            # print(f"AKLC Gateway message received, payload is {sPayload}")
 
             try:
                 node = Node.objects.get(nodeID=cPayload[1])  # Lets
@@ -197,11 +197,7 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Node" or cTopic[1] == "Network"
         ):  # These are JSON messages, both data & status
-            print(
-                "NODE/NETWORK type message received, topic: {}, payload: {}".format(
-                    msg.topic, sPayload
-                )
-            )
+            print(f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}")
 
             if is_json(sPayload):  # these messages should always be JSON
                 jStr = json.loads(sPayload)
@@ -281,13 +277,13 @@ def mqtt_on_message(client, userdata, msg):
                     }
                 ]
 
-                print(f"Influx updated from TEAM message, package is {json_body}")
+                # print(f"Influx updated from TEAM message, package is {json_body}")
                 if not InClient.write_points(json_body):
                     print("Influx update failed")
 
             except Exception as e:
-                print("Team error {}".format())
-                print(e)
+                print(f"Team error {e}")
+                
 
         else:
             print("No NodeID in this payload {}".format(sPayload))
