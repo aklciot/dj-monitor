@@ -6,5 +6,4 @@ docker-compose.yml
 aklc/aklc/__pycache__/__init__.cpython-37.pyc
 aklc/aklc/__pycache__/settings.cpython-37.pyc
 aklc/aklc/__pycache__/urls.cpython-37.pyc
-docker-compose.yml
 *.pkl

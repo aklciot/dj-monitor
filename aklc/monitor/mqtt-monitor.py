@@ -26,8 +26,8 @@ from django.contrib.auth.models import User
 eMqtt_client_id = os.getenv("AKLC_MQTT_CLIENT_ID", "mqtt_monitor")
 eMqtt_host = os.getenv("AKLC_MQTT_HOST", "mqtt")
 eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
-eMqtt_user = os.getenv("AKLC_MQTT_USER", "")
-eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "")
+eMqtt_user = os.getenv("AKLC_MQTT_USER", "aklciot")
+eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "iotiscool")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
 eMail_To = os.getenv("AKLC_MAIL_TO", "westji@aklc.govt.nz")
 
@@ -77,9 +77,7 @@ def mqtt_on_message(client, userdata, msg):
         # print("Aklc message received, topic {}, payload {}".format(msg.topic, msg.payload))
         # Check types of message from the topic
         # print("Subtopic = |{}|".format(cTopic[1]))
-        if (
-            cTopic[1] == "Status"
-        ):  # These are status messages sent by gateways. Data in CSV format
+        if cTopic[1] == "Status":  # These are status messages sent by gateways. Data in CSV format
             # print("Status message received")
             cPayload = sPayload.split(",")
             cNode = cPayload[0]
@@ -136,9 +134,7 @@ def mqtt_on_message(client, userdata, msg):
                     print(e)
                     print(f"Houston, we have an error {e}")
 
-        elif (
-            cTopic[1] == "Network"
-        ):  # These are status messages sent by gateways and nodes. Data in JSON format
+        elif cTopic[1] == "Network":  # These are status messages sent by gateways and nodes. Data in JSON format
             # print("Network message received |{}|, topic |{}|".format(sPayload, msg.topic))
             # print("Topic length = {}".format(len(cTopic)))
             jPayload = json.loads(sPayload)  # the payload should be JSON

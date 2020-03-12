@@ -34,7 +34,7 @@ from django.contrib.auth.models import User
 
 # all config parameters are set as environment variables, best practice in docker environment
 eMqtt_client_id = os.getenv("AKLC_MQTT_CLIENT_ID", "mqtt_monitor_updater-1")
-eMqtt_host = os.getenv("AKLC_MQTT_HOST", "mqtt.innovateauckland.nz")
+eMqtt_host = os.getenv("AKLC_MQTT_HOST", "mqtt")
 eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "aklciot")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "iotiscool")
