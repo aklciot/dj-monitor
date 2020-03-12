@@ -75,17 +75,45 @@ def mqtt_on_connect(client, userdata, flags, rc):
 
 
 # ********************************************************************
-
-
 def is_json(myjson):
     """
-  Function to check if an input is a valid JSON message
-  """
+    Function to check if an input is a valid JSON message
+    """
     try:
         json_object = json.loads(myjson)
     except ValueError as e:
         return False
     return True
+
+
+# ********************************************************************
+def thingsboardUpload(node, msg):
+    if node.thingsboardUpload:
+        sPayload = msg.payload.decode()
+        
+        if is_json(sPayload):  # payload is JSON
+            jStr = json.loads(sPayload)
+        else:
+            if node.messagetype:
+                jOut = csv_to_json(sPayload.split(","), node)
+                jStr = jOut['jStr']
+            else:
+                return
+
+        if node.locationOverride:
+            jStr["latitude"] = node.latitude
+            jStr["longitude"] = node.longitude
+
+        sPayload = json.dumps(jStr)
+        tbRes = publish.single(
+            topic=eTB_topic,
+            payload=sPayload,
+            hostname=eTB_host,
+            port=eTB_port,
+            auth={"username": node.thingsboardCred},
+        )
+        print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
+        return
 
 
 # ********************************************************************
@@ -125,14 +153,7 @@ def mqtt_on_message(client, userdata, msg):
                     print("Messagetype found")
 
                     if node.thingsboardUpload:
-                        # print("Thingsboard upload")
-                        mRes = publish.single(
-                            topic=eTB_topic,
-                            payload=json.dumps(jOut["jStr"]),
-                            hostname=eTB_host,
-                            port=eTB_port,
-                            auth={"username": node.thingsboardCred},
-                        )
+                        thingsboardUpload(node, msg)
 
                     if node.influxUpload:
                         # print("Influx gateway upload")
@@ -143,7 +164,7 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-                        print(f"Influx json for a Status message {json_body}")
+                        #print(f"Influx json for a Status message {json_body}")
                         InClient.write_points(json_body)
 
             except Exception as e:
@@ -160,7 +181,7 @@ def mqtt_on_message(client, userdata, msg):
                 # print("Node {} found".format(node.nodeID))
 
                 if node.messagetype:
-                    # print("Messagetype found")
+                    print(f"Message type found in Gateway message, node is {node.nodeID}")
                     jOut = csv_to_json(cPayload, node)
 
                     if node.influxUpload:
@@ -175,18 +196,11 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-                        print(f"Influx JSON {json_body}")
+                        #print(f"Influx JSON {json_body}")
                         InClient.write_points(json_body)
 
                     if node.thingsboardUpload:
-                        # print("Thingsboard upload")
-                        mRes = publish.single(
-                            topic=eTB_topic,
-                            payload=json.dumps(jOut["jStr"]),
-                            hostname=eTB_host,
-                            port=eTB_port,
-                            auth={"username": node.thingsboardCred},
-                        )
+                        thingsboardUpload(node, msg)
 
             except Exception as e:
                 print(e)
@@ -197,7 +211,9 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Node" or cTopic[1] == "Network"
         ):  # These are JSON messages, both data & status
-            print(f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}")
+            print(
+                f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}"
+            )
 
             if is_json(sPayload):  # these messages should always be JSON
                 jStr = json.loads(sPayload)
@@ -216,19 +232,8 @@ def mqtt_on_message(client, userdata, msg):
                     node = Node.objects.get(nodeID=cNode)
                     # print("Found node {}".format(cNode))
                     if node.thingsboardUpload:
+                        thingsboardUpload(node, msg)
 
-                        if node.locationOverride:
-                            jStr["latitude"] = node.latitude
-                            jStr["longitude"] = node.longitude
-                            sPayload = json.dumps(jStr)
-                        publish.single(
-                            topic=eTB_topic,
-                            payload=sPayload,
-                            hostname=eTB_host,
-                            port=eTB_port,
-                            auth={"username": node.thingsboardCred},
-                        )
-                        # print("Publish to TB {}".format(sPayload))
 
                     if node.influxUpload:
                         # print("Publish to Influx")
@@ -257,11 +262,10 @@ def mqtt_on_message(client, userdata, msg):
                 print("Payload not JSON")
 
     else:  # not AKLC, a team subscription
-        # print("TEAM message received")
         # the payload is expected to be json
 
         jPayload = json.loads(sPayload)
-        # print("Team message arrived, topic is {}".format(msg.topic))
+        #print("Team message arrived, topic is {}".format(msg.topic))
 
         if "NodeID" in jPayload:
             # print("The NodeID is {}".format(jPayload["NodeID"]))
@@ -281,10 +285,12 @@ def mqtt_on_message(client, userdata, msg):
                 if not InClient.write_points(json_body):
                     print("Influx update failed")
 
+                if node.thingsboardUpload:
+                    thingsboardUpload(node, msg)
+
             except Exception as e:
                 print(f"Team error {e}")
-                
-
+          
         else:
             print("No NodeID in this payload {}".format(sPayload))
 
@@ -292,7 +298,7 @@ def mqtt_on_message(client, userdata, msg):
 # ******************************************************************
 def json_for_influx(sPayload, nNode):
     """
-  Function evaluates a jason input and splits it into tags & fierlds for influx upload
+  Function evaluates a jason input and splits it into tags & fields for influx upload
   """
     cTags = ["gateway", "nodeid", "location", "repeater", "project", "software", "type"]
     jTags = {}
@@ -397,7 +403,7 @@ def mqtt_updater():
     """
     global InClient
 
-    print("Start Updater v1.2")
+    print("Start Updater v1.3")
 
     # print(eMqtt_client_id)
     print(eMqtt_host)
