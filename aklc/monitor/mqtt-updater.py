@@ -90,13 +90,13 @@ def is_json(myjson):
 def thingsboardUpload(node, msg):
     if node.thingsboardUpload:
         sPayload = msg.payload.decode()
-        
+
         if is_json(sPayload):  # payload is JSON
             jStr = json.loads(sPayload)
         else:
             if node.messagetype:
-                jOut = csv_to_json(sPayload.split(","), node)
-                jStr = jOut['jStr']
+                jOut = csv_to_json(sPayload, node)
+                jStr = jOut["jStr"]
             else:
                 return
 
@@ -112,7 +112,7 @@ def thingsboardUpload(node, msg):
             port=eTB_port,
             auth={"username": node.thingsboardCred},
         )
-        #print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
+        # print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
         return
 
 
@@ -149,7 +149,7 @@ def mqtt_on_message(client, userdata, msg):
                 # print(f"Gateway {node.nodeID} found")
 
                 if node.messagetype:
-                    jOut = csv_to_json(cPayload, node)
+                    jOut = csv_to_json(sPayload, node)
                     print("Messagetype found")
 
                     if node.thingsboardUpload:
@@ -164,7 +164,7 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-                        #print(f"Influx json for a Status message {json_body}")
+                        # print(f"Influx json for a Status message {json_body}")
                         InClient.write_points(json_body)
 
             except Exception as e:
@@ -181,8 +181,10 @@ def mqtt_on_message(client, userdata, msg):
                 # print("Node {} found".format(node.nodeID))
 
                 if node.messagetype:
-                    print(f"Message type found in Gateway message, node is {node.nodeID}")
-                    jOut = csv_to_json(cPayload, node)
+                    print(
+                        f"Message type found in Gateway message, node is {node.nodeID}"
+                    )
+                    jOut = csv_to_json(sPayload, node)
 
                     if node.influxUpload:
                         if node.team:
@@ -196,7 +198,7 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-                        #print(f"Influx JSON {json_body}")
+                        # print(f"Influx JSON {json_body}")
                         InClient.write_points(json_body)
 
                     if node.thingsboardUpload:
@@ -234,7 +236,6 @@ def mqtt_on_message(client, userdata, msg):
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
 
-
                     if node.influxUpload:
                         # print("Publish to Influx")
                         jOut = json_for_influx(sPayload, node)
@@ -265,7 +266,7 @@ def mqtt_on_message(client, userdata, msg):
         # the payload is expected to be json
 
         jPayload = json.loads(sPayload)
-        #print("Team message arrived, topic is {}".format(msg.topic))
+        # print("Team message arrived, topic is {}".format(msg.topic))
 
         if "NodeID" in jPayload:
             # print("The NodeID is {}".format(jPayload["NodeID"]))
@@ -290,7 +291,7 @@ def mqtt_on_message(client, userdata, msg):
 
             except Exception as e:
                 print(f"Team error {e}")
-          
+
         else:
             print("No NodeID in this payload {}".format(sPayload))
 
@@ -349,7 +350,7 @@ def json_for_influx(sPayload, nNode):
 
 
 # ******************************************************************
-def csv_to_json(cPayload, nNode):
+def csv_to_json(payload, nNode):
     """
   Function converts a CSV payload to JSON for thingsboard & Influx based on data in the MesssageType record if it exists
   """
@@ -358,17 +359,26 @@ def csv_to_json(cPayload, nNode):
     jTags = {}
     jData = {}
 
+    cPayload = payload.split(',')
+
+    # here we try and remove any references to any repeaters
+    lRepeater = True
+    while lRepeater:
+        lRepeater = False
+        for itm in cPayload:
+            if itm.startswith("RP"):
+                #print(f"Remove {itm} from input")
+                cPayload.remove(itm)
+                lRepeater = True
+    
+
     # print("csv_to_json entered, payload is {}".format(cPayload))
     for mItem in nNode.messagetype.messageitem_set.all():
         # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
         # some validation here
 
         if mItem.order > len(cPayload):
-            print(
-                "Too many items in message type record for the payload, order is {}".format(
-                    mItem.order
-                )
-            )
+            # print(f"Message type mismatch, payload is {cPayload}, message type is {nNode.messagetype.msgName}, index is {mItem.order}")
             break
 
         try:
@@ -384,6 +394,9 @@ def csv_to_json(cPayload, nNode):
                 if mItem.name == "longitude" or mItem.name == "Longitude":
                     val = nNode.longitude
         except Exception as e:
+            print(
+                f"CSV to JSON error, cPayload is {cPayload}, message type is {nNode.messagetype.msgName}"
+            )
             print(e)
 
         jStr[mItem.name] = val
