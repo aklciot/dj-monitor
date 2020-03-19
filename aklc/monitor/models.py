@@ -357,3 +357,38 @@ class NodeMsgStats(models.Model):
     def __str__(self):
         return f"{self.node.nodeID}: {self.dt} : {self.hr}"
 
+class MqttQueue(models.Model):
+    """
+    This stores details of various mqtt queues.
+    """
+
+    descr = models.CharField(max_length=50)
+    host = models.CharField(max_length=50)
+    port = models.IntegerField()
+    user = models.CharField(max_length=50, blank=True, null=True)
+    pw = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        ordering = ["descr"]
+        verbose_name = "Mqtt Queue"
+
+    def __str__(self):
+        return f"{self.descr}"
+
+class MqttMessage(models.Model):
+    """
+    Stores the last mqtt message for a node
+    """
+    node = models.ForeignKey(Node, on_delete=models.CASCADE)
+    mqttQueue = models.ForeignKey(MqttQueue, on_delete=models.CASCADE)
+    received = models.DateTimeField(auto_now=True)
+    first_msg = models.DateTimeField(auto_now_add=True)
+    topic = models.CharField(max_length=100)
+    payload = models.TextField()
+
+    class Meta:
+        ordering = ["node"]
+        verbose_name = "Mqtt Message"
+
+    def __str__(self):
+        return( f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, payload: {self.payload}")

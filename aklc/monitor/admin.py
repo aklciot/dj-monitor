@@ -10,6 +10,8 @@ from .models import (
     MessageType,
     MessageItem,
     NodeMsgStats,
+    MqttQueue,
+    MqttMessage,
 )
 
 admin.site.register(Node)
@@ -20,4 +22,6 @@ admin.site.register(NodeGateway)
 admin.site.register(MessageType)
 admin.site.register(MessageItem)
 admin.site.register(NodeMsgStats)
+admin.site.register(MqttQueue)
+admin.site.register(MqttMessage)
 

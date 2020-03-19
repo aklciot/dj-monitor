@@ -99,6 +99,14 @@ Node Details
           <li>{{pass.gatewayID}} {{pass.lastdata }}</li>
         {% endfor %}
         </ul>
+        {% if node.mqttmessage_set.all %}
+          <P>Data has been received from the following MQTT queues</P>
+          <ul>
+          {% for mq in node.mqttmessage_set.all %}
+              <li>{{ mq.mqttQueue.descr }} ({{mq.received}})</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
 
         {% if node.status == 'X' %}
           <div id="node_det_button" class="action_button">

@@ -117,6 +117,25 @@ def thingsboardUpload(node, msg):
 
 
 # ********************************************************************
+def influxUpload(node, influxClient, msg, measurement, aTags, aData):
+    """
+    A function to load data to Influx
+    """
+
+    if node.influxUpload:  # check if we should do this
+        sPayload = msg.payload.decode()
+        json_body = [{"measurement": measurement, "tags": aTags, "fields": aData,}]
+        print(f"Influx json from function {json_body}")
+        try:
+            influxClient.write_points(json_body)
+        except Exception as e:
+            print(e)
+            print(f"Influx error: {e}, json_body is {json_body}")
+
+    return
+
+
+# ********************************************************************
 def mqtt_on_message(client, userdata, msg):
     """This procedure is called each time a mqtt message is received
 
@@ -150,22 +169,15 @@ def mqtt_on_message(client, userdata, msg):
 
                 if node.messagetype:
                     jOut = csv_to_json(sPayload, node)
-                    print("Messagetype found")
+                    # print("Messagetype found")
 
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
 
                     if node.influxUpload:
-                        # print("Influx gateway upload")
-                        json_body = [
-                            {
-                                "measurement": "Gateway",
-                                "tags": jOut["jTags"],
-                                "fields": jOut["jData"],
-                            }
-                        ]
-                        # print(f"Influx json for a Status message {json_body}")
-                        InClient.write_points(json_body)
+                        influxUpload(
+                            node, InClient, msg, "Gateway", jOut["jTags"], jOut["jData"]
+                        )
 
             except Exception as e:
                 print(e)
@@ -176,14 +188,16 @@ def mqtt_on_message(client, userdata, msg):
         ):  # Data message passed on by gateway, data in CSV format
             # print(f"AKLC Gateway message received, payload is {sPayload}")
 
+            if "Test" in cPayload[1]:
+                #print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
+                return
+
             try:
                 node = Node.objects.get(nodeID=cPayload[1])  # Lets
                 # print("Node {} found".format(node.nodeID))
 
                 if node.messagetype:
-                    print(
-                        f"Message type found in Gateway message, node is {node.nodeID}"
-                    )
+                    # print(f"Message type found in Gateway message, node is {node.nodeID}")
                     jOut = csv_to_json(sPayload, node)
 
                     if node.influxUpload:
@@ -206,7 +220,9 @@ def mqtt_on_message(client, userdata, msg):
 
             except Exception as e:
                 print(e)
-                print("Cant find {} in database, error is {}".format(cPayload[1], e))
+                print(
+                    f"Cant find {cPayload[1]} in database, error is {e}, payload is {sPayload}, topic is {msg.topic}"
+                )
 
         # elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
         #  x =1
@@ -225,9 +241,11 @@ def mqtt_on_message(client, userdata, msg):
                 elif "Gateway" in jStr:
                     cNode = jStr["Gateway"]
                 elif "nodeID" in jStr:
-                    cNode = jStr["Gateway"]
+                    cNode = jStr["NodeID"]
+                elif "NodeID" in jStr:
+                    cNode = jStr["NodeID"]
                 else:
-                    # print("No node info could be found, ignore message")
+                    print("No node info could be found, ignore message")
                     cNode = "XXXXXXXXX"
 
                 try:
@@ -245,17 +263,10 @@ def mqtt_on_message(client, userdata, msg):
                             sMeasure = sPayload["project"]
                         else:
                             sMeasure = "AKLC"
-                        json_body = [
-                            {
-                                "measurement": sMeasure,
-                                "tags": jOut["jTags"],
-                                "fields": jOut["jData"],
-                            }
-                        ]
 
-                        # print("Publish to Influx {}".format(json_body))
-                        if not InClient.write_points(json_body):
-                            print("Influx update failed")
+                        influxUpload(
+                            node, InClient, msg, cTopic[0], jOut["jTags"], jOut["jData"]
+                        )
 
                 except Exception as e:
                     print(e)
@@ -274,17 +285,21 @@ def mqtt_on_message(client, userdata, msg):
                 node = Node.objects.get(nodeID=jPayload["NodeID"])
                 # print("Node retrieved")
                 jOut = json_for_influx(sPayload, node)
-                json_body = [
-                    {
-                        "measurement": cTopic[0],
-                        "tags": jOut["jTags"],
-                        "fields": jOut["jData"],
-                    }
-                ]
+                # json_body = [
+                #    {
+                #        "measurement": cTopic[0],
+                #        "tags": jOut["jTags"],
+                #        "fields": jOut["jData"],
+                #    }
+                # ]
 
                 # print(f"Influx updated from TEAM message, package is {json_body}")
-                if not InClient.write_points(json_body):
-                    print("Influx update failed")
+                # if not InClient.write_points(json_body):
+                #    print("Influx update failed")
+
+                influxUpload(
+                    node, InClient, msg, cTopic[0], jOut["jTags"], jOut["jData"]
+                )
 
                 if node.thingsboardUpload:
                     thingsboardUpload(node, msg)
@@ -319,9 +334,7 @@ def json_for_influx(sPayload, nNode):
                 jTags[jD] = val
             else:
                 print(
-                    "Tag value should be a string, {} vas a value of {} which is {}".format(
-                        jD, val, type(val)
-                    )
+                    f"Tag value should be a string, {jD} has a value of {val} which is a {type(val)}"
                 )
                 # jTags[jD] = val
         else:
@@ -359,7 +372,7 @@ def csv_to_json(payload, nNode):
     jTags = {}
     jData = {}
 
-    cPayload = payload.split(',')
+    cPayload = payload.split(",")
 
     # here we try and remove any references to any repeaters
     lRepeater = True
@@ -367,10 +380,9 @@ def csv_to_json(payload, nNode):
         lRepeater = False
         for itm in cPayload:
             if itm.startswith("RP"):
-                #print(f"Remove {itm} from input")
+                # print(f"Remove {itm} from input")
                 cPayload.remove(itm)
                 lRepeater = True
-    
 
     # print("csv_to_json entered, payload is {}".format(cPayload))
     for mItem in nNode.messagetype.messageitem_set.all():
@@ -418,6 +430,21 @@ def mqtt_updater():
 
     print("Start Updater v1.3")
 
+    # InClient = InfluxDBClient(host='influxdb', port=8086, username='aklciot', password='iotiscool', database='aklc')
+    InClient = InfluxDBClient(
+        host=eInflux_host,
+        port=eInflux_port,
+        username=eInflux_user,
+        password=eInflux_pw,
+        database=eInflux_db,
+    )
+    print(
+        f"Influx connection details - host: {eInflux_host}, port: {eInflux_port}, user: {eInflux_user}, password: {eInflux_pw}, database: {eInflux_db}"
+    )
+    aDb = InClient.get_list_database()
+    # print(aDb)
+    InClient.switch_database("aklc")
+
     # print(eMqtt_client_id)
     print(eMqtt_host)
     print(eMqtt_port)
@@ -431,7 +458,6 @@ def mqtt_updater():
     print("MQTT env set up done")
 
     try:
-
         # set up the MQTT environment
         client.username_pw_set(eMqtt_user, eMqtt_password)
         client.connect(eMqtt_host, int(eMqtt_port), 60)
@@ -453,21 +479,6 @@ def mqtt_updater():
         stats_data = {
             "LastStats": datetime.datetime.now() + datetime.timedelta(days=-3)
         }
-
-    # InClient = InfluxDBClient(host='influxdb', port=8086, username='aklciot', password='iotiscool', database='aklc')
-    InClient = InfluxDBClient(
-        host=eInflux_host,
-        port=eInflux_port,
-        username=eInflux_user,
-        password=eInflux_pw,
-        database=eInflux_db,
-    )
-    print(
-        f"Influx connection details - host: {eInflux_host}, port: {eInflux_port}, user: {eInflux_user}, password: {eInflux_pw}, database: {eInflux_db}"
-    )
-    aDb = InClient.get_list_database()
-    # print(aDb)
-    InClient.switch_database("aklc")
 
     while True:
         time.sleep(1)
