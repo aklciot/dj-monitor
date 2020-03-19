@@ -128,6 +128,8 @@ def mqtt_spy():
     """ The main program that sends updates to the MQTT system
     """
 
+    print("Start MQTT spy")
+
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
     
@@ -148,10 +150,27 @@ def mqtt_spy():
         print("Client connect requested")
         cMqtt[-1].loop_start()
         
-        time.sleep(5)
+        #time.sleep(5)
     
+    checkDt = datetime.date(2020, 1, 1)
 
     while True:
+
+        if datetime.date.today() != checkDt:
+            print("Clean old mqtt messages")
+            aMqttMsgAll = MqttMessage.objects.all()
+            refDt = timezone.make_aware(
+                        datetime.datetime.now(), timezone.get_current_timezone()
+                    )
+            cutOff = datetime.timedelta(days=30)
+            for msg in aMqttMsgAll:
+                tDiff = refDt - msg.received
+                #print(f"Msg time dif is {tDiff}")
+                if tDiff > cutOff:
+                    print(f"Delete mqtt record reference {msg}")
+                    msg.delete()
+            checkDt = datetime.date.today()
+
         time.sleep(1)
 
 
