@@ -125,7 +125,7 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
     if node.influxUpload:  # check if we should do this
         sPayload = msg.payload.decode()
         json_body = [{"measurement": measurement, "tags": aTags, "fields": aData,}]
-        print(f"Influx json from function {json_body}")
+        #print(f"Influx json from function {json_body}")
         try:
             influxClient.write_points(json_body)
         except Exception as e:
@@ -186,7 +186,7 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
-            # print(f"AKLC Gateway message received, payload is {sPayload}")
+            #print(f"AKLC Gateway message received, payload is {sPayload}")
 
             if "Test" in cPayload[1]:
                 #print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
@@ -197,7 +197,7 @@ def mqtt_on_message(client, userdata, msg):
                 # print("Node {} found".format(node.nodeID))
 
                 if node.messagetype:
-                    # print(f"Message type found in Gateway message, node is {node.nodeID}")
+                    print(f"Message type found in Gateway message, node is {node.nodeID}")
                     jOut = csv_to_json(sPayload, node)
 
                     if node.influxUpload:
@@ -212,7 +212,7 @@ def mqtt_on_message(client, userdata, msg):
                                 "fields": jOut["jData"],
                             }
                         ]
-                        # print(f"Influx JSON {json_body}")
+                        print(f"Influx JSON {json_body}")
                         InClient.write_points(json_body)
 
                     if node.thingsboardUpload:
@@ -229,9 +229,9 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Node" or cTopic[1] == "Network"
         ):  # These are JSON messages, both data & status
-            print(
-                f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}"
-            )
+            #print(
+            #    f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}"
+            #)
 
             if is_json(sPayload):  # these messages should always be JSON
                 jStr = json.loads(sPayload)

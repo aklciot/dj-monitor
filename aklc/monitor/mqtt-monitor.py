@@ -96,7 +96,7 @@ def mqtt_on_message(client, userdata, msg):
             # print("Gateway message received")
             cPayload = sPayload.split(",")  # the payload should be CSV
 
-            # print("Node {}, Gateway {}".format(cPayload[1], cPayload[0]))
+            print("Node {}, Gateway {}".format(cPayload[1], cPayload[0]))
             if node_validate(cPayload[1]):  # check if the nodeID is valid
                 # get the node, or create it if not found
                 # print("Valid node {}".format(cPayload[1]))

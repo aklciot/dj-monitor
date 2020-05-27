@@ -81,7 +81,7 @@ Node Details
         <P>Data has been received from the following nodes in the last 7 days</P>
         <ul>
         {% for pass in passData %}
-          <li>{{pass.nodeID}} {{pass.lastdata }}</li>
+          <li><a href="{% url 'monitor:nodeDetail' pass.nodeID.id %}">{{pass.nodeID}}</a> {{pass.lastdata }}</li>
         {% endfor %}
         </ul>
         {% if gateway.status == 'X' %}

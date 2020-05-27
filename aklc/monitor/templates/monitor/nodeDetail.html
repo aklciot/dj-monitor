@@ -96,14 +96,14 @@ Node Details
         <P>Data has been processed by the following gateways in the last 7 days</P>
         <ul>
         {% for pass in passData %}
-          <li>{{pass.gatewayID}} {{pass.lastdata }}</li>
+          <li><a href="{% url 'monitor:gatewayDetail' pass.gatewayID.id %}">{{pass.gatewayID}}</a> {{pass.lastdata }}</li>
         {% endfor %}
         </ul>
         {% if node.mqttmessage_set.all %}
           <P>Data has been received from the following MQTT queues</P>
           <ul>
           {% for mq in node.mqttmessage_set.all %}
-              <li>{{ mq.mqttQueue.descr }} ({{mq.received}})</li>
+              <li>{{ mq.mqttQueue.descr }} ({{mq.received}})</li> 
             {% endfor %}
           </ul>
         {% endif %}

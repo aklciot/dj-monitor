@@ -181,7 +181,7 @@ class Node(models.Model):
         Gateways, returns the nodes they have processed data for,
         Nodes, returns the gateways that have processed their data
 
-        Only data processed in the last 7 data is considered.
+        Only data processed in the last 7 data is considered. 
 
         """
         if self.isGateway:
