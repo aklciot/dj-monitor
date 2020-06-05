@@ -110,7 +110,7 @@ def mqtt_on_message(client, userdata, msg):
 
     
     try:
-        #print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
+        print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
         mqttMsg, created = MqttMessage.objects.get_or_create(node=node, mqttQueue=userdata)
         mqttMsg.topic = msg.topic
         mqttMsg.payload = sPayload
@@ -144,11 +144,16 @@ def mqtt_spy():
             print("User present")
             cMqtt[-1].username_pw_set(m.user, m.pw)
         
-        print(f"Connect to {m.host} on port {m.port}")
-        cMqtt[-1].connect(m.host, m.port, 60)
+        try:
+            print(f"Connect to {m.host} on port {m.port}")
+            cMqtt[-1].connect(m.host, m.port, 60)
         
-        print("Client connect requested")
-        cMqtt[-1].loop_start()
+            print("Client connect requested")
+            cMqtt[-1].loop_start()
+        except Exception as e:
+            print(e)
+            print(f"Houston, we have an mqtt connection error {e}")
+            cMqtt.pop()     # remove this from the list 
         
         #time.sleep(5)
     

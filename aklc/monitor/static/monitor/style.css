@@ -29,6 +29,10 @@ body {
   font-weight: bold;
 }
 
+.mqtt_info {
+  color: lightskyblue;
+}
+
 .content_block {
   border-style: groove;
   border: 5px;

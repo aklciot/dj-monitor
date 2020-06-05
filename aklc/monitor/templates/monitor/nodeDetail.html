@@ -103,7 +103,9 @@ Node Details
           <P>Data has been received from the following MQTT queues</P>
           <ul>
           {% for mq in node.mqttmessage_set.all %}
-              <li>{{ mq.mqttQueue.descr }} ({{mq.received}})</li> 
+              <li><span class = "nodename">{{ mq.mqttQueue.descr }}</span> ({{mq.received}})<br>
+              Topic <span class = "mqtt_info">{{mq.topic}}</span><br>
+              Payload <span class = "mqtt_info">{{mq.payload}}</span></li> 
             {% endfor %}
           </ul>
         {% endif %}

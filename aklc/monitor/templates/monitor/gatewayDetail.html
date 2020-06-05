@@ -84,6 +84,20 @@ Node Details
           <li><a href="{% url 'monitor:nodeDetail' pass.nodeID.id %}">{{pass.nodeID}}</a> {{pass.lastdata }}</li>
         {% endfor %}
         </ul>
+
+        {% if gateway.mqttmessage_set.all %}
+          <P>Data has been received from the following MQTT queues</P>
+          <ul>
+          {% for mq in gateway.mqttmessage_set.all %}
+              <li><span class = "nodename">{{ mq.mqttQueue.descr }}</span> ({{mq.received}})<br>
+              <!-- Topic <span class = "mqtt_info">{{mq.topic}}</span><br>
+              Payload <span class = "mqtt_info">{{mq.payload}}</span></li> -->
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+
+
         {% if gateway.status == 'X' %}
           <div id="node_det_button" class="action_button">
             <a href="{% url 'monitor:nodeRemove' gateway.id %}" class="btn btn-danger" role="button">Remove</a>
