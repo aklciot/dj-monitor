@@ -58,6 +58,15 @@ def mqtt_on_connect(client, userdata, flags, rc):
         print(sub_topic)
         client.subscribe(sub_topic)
 
+# ********************************************************************
+def mqtt_on_disconnect(client, userdata, rc):
+    """
+      This procedure is called on connection to the mqtt broker
+    """
+    print(f"MQTT has disconnected, the code was {rc}, attempting to reconnect")
+    client.reconnect()
+    return
+
 
 # ********************************************************************
 def mqtt_on_message(client, userdata, msg):
@@ -96,7 +105,7 @@ def mqtt_on_message(client, userdata, msg):
             # print("Gateway message received")
             cPayload = sPayload.split(",")  # the payload should be CSV
 
-            print("Node {}, Gateway {}".format(cPayload[1], cPayload[0]))
+            print("Gateway msg received, Node {}, Gateway {}".format(cPayload[1], cPayload[0]))
             if node_validate(cPayload[1]):  # check if the nodeID is valid
                 # get the node, or create it if not found
                 # print("Valid node {}".format(cPayload[1]))
@@ -135,7 +144,7 @@ def mqtt_on_message(client, userdata, msg):
                     print(f"Houston, we have an error {e}")
 
         elif cTopic[1] == "Network":  # These are status messages sent by gateways and nodes. Data in JSON format
-            # print("Network message received |{}|, topic |{}|".format(sPayload, msg.topic))
+            print(f"Network message received |{sPayload}|, topic |{msg.topic}|")
             # print("Topic length = {}".format(len(cTopic)))
             jPayload = json.loads(sPayload)  # the payload should be JSON
 
@@ -176,7 +185,7 @@ def mqtt_on_message(client, userdata, msg):
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
         jPayload = json.loads(sPayload)
-        # print("Team message arrived, topic is {}, payload is {}".format(msg.topic, sPayload))
+        print(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
         # print("The NodeID is {}".format(jPayload["NodeID"]))
         if "NodeID" in jPayload:
             try:
@@ -392,7 +401,7 @@ def sys_monitor():
     # functions called by mqtt client
     client.on_connect = mqtt_on_connect
     client.on_message = mqtt_on_message
-    print("MQTT env set up done")
+    client.on_disconnect = mqtt_on_disconnect
 
     try:
 
@@ -400,10 +409,12 @@ def sys_monitor():
         client.username_pw_set(eMqtt_user, eMqtt_password)
         client.connect(eMqtt_host, int(eMqtt_port), 60)
     except Exception as e:
-        print(e)
+        print(f"MQTT connection error: {e}")
 
-    # used to manage mqtt subscriptions
+     # used to manage mqtt subscriptions
     client.loop_start()
+
+    print("MQTT env set up done")
 
     # initialise the checkpoint timer
     checkTimer = timezone.now()
