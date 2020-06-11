@@ -48,6 +48,17 @@ def mqtt_on_connect(client, userdata, flags, rc):
         client.subscribe(sub_topic)
     return
 
+def mqtt_on_disconnect(client, userdata, rc):
+    """
+      This procedure is called on when a disconnection is noted
+      Attempt to reconnect
+    """
+    print(f"Disconnected to {userdata.descr} with result code {rc}, attempt to reconnect")
+    res = client.reconnect()
+    print(f"Reconnect result was {res}")
+    return
+
+
 # ********************************************************************
 """
 This function is called when an mqtt message is received
@@ -128,8 +139,12 @@ def mqtt_spy():
     """ The main program that sends updates to the MQTT system
     """
 
+    print(" ")
+    print(" ")
     print("Start MQTT spy")
-
+    print(" ")
+    print(" ")
+    
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
     
@@ -153,7 +168,7 @@ def mqtt_spy():
         except Exception as e:
             print(e)
             print(f"Houston, we have an mqtt connection error {e}")
-            cMqtt.pop()     # remove this from the list 
+            # cMqtt.pop()     # remove this from the list 
         
         #time.sleep(5)
     

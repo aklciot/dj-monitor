@@ -64,7 +64,8 @@ def mqtt_on_disconnect(client, userdata, rc):
       This procedure is called on connection to the mqtt broker
     """
     print(f"MQTT has disconnected, the code was {rc}, attempting to reconnect")
-    client.reconnect()
+    res = client.reconnect()
+    print(f"Reconnect result was {res}")
     return
 
 
@@ -185,7 +186,7 @@ def mqtt_on_message(client, userdata, msg):
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
         jPayload = json.loads(sPayload)
-        print(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
+        # print(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
         # print("The NodeID is {}".format(jPayload["NodeID"]))
         if "NodeID" in jPayload:
             try:
@@ -404,7 +405,6 @@ def sys_monitor():
     client.on_disconnect = mqtt_on_disconnect
 
     try:
-
         # set up the MQTT environment
         client.username_pw_set(eMqtt_user, eMqtt_password)
         client.connect(eMqtt_host, int(eMqtt_port), 60)
