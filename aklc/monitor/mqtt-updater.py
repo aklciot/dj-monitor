@@ -161,7 +161,7 @@ def mqtt_on_message(client, userdata, msg):
         # Check types of message from the topic
 
         if cTopic[1] == "Status":  # Status messages from Gateways, data in CSV format
-            # print(f"AKLC Status message received, payload is {sPayload}")
+            #print(f"AKLC Status message received, payload is {sPayload}")
 
             try:
                 node = Node.objects.get(nodeID=cPayload[0])  # Lets
@@ -169,8 +169,21 @@ def mqtt_on_message(client, userdata, msg):
 
                 if node.messagetype:
                     jOut = csv_to_json(sPayload, node)
-                    # print("Messagetype found")
+                    #print("Messagetype found")
+                    #print(f"jOut is {jOut}")
 
+                    if "Uptime" in jOut["jStr"]:
+                        node.upTime = jOut["jStr"]["Uptime"]
+                        node.save()
+                        #print(f"Update updated to {node.upTime}")
+                        
+                    if "HWType" in jOut["jStr"]:
+                        node.hardware = jOut["jStr"]["HWType"]
+                        
+                    if "Version" in jOut["jStr"]:
+                        node.software = jOut["jStr"]["Version"]
+                        
+                    node.save()
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
 

@@ -12,6 +12,7 @@ class Team(models.Model):
     """
     Model for a Team, usually referred to as a Project by the IoT team.
     """
+
     teamID = models.CharField(max_length=50)
     descr = models.TextField(blank=True, null=True)
 
@@ -29,6 +30,7 @@ class MessageType(models.Model):
     The message type consists of this header model and a number of MessageItem
     elements which need to be ordered as in the incoming payload.
     """
+
     msgName = models.CharField(max_length=30)
     descr = models.TextField(blank=True, null=True, help_text="")
 
@@ -44,6 +46,7 @@ class MessageItem(models.Model):
     """
     Model for message items which are part og the MessageType element.
     """
+
     FIELD_TYPE_CHOICES = [
         ("S", "String"),
         ("I", "Integer"),
@@ -60,7 +63,9 @@ class MessageItem(models.Model):
         choices=FIELD_TYPE_CHOICES,
     )
     isTag = models.BooleanField(
-        blank=True, default=False, help_text="Use as a field tag when uploading to Influx"
+        blank=True,
+        default=False,
+        help_text="Use as a field tag when uploading to Influx",
     )
 
     class Meta:
@@ -81,6 +86,7 @@ class Node(models.Model):
         jsonLoad(input) - processes JSON input
         incrementMsgCnt - increments message count for node
     """
+
     nodeID = models.CharField(max_length=30)
     lastseen = models.DateTimeField(blank=True, null=True)
     cameOnline = models.DateTimeField(blank=True, null=True)
@@ -167,12 +173,13 @@ class Node(models.Model):
         null=True,
         help_text="The credentials needed for thingsboard data load",
     )
+    upTime = models.FloatField("Uptime in minutes", default=0.0)
 
     class Meta:
         ordering = ["nodeID"]
 
     def __str__(self):
-        return(self.nodeID)
+        return self.nodeID
 
     def passOnData(self):
         """
@@ -186,7 +193,7 @@ class Node(models.Model):
         """
         if self.isGateway:
             passAll = NodeGateway.objects.filter(gatewayID=self).order_by("-lastdata")
-        else:                   # must be a node
+        else:  # must be a node
             passAll = NodeGateway.objects.filter(nodeID=self).order_by("-lastdata")
         # Now filter the result so we only get the last 7 days
         passAll = passAll.filter(
@@ -206,7 +213,7 @@ class Node(models.Model):
         self.lastseen = timezone.make_aware(
             datetime.datetime.now(), timezone.get_current_timezone()
         )
-        if self.status != "C":              # if the node is not current, update the status
+        if self.status != "C":  # if the node is not current, update the status
             self.textStatus = "Online"
             self.status = "C"
             self.cameOnline = timezone.make_aware(
@@ -218,7 +225,7 @@ class Node(models.Model):
         """
         Process as JSON string and updates any relevant node/gateway attributes.
         """
-        
+
         jPayload = json.loads(sInput)
         # Set battery level
         if self.battName in jPayload:
@@ -236,7 +243,7 @@ class Node(models.Model):
                     self.longitude = float(jPayload["Longitude"])
                 else:
                     self.longitude = jPayload["Longitude"]
-                   
+
             if "latitude" in jPayload:
                 if isinstance(jPayload["latitude"], str):
                     self.latitude = float(jPayload["latitude"])
@@ -269,7 +276,7 @@ class Node(models.Model):
         # Look for the NodeMsgStats record for this node at this time
         aStat = self.nodemsgstats_set.all().filter(dt=tDate, hr=tDate.hour)
 
-        if len(aStat) == 0:             # If not found, make a new one
+        if len(aStat) == 0:  # If not found, make a new one
             nMsg = NodeMsgStats(node=self, dt=tDate, hr=tDate.hour)
             nMsg.msgCount = 1
             nMsg.save()
@@ -280,11 +287,22 @@ class Node(models.Model):
 
         return ()
 
+    def startTime(self):
+        """
+        Function returns date & time when node last started  
+        """
+        dt = timezone.make_aware(
+            datetime.datetime.now(), timezone.get_current_timezone()
+        ) - datetime.timedelta(minutes=self.upTime)
+
+        return dt
+
 
 class NodeUser(models.Model):
     """
     Model for relationship between a user and a node.
     """
+
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.BooleanField(blank=True, default=False)
@@ -294,7 +312,7 @@ class NodeUser(models.Model):
     smsSent = models.BooleanField(blank=True, default=False)
 
     def __str__(self):
-        return(f"{self.nodeID}: {self.user.username}")
+        return f"{self.nodeID}: {self.user.username}"
 
 
 class Profile(models.Model):
@@ -305,6 +323,7 @@ class Profile(models.Model):
         Record a mobile phone number which is used for SMS alerts
         Record what type of email report a user gets
     """
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phoneNumber = models.CharField(max_length=50, blank=True, null=True)
     reportType = models.CharField(max_length=1, blank=True, null=True, default="S")
@@ -334,6 +353,7 @@ class NodeGateway(models.Model):
     """
     This model stores the date/time the last message from a node was passed on by a gateway.
     """
+
     nodeID = models.ForeignKey(Node, on_delete=models.CASCADE)
     gatewayID = models.ForeignKey(
         Node, on_delete=models.CASCADE, related_name="gateway",
@@ -357,6 +377,7 @@ class NodeMsgStats(models.Model):
     def __str__(self):
         return f"{self.node.nodeID}: {self.dt} : {self.hr}"
 
+
 class MqttQueue(models.Model):
     """
     This stores details of various mqtt queues.
@@ -375,10 +396,12 @@ class MqttQueue(models.Model):
     def __str__(self):
         return f"{self.descr}"
 
+
 class MqttMessage(models.Model):
     """
     Stores the last mqtt message for a node
     """
+
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
     mqttQueue = models.ForeignKey(MqttQueue, on_delete=models.CASCADE)
     received = models.DateTimeField(auto_now=True)
@@ -391,4 +414,4 @@ class MqttMessage(models.Model):
         verbose_name = "Mqtt Message"
 
     def __str__(self):
-        return( f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, payload: {self.payload}")
+        return f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, payload: {self.payload}"
