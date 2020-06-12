@@ -233,6 +233,7 @@ def missing_node(node, mqtt_client):
         node.textStatus = "Missing"
         node.status = "X"
         node.notification_sent = True
+        node.upTime = 0
         node.status_sent = timezone.make_aware(
             datetime.datetime.now(), timezone.get_current_timezone()
         )
