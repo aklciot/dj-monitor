@@ -67,7 +67,9 @@ Node Details
           <tr><td>Last seen at: </td><td class="lastseen">{{ gateway.lastseen }}</td></tr>
           {% if gateway.status == "C" %}
             <tr><td>Online for : </td><td class="lastseen">{{ gateway.cameOnline|timesince }}</td></tr>
-            <tr><td>Since last reboot : </td><td class="lastseen">{{ gateway.startTime|timesince }}</td></tr>
+            {% if gateway.startTime > 0 %}
+              <tr><td>Since last reboot : </td><td class="lastseen">{{ gateway.startTime|timesince }}</td></tr>
+            {% endif %}
           {% endif %}
 
           {% if gateway.latitude %} {% if gateway.longitude %}
