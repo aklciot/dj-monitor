@@ -62,8 +62,8 @@ Node Details
         <table>
           <tr><th>Reported data: </th></tr>
           <tr><td>Current status: </td><td>{{ gateway.textStatus }}</td></tr>
-          <tr><td>Last data: </td><td class = "wrap_cell">{{ gateway.lastData }}</td></tr>
-          <tr><td>Last status: </td><td class = "wrap_cell">{{ gateway.lastStatus }}</td></tr>
+          <tr><td>Last data: </td><td class = "wrap_cell">{{ gateway.lastData }} ({{ gateway.lastDataTime }})</td></tr>
+          <tr><td>Last status: </td><td class = "wrap_cell">{{ gateway.lastStatus }} ({{ gateway.lastStatusTime }})</td></tr>
           <tr><td>Last seen at: </td><td class="lastseen">{{ gateway.lastseen }}</td></tr>
           {% if gateway.status == "C" %}
             <tr><td>Online for : </td><td class="lastseen">{{ gateway.cameOnline|timesince }}</td></tr>
