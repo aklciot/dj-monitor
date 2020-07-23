@@ -98,6 +98,7 @@ def mqtt_on_message(client, userdata, msg):
                 gw.msgReceived()
                 gw.isGateway = True
                 gw.lastStatus = sPayload
+                gw.lastStatusTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 gw.incrementMsgCnt()
                 gw.save()
 
@@ -113,6 +114,7 @@ def mqtt_on_message(client, userdata, msg):
                 nd, created = Node.objects.get_or_create(nodeID=cPayload[1])
                 nd.msgReceived()
                 nd.lastData = sPayload
+                nd.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.incrementMsgCnt()
                 nd.save()
 
@@ -123,6 +125,7 @@ def mqtt_on_message(client, userdata, msg):
                 gw.msgReceived()
                 gw.isGateway = True
                 gw.lastData = sPayload
+                gw.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 gw.incrementMsgCnt()
                 gw.save()
 
@@ -162,6 +165,7 @@ def mqtt_on_message(client, userdata, msg):
                             nd, created = Node.objects.get_or_create(nodeID=cTopic[2])
                             nd.msgReceived()
                             nd.lastStatus = sPayload
+                            nd.lastStatusTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                             nd.jsonLoad(sPayload)
                             nd.incrementMsgCnt()
                             nd.save()
@@ -175,6 +179,7 @@ def mqtt_on_message(client, userdata, msg):
                                 )
                                 gw.msgReceived()
                                 gw.lastStatus = sPayload
+                                gw.lastStatusTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                                 gw.jsonLoad(sPayload)
                                 gw.incrementMsgCnt()
 
@@ -193,6 +198,7 @@ def mqtt_on_message(client, userdata, msg):
                 nd, created = Node.objects.get_or_create(nodeID=jPayload["NodeID"])
                 nd.msgReceived()
                 nd.lastData = sPayload
+                nd.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.jsonLoad(sPayload)
                 nd.incrementMsgCnt()
                 try:

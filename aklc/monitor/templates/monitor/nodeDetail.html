@@ -73,8 +73,8 @@ Node Details
         <table>
           <tr><th>Reported data: </th></tr>
           <tr><td>Current status: </td><td>{{ node.textStatus }}</td></tr>
-          <tr><td>Last data: </td><td class = "wrap_cell">{{ node.lastData }}</td></tr>
-          <tr><td>Last status: </td><td class = "wrap_cell">{{ node.lastStatus }}</td></tr>
+          <tr><td>Last data: </td><td class = "wrap_cell">{{ node.lastData }} ({{ node.lastDataTime }})</td></tr>
+          <tr><td>Last status: </td><td class = "wrap_cell">{{ node.lastStatus }} ({{ node.lastStatusTime }})</td></tr>
           <tr><td>Last seen at: </td><td class="lastseen">{{ node.lastseen }}</td></tr>
           {% if node.status == "C" %}
             <tr><td>Online for : </td><td class="lastseen">{{ node.cameOnline|timesince }}</td></tr>
