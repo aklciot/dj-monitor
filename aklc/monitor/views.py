@@ -10,13 +10,15 @@ from django.urls import reverse
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 
-from .models import Node, NodeUser, MessageType, MessageItem
+from .models import Node, NodeUser, MessageType, MessageItem, Team
 from .forms import (
     NodeDetailForm,
     NodeNotifyForm,
     MessageTypeDetailForm,
     MessageItemDetailForm,
     NodeMessageForm,
+    ProjectDetailForm,
+    ProjectAddForm,
 )
 from django.forms import modelformset_factory
 
@@ -62,6 +64,16 @@ def index_msg(request):
     msgList = MessageType.objects.order_by("msgName")
     context = {"msgList": msgList, "msgactive": "Y"}
     return render(request, "monitor/index_msg.html", context)
+
+
+@login_required
+def index_prj(request):
+    """
+    View for projects.
+    """
+    prjList = Team.objects.order_by("teamID")
+    context = {"prjList": prjList, "prjactive": "Y"}
+    return render(request, "monitor/index_prj.html", context)
 
 
 @login_required
@@ -307,3 +319,53 @@ def msgAdd(request):
     context["msgactive"] = "Y"
     return render(request, "monitor/msgAdd.html", context)
 
+@login_required
+def projectDetail(request, prj_ref):
+    prj = get_object_or_404(Team, pk=prj_ref)
+    prjNodes = prj.node_set.all()
+    context = {"prj": prj, "prjNodes": prjNodes}
+    context["prjactive"] = "Y"
+    return render(request, "monitor/projectDetail.html", context)
+
+@login_required
+def projectUpdate(request, prj_ref):
+    prj = get_object_or_404(Team, pk=prj_ref)
+    #print("BP1")
+    if request.method == "POST":
+        print("Post message received")
+        nf = ProjectDetailForm(request.POST, instance=prj)
+        if nf.is_valid():
+            print("Valid BK 1")
+            nf.save()
+
+            return HttpResponseRedirect(reverse("monitor:projectDetail", args=[prj_ref]))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = ProjectDetailForm(instance=prj)
+
+    context = {"form": nf, "prj": prj}
+    context["prjactive"] = "Y"
+    print(context)
+    return render(request, "monitor/projectUpdate.html", context)
+
+@login_required
+def projectAdd(request):
+    #prj = get_object_or_404(Team, pk=prj_ref)
+    print("BP1")
+    if request.method == "POST":
+        print("Post message received")
+        nf = ProjectAddForm(request.POST)
+        if nf.is_valid():
+            print("Valid BK 1")
+            prj = Team(teamID=nf.cleaned_data['teamID'], descr=nf.cleaned_data['descr'])
+            prj.save()
+
+            return HttpResponseRedirect(reverse("monitor:projectDetail", args=[prj.id]))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        print("BP2")
+        nf = ProjectAddForm()
+
+    context = {"form": nf}
+    context["prjactive"] = "Y"
+    return render(request, "monitor/projectAdd.html", context)

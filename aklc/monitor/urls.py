@@ -19,4 +19,8 @@ urlpatterns = [
     path("message/add/", views.msgAdd, name="msgAdd"),
     path("message/update/<int:msg_ref>/", views.msgUpdate, name="msgUpdate"),
     path("node/msgupdate/<int:node_ref>/", views.nodeMsgUpdate, name="nodeMsgUpdate"),
+    path("index_prj/", views.index_prj, name="index_prj"),
+    path("project/<int:prj_ref>/", views.projectDetail, name="projectDetail"),
+    path("project/update/<int:prj_ref>/", views.projectUpdate, name="projectUpdate"),
+    path("project/add/", views.projectAdd, name="projectAdd"),
 ]

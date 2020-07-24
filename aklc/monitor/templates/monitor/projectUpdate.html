@@ -1,0 +1,26 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Project Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+  <div id="node-header"><h3>Update Project information for {{ prj.teamID }}</h3></div>
+    <div id="node_detail" class="content_block">
+      <div id="node_det_table">
+        <form action="{% url 'monitor:projectUpdate'  prj.id %}" method="POST">
+          {% csrf_token %}
+          <table>
+            {{ form.as_table }}
+          </table>
+        <input type="submit" value="Submit">
+        <span id="node_cancel_button" class="cancel_button">
+          <a href="{% url 'monitor:projectDetail' prj.id %}" class="btn btn-link btn-outline-warning" role="button">Cancel</a>
+        </span>
+      </form>
+    </div>
+  </div>
+ 
+</div>
+{% endblock %}

@@ -3,7 +3,7 @@
 {% block pagerefresh %}<meta http-equiv="refresh" content="30">{% endblock %}
 
 {% block title %}
-Gateway list
+Project list
 {% endblock %}
 
 {% block navbar %}
@@ -20,7 +20,7 @@ Gateway list
       <li class="nav-item">
         <a class="nav-link" href="{% url 'monitor:index' %}">Data nodes</a>
       </li>
-      <li class="nav-item active">
+      <li class="nav-item">
         <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
       </li>
       {% if perms.monitor.change_messagetype %}
@@ -29,7 +29,7 @@ Gateway list
         </li>
       {% endif %}
       {% if perms.monitor.change_team %}
-        <li class="nav-item">
+        <li class="nav-item active">
           <a class="nav-link" href="{% url 'monitor:index_prj' %}">Projects</a>
         </li>
       {% endif %}
@@ -39,29 +39,21 @@ Gateway list
 {% endblock %}
 
 {% block web-body %}
+  <div id="prj_add_button" class="action_button">
+    <a href="{% url 'monitor:projectAdd'%}" class="btn btn-info" role="button">Add project</a>
+  </div>
 
-  <div id="gateways">
-          {% if nodeList %}
-          <div class="list-group">
-          {% for node in nodeList%}
-            {% if node.isGateway %}  {% if not node.status == 'M' %}
-              {% if node.status == 'X' %}
-                <a href="{% url 'monitor:gatewayDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-dark">{{node.nodeID}} (gateway not reporting in)</a>
-              {% else %}
-                {% if node.descr %}
-                  <a href="{% url 'monitor:gatewayDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}} ({{node.descr}})</a>
-                {% else %}
-                  <a href="{% url 'monitor:gatewayDetail' node.id %}" class="list-group-item list-group-item-action list-group-item-success">{{node.nodeID}}</a>
-                {% endif %}
-
-              {% endif %}
-            {% endif %} {% endif %}
-          {% endfor %}
-          </div>
-        {% else %}
-          <p>No gateways defined</p>>
-        {% endif %} 
+  <div id="projects">
+    {% if prjList %}
+      <div class="list-group">
+        {% for project in prjList%}
+          <a href="{% url 'monitor:projectDetail' project.id %}" class="list-group-item list-group-item-action list-group-item-success">{{project.teamID}}</a>
+        {% endfor %}
       </div>
+    {% else %}
+      <p>No projects defined</p>
+    {% endif %} 
+  </div>
     
 
 {% endblock %}

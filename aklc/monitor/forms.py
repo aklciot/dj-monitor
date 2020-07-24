@@ -1,5 +1,5 @@
 from django import forms
-from .models import Node, MessageType, MessageItem
+from .models import Node, MessageType, MessageItem, Team
 
 
 class ContactForm(forms.Form):
@@ -75,3 +75,24 @@ class NodeMessageForm(forms.ModelForm):
         #    'thingsboardCred': forms.Textarea(attrs={'rows': 3}),
         # }
 
+
+class ProjectDetailForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = [
+            "descr",
+        ]
+        widgets = {
+            "descr": forms.Textarea(attrs={"rows": 3}),
+        }
+
+class ProjectAddForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = [
+            "teamID",
+            "descr",
+        ]
+        widgets = {
+            "descr": forms.Textarea(attrs={"rows": 3}),
+        }

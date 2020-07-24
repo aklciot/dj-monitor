@@ -1,0 +1,38 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Project Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="prj-header"><H2>Project information</H2></div>
+    <div id="prj_detail" class="content_block">
+      <div id="prj_det_table">
+        <table>
+          <tr><th>Project Name: </th><th>{{ prj.teamID }}</th></tr>
+          <tr><td>Description: </td><td class = "wrap_cell">{{ prj.descr }}</td></tr>
+        </table>
+      </div>
+      <div id="prj_det_button" class="action_button">
+        <a href="{% url 'monitor:projectUpdate' prj.id %}" class="btn btn-info" role="button">Update details</a>
+      </div>
+      {% if prjNodes %}
+        <div id="prj_usage_table">
+          <b>Nodes and gateways using this project</b>
+          <ul>
+          {% for node in prjNodes %}
+              <li>
+              <a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}} ({{node.descr}})</a>
+              </li>
+            {% endfor %}
+          </table>
+        </div>  
+      {% endif %}    
+    </div>
+  </div>
+
+  <a href="{% url 'monitor:index_prj' %}" class="btn btn-info" role="button">Home</a>
+</div>
+{% endblock %}
