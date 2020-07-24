@@ -24,7 +24,7 @@ Project Details
           <ul>
           {% for node in prjNodes %}
               <li>
-              <a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}} ({{node.descr}})</a>
+              <a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a>
               </li>
             {% endfor %}
           </table>
