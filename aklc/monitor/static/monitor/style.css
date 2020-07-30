@@ -71,10 +71,13 @@ body {
   color: yellow
 }
 
-
 .logo {
   max-width: 30%;
   padding: 10px 10px 10px 10px;
+}
+
+.background1 {
+  background-size: cover;
 }
 
 .wrap_cell {

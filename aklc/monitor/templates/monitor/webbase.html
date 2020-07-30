@@ -27,7 +27,10 @@
     </title>
   </head>
   <body class="iot_background">
-    <div class="container-fluid">
+    {% block background %}
+      <div class="container-fluid">
+    {% endblock %}
+    
       <div id="logged_in">
         {% if user.is_authenticated %}
           Hi {{ user.username|capfirst }} <a href="{% url 'logout' %}">Logout</a>

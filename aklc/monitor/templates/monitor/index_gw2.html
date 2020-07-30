@@ -1,15 +1,18 @@
 {% extends "monitor/webbase.html" %}
-
+{% load static %}
 {% block pagerefresh %}<meta http-equiv="refresh" content="30">{% endblock %}
 
 {% block title %}
 Gateway list
 {% endblock %}
 
-{% block web-body %}
+{% block background %}
+  <div class="container-fluid background1" style="background-image: url({% static 'monitor/Torbay.jpg' %});">
+{% endblock %}
 
-  <div id="gateways" class="container-fluid">
+{% block web-body %}
   
+  <div id="gateways" class="container-fluid">
     <p>
     {% comment %}<div class="card-columns">{% endcomment %}
       {% for gRow in gw_block %}
