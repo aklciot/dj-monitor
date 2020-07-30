@@ -1,3 +1,7 @@
+/** {
+  box-sizing: border-box;
+}
+*/
 body {
   font-family:Verdana, Geneva, Arial, sans-serif;
   background-color: lightblue;
@@ -84,6 +88,12 @@ body {
 
 #logged_in {
   float: right;
+}
+
+.card-columns {
+  @include media-breakpoint-only(xl) {
+    column-count: 5;
+  }
 }
 
 /* -------------------------------------

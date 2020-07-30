@@ -51,9 +51,22 @@ def index_gw(request):
     nodeList = Node.objects.order_by("nodeID").exclude(status="M")
     # Remove anything that is not a gateway
     nodeList = nodeList.exclude(isGateway=False)
-    
-    context = {"nodeList": nodeList, "gatewayactive": "Y"}
-    return render(request, "monitor/index_gw.html", context)
+    gw_block = []           # will be a list of lists
+    nCnt = 1
+    innerList = []
+    for g in nodeList:      # cycle through the gateways
+      innerList.append(g)
+      nCnt += 1
+      if nCnt > 6:
+        gw_block.append(innerList)
+        nCnt = 1
+        innerList = []
+
+    context = {"nodeList": nodeList, "gatewayactive": "Y", "gw_block": gw_block}
+    if request.user.username == 'jim':
+      return render(request, "monitor/index_gw2.html", context)
+    else:
+      return render(request, "monitor/index_gw.html", context)
 
 
 @login_required
@@ -369,3 +382,6 @@ def projectAdd(request):
     context = {"form": nf}
     context["prjactive"] = "Y"
     return render(request, "monitor/projectAdd.html", context)
+
+def dashBoard(request):
+    return render(request, "monitor/NetworkStatusPage.html")

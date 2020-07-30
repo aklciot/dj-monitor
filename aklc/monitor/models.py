@@ -92,6 +92,7 @@ class Node(models.Model):
     cameOnline = models.DateTimeField(blank=True, null=True)
     status_sent = models.DateTimeField(null=True, blank=True)
     isGateway = models.BooleanField(blank=True, default=False)
+    isRepeater = models.BooleanField(blank=True, default=False)
     notification_sent = models.BooleanField(default=False)
     status = models.CharField(
         max_length=1,
@@ -176,6 +177,7 @@ class Node(models.Model):
         help_text="The credentials needed for thingsboard data load",
     )
     upTime = models.FloatField("Uptime in minutes", default=0.0)
+    bootTime = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ["nodeID"]

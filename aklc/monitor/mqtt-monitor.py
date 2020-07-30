@@ -116,6 +116,10 @@ def mqtt_on_message(client, userdata, msg):
                 nd.lastData = sPayload
                 nd.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
                 nd.incrementMsgCnt()
+                if "RP" in nd.nodeID:
+                    nd.isRepeater = True
+                else:
+                    nd.isRepeater = False
                 nd.save()
 
             # Check and update the gateways info
@@ -523,7 +527,7 @@ def sys_monitor():
 
                         # function to remove old nodes in 'M'aintenance mode
                         print("Checking for maintenace nodes to purge")
-                        dCutOff = timezone.now() - datetime.timedelta(days=30)
+                        dCutOff = timezone.now() - datetime.timedelta(days=360)
                         print(f"Cutoff date is {dCutOff}")
                         allMaint = Node.objects.filter(status="M").filter(
                             lastseen__lt=dCutOff

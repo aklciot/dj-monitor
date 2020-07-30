@@ -23,4 +23,5 @@ urlpatterns = [
     path("project/<int:prj_ref>/", views.projectDetail, name="projectDetail"),
     path("project/update/<int:prj_ref>/", views.projectUpdate, name="projectUpdate"),
     path("project/add/", views.projectAdd, name="projectAdd"),
+    path("NetworkStatus/", views.dashBoard, name="DashboardStatus"),
 ]

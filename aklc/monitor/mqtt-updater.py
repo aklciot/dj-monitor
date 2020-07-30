@@ -174,6 +174,8 @@ def mqtt_on_message(client, userdata, msg):
 
                     if "Uptime" in jOut["jStr"]:
                         node.upTime = jOut["jStr"]["Uptime"]
+                        node.bootTime = timezone.make_aware(
+                            datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(minutes=node.upTime)
                         node.save()
                         #print(f"Update updated to {node.upTime}")
                         
