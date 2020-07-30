@@ -90,10 +90,10 @@ body {
   float: right;
 }
 
-.card-columns {
-  @include media-breakpoint-only(xl) {
-    column-count: 5;
-  }
+.card-header {
+    font-weight: bold;
+    color: black;
+    font-size: 1.2em;
 }
 
 /* -------------------------------------

@@ -63,7 +63,7 @@ def index_gw(request):
         innerList = []
 
     context = {"nodeList": nodeList, "gatewayactive": "Y", "gw_block": gw_block}
-    if request.user.username == 'jim':
+    if request.user.groups.filter(name="BetaTesters").exists():
       return render(request, "monitor/index_gw2.html", context)
     else:
       return render(request, "monitor/index_gw.html", context)

@@ -6,92 +6,50 @@
 Gateway list
 {% endblock %}
 
-{% block navbar %}
-<nav class="navbar navbar-expand-md bg-dark navbar-dark">
- 
-  <!-- Toggler/collapsibe Button -->
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <!-- Navbar links -->
-  <div class="collapse navbar-collapse" id="collapsibleNavbar">
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'monitor:index' %}">Data nodes</a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
-      </li>
-      {% if perms.monitor.change_messagetype %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'monitor:index_msg' %}">Message Types</a>
-        </li>
-      {% endif %}
-      {% if perms.monitor.change_team %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'monitor:index_prj' %}">Projects</a>
-        </li>
-      {% endif %}
-    </ul>
-  </div>
-</nav>
-{% endblock %}
-
 {% block web-body %}
 
   <div id="gateways" class="container-fluid">
-    {% comment%}
-    {% if nodeList %}
-      {% for gRow in gw_block %}
-        <div class="row">
-          {% for node in gRow %}
-            {% if node.upTime > 10 %}
-              <div class="col-sm-2 bg-primary">
-                {{node.nodeID}}
-              </div>
-            {% else %}
-              <div class="col-sm-2 bg-warning">
-                {{node.nodeID}}
-              </div>
-            {% endif %}
-          {% endfor %}
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>No gateways defined</p>>
-    {% endif %} 
-    {% endcomment %}
+  
     <p>
     {% comment %}<div class="card-columns">{% endcomment %}
       {% for gRow in gw_block %}
         <div class = "row row-cols-6">
-        {% for node in gRow %}
-          <div class="col">
-          {% if node.status == "X" %}
-            <div class="card bg-danger"> 
-          {% elif node.upTime > 10080 %}
-            <div class="card bg-success"> 
-          {% elif node.upTime > 1440 %}
-            <div class="card bg-info">
-          {% else %}
-            <div class="card bg-warning">
-          {% endif %}
-            <a href="{% url 'monitor:gatewayDetail' node.id %}" class="stretched-link card-title text-center">{{node.nodeID}}</a>
-            <p class="card-text">
-            {% if node.descr %} {{node.descr }} <br> {% endif %}
-            HW: {{ node.hardware }} SW version : {{node.software}} <br>
-            {% if node.upTime %}
-            Up time : {{ node.startTime|timesince }}
+          {% for node in gRow %}
+            <div class="col">
+            {% if node.status == "X" %}
+              <div class="card bg-danger"> 
+            {% elif node.upTime > 10080 %}
+              <div class="card bg-success"> 
+            {% elif node.upTime > 1440 %}
+              <div class="card bg-info">
+            {% elif node.cameOnline > 10080 %}
+              <div class="card bg-success">
+            {% elif node.cameOnline > 1440 %}
+              <div class="card bg-info">    
             {% else %}
-            Online for: {{ node.cameOnline|timesince }}
+              <div class="card bg-warning">
             {% endif %}
-            </p>
+              <a href="{% url 'monitor:gatewayDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
+              <p class="card-text">
+              {% if node.descr %} {{node.descr }} <br> {% endif %}
+              {% if node.team %}Project: {{node.team.teamID}} <br>{% endif %}
+              HW: {{ node.hardware }} SW version : {{node.software}} <br>
+              {% if node.status != "X" %}
+                {% if node.upTime %}
+                  Up time : {{ node.startTime|timesince }}
+                {% else %}
+                  Online for: {{ node.cameOnline|timesince }}
+                {% endif %}
+              {% else %}
+                Status: Down
+              {% endif %}
+              </p>
             
-          </div>
-          </div>
-        {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
         </div>
+        <p>
       {% endfor %}
     {% comment %} </div> {% endcomment %}
   </div>  
