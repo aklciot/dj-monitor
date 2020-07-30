@@ -25,9 +25,9 @@ Gateway list
               <div class="card bg-success"> 
             {% elif node.upTime > 1440 %}
               <div class="card bg-info">
-            {% elif node.cameOnline > 10080 %}
+            {% elif node.onlineTime > 10080 %}
               <div class="card bg-success">
-            {% elif node.cameOnline > 1440 %}
+            {% elif node.onlineTime > 1440 %}
               <div class="card bg-info">    
             {% else %}
               <div class="card bg-warning">

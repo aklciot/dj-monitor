@@ -178,6 +178,7 @@ class Node(models.Model):
     )
     upTime = models.FloatField("Uptime in minutes", default=0.0)
     bootTime = models.DateTimeField(blank=True, null=True)
+    onlineTime = models.FloatField("Uptime in minutes", default=0.0)
 
     class Meta:
         ordering = ["nodeID"]
@@ -223,6 +224,8 @@ class Node(models.Model):
             self.cameOnline = timezone.make_aware(
                 datetime.datetime.now(), timezone.get_current_timezone()
             )
+        minDelta = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - self.cameOnline
+        self.onlineTime = minDelta.total_seconds()/60
         return ()
 
     def jsonLoad(self, sInput):
@@ -300,7 +303,7 @@ class Node(models.Model):
         ) - datetime.timedelta(minutes=self.upTime)
 
         return dt
-
+    
 
 class NodeUser(models.Model):
     """
