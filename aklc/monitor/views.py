@@ -40,8 +40,13 @@ def index(request):
     # remove any Gateways
     nodeList = nodeList.exclude(isGateway=True)
     
+    nodeList2 = Node.objects.order_by("team", "nodeID").exclude(status="M")
+
     context = {"nodeList": nodeList, "nodeactive": "Y"}
-    return render(request, "monitor/index.html", context)
+    if request.user.groups.filter(name="BetaTesters").exists():
+        return render(request, "monitor/index.html", context)
+    else:
+        return render(request, "monitor/index.html", context)
 
 
 def index_gw(request):

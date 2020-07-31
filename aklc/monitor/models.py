@@ -267,6 +267,13 @@ class Node(models.Model):
                 self.RSSI = jPayload["RSSI"]
             else:
                 print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
+        if "Uptime" in jPayload:
+            if isinstance(jPayload["Uptime"], int) or isinstance(jPayload["Uptime"], float):
+                self.upTime = jPayload["Uptime"]
+                self.bootTime = timezone.make_aware(
+                            datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(minutes=self.upTime)
+            else:
+                print(f"Invalid data for Uptime, recieved {jPayload['Uptime']}")
         return ()
 
     def incrementMsgCnt(self):
