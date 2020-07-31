@@ -20,17 +20,25 @@ Gateway list
           {% for node in gRow %}
             <div class="col">
             {% if node.status == "X" %}
-              <div class="card bg-danger"> 
-            {% elif node.upTime > 10080 %}
-              <div class="card bg-success"> 
-            {% elif node.upTime > 1440 %}
-              <div class="card bg-info">
-            {% elif node.onlineTime > 10080 %}
-              <div class="card bg-success">
-            {% elif node.onlineTime > 1440 %}
-              <div class="card bg-info">    
+              <div class="card bg-danger">
             {% else %}
-              <div class="card bg-warning">
+              {% if node.upTime %}
+                {% if node.upTime > 10080 %}
+                  <div class="card bg-success"> 
+                {% elif node.upTime > 1440 %}
+                  <div class="card bg-info">
+                {% else %}
+                  <div class="card bg-warning">
+                {% endif %}
+              {% else %}
+                {% if node.onlineTime > 10080 %}
+                  <div class="card bg-success">
+                {% elif node.onlineTime > 1440 %}
+                  <div class="card bg-info">    
+                {% else %}
+                  <div class="card bg-warning">
+                {% endif %}
+              {% endif %}
             {% endif %}
               <a href="{% url 'monitor:gatewayDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
               <p class="card-text">
@@ -41,7 +49,7 @@ Gateway list
                 {% if node.upTime %}
                   Up time : {{ node.startTime|timesince }}
                 {% else %}
-                  Online for: {{ node.cameOnline|timesince }}
+                  Uptime : N/A (Online for: {{ node.cameOnline|timesince }})
                 {% endif %}
               {% else %}
                 Status: Down
