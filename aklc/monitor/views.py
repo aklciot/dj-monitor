@@ -42,6 +42,7 @@ def index(request):
 
     nodeByTeam = Node.objects.order_by("team", "nodeID").exclude(status="M")
     nodeByTeam = nodeByTeam.exclude(isGateway=True)
+    nodeByTeam = nodeByTeam.exclude(isRepeater=True)
     noTeamNode = nodeByTeam.exclude(team__isnull=True)
     nodeBlock = []
     teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
