@@ -122,12 +122,40 @@ def index_gw(request):
             gw_block.append(innerList)
             nCnt = 1
             innerList = []
+    
+    if len(innerList) > 0:
+        gw_block.append(innerList)
 
     context = {"nodeList": nodeList, "gatewayactive": "Y", "gw_block": gw_block}
     if request.user.groups.filter(name="BetaTesters").exists():
         return render(request, "monitor/index_gw2.html", context)
     else:
         return render(request, "monitor/index_gw.html", context)
+
+def index_rp(request):
+    """
+    View for repeaters.
+    """
+    nodeList = Node.objects.order_by("nodeID").exclude(status="M")
+    # Remove anything that is not a repeater
+    nodeList = nodeList.exclude(isRepeater=False)
+    print(f"There are {len(nodeList)} repeaters")
+    rp_block = []  # will be a list of lists
+    nCnt = 1
+    innerList = []
+    for g in nodeList:  # cycle through the gateways
+        innerList.append(g)
+        nCnt += 1
+        if nCnt > 6:
+            rp_block.append(innerList)
+            nCnt = 1
+            innerList = []
+    
+    if len(innerList) > 0:
+        rp_block.append(innerList)
+
+    context = {"repeaterList": rp_block, "repeateractive": "Y"}
+    return render(request, "monitor/index_rp.html", context)
 
 
 @login_required
@@ -189,9 +217,55 @@ def gatewayDetail(request, gateway_ref):
     }
     return render(request, "monitor/gatewayDetail.html", context)
 
+@login_required
+def repeaterDetail(request, rp_ref):
+    """
+    View to display Repeater details
+    """
+    rp = get_object_or_404(Node, pk=rp_ref)
+    aNodeUsers = NodeUser.objects.filter(
+        nodeID=rp
+    )  # users that have an 'interest' in this gateway
+    passList = rp.passOnData()  # nodes that have been processed by this repeater
+    context = {
+        "node": rp,
+        "user": request.user,
+        "aNodeUser": aNodeUsers,
+        "passData": passList,
+        "repeateractive": "Y",
+    }
+    return render(request, "monitor/repeaterDetail.html", context)
+
 
 @login_required
 def nodeUpdate(request, node_ref):
+    """
+    View to process info update form from nodes or gateways
+    """
+    node = get_object_or_404(Node, pk=node_ref)
+    if request.method == "POST":
+
+        nf = NodeDetailForm(
+            request.POST, instance=node
+        )  # NodeDetailForm defines in forms.py
+        if nf.is_valid():
+            nf.save()
+            return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
+        else:
+            print("Invalid form")
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = NodeDetailForm(instance=node)
+    context = {"form": nf, "node": node}
+    2
+    if node.isGateway:
+        context["gatewayactive"] = "Y"
+    else:
+        context["nodeactive"] = "Y"
+    return render(request, "monitor/nodeUpdate.html", context)
+
+@login_required
+def repeaterUpdate(request, node_ref):
     """
     View to process info update form from nodes or gateways
     """

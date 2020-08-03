@@ -1,0 +1,68 @@
+{% extends "monitor/webbase.html" %}
+{% load static %}
+{% block pagerefresh %}<meta http-equiv="refresh" content="60">{% endblock %}
+
+{% block title %}
+Repeater list
+{% endblock %}
+
+{% block background %}
+  <div class="container-fluid background1" style="background-image: url({% static 'monitor/repeater.jpg' %});">
+{% endblock %}
+
+{% block web-body %}
+  
+  <div id="gateways" class="container-fluid">
+    
+    {% comment %}<div class="card-columns">{% endcomment %}
+      {% for gRow in repeaterList %}
+        <div class = "row row-cols-6">
+          {% for node in gRow %}
+            <div class="col mb-md-3">
+            {% if node.status == "X" %}
+              <div class="card bg-danger">
+            {% else %}
+              {% if node.upTime %}
+                {% if node.upTime > 10080 %}
+                  <div class="card bg-success"> 
+                {% elif node.upTime > 1440 %}
+                  <div class="card bg-info">
+                {% else %}
+                  <div class="card bg-warning">
+                {% endif %}
+              {% else %}
+                {% if node.onlineTime > 10080 %}
+                  <div class="card bg-success">
+                {% elif node.onlineTime > 1440 %}
+                  <div class="card bg-info">    
+                {% else %}
+                  <div class="card bg-warning">
+                {% endif %}
+              {% endif %}
+            {% endif %}
+              <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
+              <p class="card-text">
+              {% if node.descr %} {{node.descr }} <br> {% endif %}
+              {% if node.team %}Project: {{node.team.teamID}} <br>{% endif %}
+              HW: {{ node.hardware }} SW version : {{node.software}} <br>
+              {% if node.status != "X" %}
+                {% if node.upTime %}
+                  Up time : {{ node.startTime|timesince }}
+                {% else %}
+                  Uptime : N/A (Online for: {{ node.cameOnline|timesince }})
+                {% endif %}
+              {% else %}
+                Status: Down
+              {% endif %}
+              </p>
+            
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <p>
+      {% endfor %}
+    {% comment %} </div> {% endcomment %}
+  </div>  
+
+{% endblock %}

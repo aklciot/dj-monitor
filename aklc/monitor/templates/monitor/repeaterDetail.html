@@ -1,0 +1,151 @@
+{% extends "monitor/webbase.html" %}
+
+{% block pagerefresh %}<meta http-equiv="refresh" content="60">{% endblock %}
+
+{% block title %}
+Repeater Details
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="node-header"><H2>Repeater information</H2></div>
+  <div id="node_detail" class="content_block">
+    <div id="node_det_table">
+      <table>
+        <tr><th>NodeID: </th><th>{{ node.nodeID }}</th></tr>
+        <tr><td>Description: </td><td class = "wrap_cell">{{ node.descr }}</td></tr>
+        <tr><td>Team: </td><td>{{ node.team.teamID }}</td></tr>
+        {% if node.hardware %}
+          <tr><td>Hardware: </td><td>{{ node.hardware }}</td></tr>
+        {% endif %}
+        {% if node.software %}
+          <tr><td>Software: </td><td>{{ node.software }}</td></tr>
+        {% endif %}
+        {% if node.battName %}
+          <tr><td>Battery attribute name: </td><td>{{ node.battName }}</td></tr>
+          <tr><td>Battery warning level: </td><td>{{ node.battWarn }}</td></tr>
+          <tr><td>Battery critical level: </td><td>{{ node.battCritical }}</td></tr>
+          <tr><td>Battery current value: </td><td class="lastseen">{{ node.battLevel }}</td></tr>
+        {% endif %}
+        {% if node.locationOverride %}
+          <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
+         <tr><td>Longitude: </td><td>{{ node.longitude }}</td></tr>
+          <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ node.latitude }}&mlon={{ node.longitude }}&zoom=14" target="_blank">View in OpenStreetMap</a></td></tr>
+        {% endif %}
+        {% if node.portal %}
+          <tr><td>Data link: </td><td><span  class='yellow'><a href = {{node.portal}} >{{ node.portal }}</a></span></td></tr>
+        {% endif %}
+      </table>
+    </div>
+    <div id="node_det_button" class="action_button">
+      <a href="{% url 'monitor:repeaterUpdate' node.id %}" class="btn btn-info" role="button">Update details</a>
+    </div>
+  </div>
+  
+  
+  <div id="node_notify" class="content_block"> 
+    {% if node.nodeuser_set.all %}
+      <div id="node_notify_table">
+        <table>
+          <tr><th>People </th><th>Notification method</th></tr>
+          {% for person in node.nodeuser_set.all %}
+            <tr><td>{{ person.user.username }}</td>
+              <td>
+              {% if person.email %} Email {% endif %}
+              {% if person.sms %} SMS {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    {% else %}
+      Nobody is getting notified about this node!<br><br>
+    {% endif %}
+    <div id="node_notify_button" class="action_button">
+      <a href="{% url 'monitor:nodeModNotify' node.id %}" class="btn btn-info" role="button">Change your notification</a>
+    </div>
+  </div>
+  
+  
+  <div id="node_reported" class="content_block">
+      <div id="node_rep_table">
+        <table>
+          <tr><th>Reported data: </th></tr>
+          <tr><td>Current status: </td><td>{{ node.textStatus }}</td></tr>
+          {% if node.lastData %}
+            <tr><td>Last data ({{ node.lastDataTime }}): </td><td class = "wrap_cell">{{ node.lastData }}</td></tr>
+          {% endif %}
+          {% if node.lastStatus %}
+            <tr><td>Last status ({{ node.lastStatusTime }}): </td><td class = "wrap_cell">{{ node.lastStatus }}</td></tr>
+          {% endif %}
+          <tr><td>Last seen at: </td><td class="lastseen">{{ node.lastseen }}</td></tr>
+          {% if node.status == "C" %}
+            <tr><td>Online for : </td><td class="lastseen">{{ node.cameOnline|timesince }}</td></tr>
+          {% endif %}
+          {% if not node.locationOverride %}
+            {% if node.latitude %} {% if node.longitude %}
+              <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
+              <tr><td>Longitude: </td><td>{{ node.longitude }}</td></tr>
+              <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ node.latitude }}&mlon={{ node.longitude }}&zoom=14" target="_blank">View in OpenStreetMap</a></td></tr>
+            {% endif %} {% endif %}
+          {% endif %}
+          {% if node.battName %} {% if node.battLevel > 0 %}
+            <tr><td>Current battery level: </td><td>{{ node.battLevel }}</td></tr>
+          {% endif %} {% endif %} 
+          {% if node.RSSI %}
+            <tr><td>Last RSSI level: </td><td>{{ node.RSSI }}</td></tr>
+          {% endif %}
+        </table>
+        <P>Data has been processed by the following gateways in the last 7 days</P>
+        <ul>
+        {% for pass in passData %}
+          <li><a href="{% url 'monitor:gatewayDetail' pass.gatewayID.id %}">{{pass.gatewayID}}</a> {{pass.lastdata }}</li>
+        {% endfor %}
+        </ul>
+        {% if node.mqttmessage_set.all %}
+          <P>Data has been received from the following MQTT queues</P>
+          <ul>
+          {% for mq in node.mqttmessage_set.all %}
+              <li><span class = "nodename">{{ mq.mqttQueue.descr }}</span> ({{mq.received}})<br>
+              Topic <span class = "mqtt_info">{{mq.topic}}</span><br>
+              Payload <span class = "mqtt_info">{{mq.payload}}</span></li> 
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if node.status == 'X' %}
+          <div id="node_det_button" class="action_button">
+            <a href="{% url 'monitor:nodeRemove' node.id %}" class="btn btn-danger" role="button">Remove</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    
+    {% if "MessageClassEditor" in user.groups.all.0.name %}
+      <div id="node_notify" class="content_block"> 
+        <div id="node_message_table">
+          <table>
+            <tr><th>Auto update information: </th></tr>
+            <tr><td>Message Type : </td><td>{{node.messagetype.msgName}}</td></tr>
+            <tr><td>Update Thingsboard : </td><td>{{node.thingsboardUpload}}</td></tr>
+            <tr><td>Thingsboard credentials: </td><td>{{node.thingsboardCred}}</td></tr>
+            <tr><td>Update InfluxDB : </td><td>{{node.influxUpload}}</td></tr>
+            <tr><td>Location override: </td><td>{{node.locationOverride}}</td></tr>
+            <tr><td>Project override: </td><td>{{node.projectOverride}}</td></tr>
+          </table>
+        </div>
+
+        <div id="node_notify_button" class="action_button">
+          <a href="{% url 'monitor:nodeMsgUpdate' node.id %}" class="btn btn-info" role="button">Auto Update control</a>
+        </div>
+      </div>
+  
+    {% endif %}
+  
+  </div>
+
+  <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>
+ 
+</div>
+{% endblock %}

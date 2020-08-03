@@ -62,6 +62,14 @@
               <a class="nav-link" href="{% url 'monitor:index' %}">Data nodes</a>
             </li>
 
+            {% if repeateractive %}
+              <li class="nav-item active">
+            {% else %}
+              <li class="nav-item"></li>
+            {% endif %}
+              <a class="nav-link" href="{% url 'monitor:index_rp' %}">Repeaters</a>
+            </li>
+
             {% if gatewayactive %}
               <li class="nav-item active">
             {% else %}

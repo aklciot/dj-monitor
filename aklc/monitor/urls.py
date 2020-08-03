@@ -24,4 +24,7 @@ urlpatterns = [
     path("project/update/<int:prj_ref>/", views.projectUpdate, name="projectUpdate"),
     path("project/add/", views.projectAdd, name="projectAdd"),
     path("NetworkStatus/", views.dashBoard, name="DashboardStatus"),
+    path("index_rp/", views.index_rp, name="index_rp"),
+    path("repeater/<int:rp_ref>/", views.repeaterDetail, name="repeaterDetail"),
+    path("repeater/update/<int:rp_ref>/", views.repeaterUpdate, name="repeaterUpdate"),
 ]
