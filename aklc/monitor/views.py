@@ -23,7 +23,7 @@ from .forms import (
 from django.forms import modelformset_factory
 
 
-#class IndexView(generic.ListView):
+# class IndexView(generic.ListView):
 #    template_name = "monitor/index.html"
 #    context_object_name = "nodeList"
 #
@@ -39,12 +39,68 @@ def index(request):
     nodeList = Node.objects.order_by("nodeID").exclude(status="M")
     # remove any Gateways
     nodeList = nodeList.exclude(isGateway=True)
-    
-    nodeList2 = Node.objects.order_by("team", "nodeID").exclude(status="M")
 
-    context = {"nodeList": nodeList, "nodeactive": "Y"}
+    nodeByTeam = Node.objects.order_by("team", "nodeID").exclude(status="M")
+    nodeByTeam = nodeByTeam.exclude(isGateway=True)
+    noTeamNode = nodeByTeam.exclude(team__isnull=True)
+    nodeBlock = []
+    teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
+    # print(nodeDict)
+    tTeam = nodeByTeam[0].team
+    # teamBlock = []
+    innerBlock = []
+    nCnt = 0
+
+    for n in nodeByTeam:
+
+        if n.team != tTeam:  # change teams
+            print(f"Team change, now {n.team}")
+            teamDict["teamBlock"].append(innerBlock)
+            nodeBlock.append(teamDict)
+            if not n.team:
+                print(f"Break at {n.nodeID}")
+                break
+
+            # set up for next team
+            teamDict = {"Name": n.team.teamID, "teamBlock": []}
+            tTeam = n.team
+            nCnt = 0
+            innerBlock = []
+            teamBlock = []
+
+        if nCnt > 5:
+            nCnt = 0
+            teamDict["teamBlock"].append(innerBlock)
+            innerBlock = []
+
+        innerBlock.append(n)
+        nCnt += 1
+
+    # Now do those with no team assigned
+    teamDict = {"Name": "No project", "teamBlock": []}
+    print("Process no team")
+    innerBlock = []
+    nCnt = 0
+    # teamBlock = []
+    for n in nodeByTeam:
+        if not n.team:
+            print(n.nodeID)
+            innerBlock.append(n)
+            nCnt += 1
+        if nCnt > 5:
+            nCnt = 0
+            teamDict["teamBlock"].append(innerBlock)
+            innerBlock = []
+    if len(innerBlock) > 0:
+        teamDict["teamBlock"].append(innerBlock)
+    nodeBlock.append(teamDict)
+
+    print(nodeBlock)
+
+    context = {"nodeList": nodeList, "nodeactive": "Y", "nodeBlock": nodeBlock}
+    # context = {"nodeList": nodeList, "nodeactive": "Y"}
     if request.user.groups.filter(name="BetaTesters").exists():
-        return render(request, "monitor/index.html", context)
+        return render(request, "monitor/index2.html", context)
     else:
         return render(request, "monitor/index.html", context)
 
@@ -56,22 +112,22 @@ def index_gw(request):
     nodeList = Node.objects.order_by("nodeID").exclude(status="M")
     # Remove anything that is not a gateway
     nodeList = nodeList.exclude(isGateway=False)
-    gw_block = []           # will be a list of lists
+    gw_block = []  # will be a list of lists
     nCnt = 1
     innerList = []
-    for g in nodeList:      # cycle through the gateways
-      innerList.append(g)
-      nCnt += 1
-      if nCnt > 6:
-        gw_block.append(innerList)
-        nCnt = 1
-        innerList = []
+    for g in nodeList:  # cycle through the gateways
+        innerList.append(g)
+        nCnt += 1
+        if nCnt > 6:
+            gw_block.append(innerList)
+            nCnt = 1
+            innerList = []
 
     context = {"nodeList": nodeList, "gatewayactive": "Y", "gw_block": gw_block}
     if request.user.groups.filter(name="BetaTesters").exists():
-      return render(request, "monitor/index_gw2.html", context)
+        return render(request, "monitor/index_gw2.html", context)
     else:
-      return render(request, "monitor/index_gw.html", context)
+        return render(request, "monitor/index_gw.html", context)
 
 
 @login_required
@@ -100,8 +156,10 @@ def nodeDetail(request, node_ref):
     View to display details of a node
     """
     node = get_object_or_404(Node, pk=node_ref)
-    passList = node.passOnData()                            # gateways that have processed msg from this node
-    aNodeUsers = NodeUser.objects.filter(nodeID=node)       # users that have an 'interest' in this node
+    passList = node.passOnData()  # gateways that have processed msg from this node
+    aNodeUsers = NodeUser.objects.filter(
+        nodeID=node
+    )  # users that have an 'interest' in this node
     context = {
         "node": node,
         "user": request.user,
@@ -118,8 +176,10 @@ def gatewayDetail(request, gateway_ref):
     View to display Gateway details
     """
     gw = get_object_or_404(Node, pk=gateway_ref)
-    aNodeUsers = NodeUser.objects.filter(nodeID=gw)         # users that have an 'interest' in this gateway
-    passList = gw.passOnData()                              # nodes that have been processed by this gateway
+    aNodeUsers = NodeUser.objects.filter(
+        nodeID=gw
+    )  # users that have an 'interest' in this gateway
+    passList = gw.passOnData()  # nodes that have been processed by this gateway
     context = {
         "gateway": gw,
         "user": request.user,
@@ -138,7 +198,9 @@ def nodeUpdate(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
     if request.method == "POST":
 
-        nf = NodeDetailForm(request.POST, instance=node)    # NodeDetailForm defines in forms.py
+        nf = NodeDetailForm(
+            request.POST, instance=node
+        )  # NodeDetailForm defines in forms.py
         if nf.is_valid():
             nf.save()
             return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
@@ -337,6 +399,7 @@ def msgAdd(request):
     context["msgactive"] = "Y"
     return render(request, "monitor/msgAdd.html", context)
 
+
 @login_required
 def projectDetail(request, prj_ref):
     prj = get_object_or_404(Team, pk=prj_ref)
@@ -345,10 +408,11 @@ def projectDetail(request, prj_ref):
     context["prjactive"] = "Y"
     return render(request, "monitor/projectDetail.html", context)
 
+
 @login_required
 def projectUpdate(request, prj_ref):
     prj = get_object_or_404(Team, pk=prj_ref)
-    #print("BP1")
+    # print("BP1")
     if request.method == "POST":
         print("Post message received")
         nf = ProjectDetailForm(request.POST, instance=prj)
@@ -356,7 +420,9 @@ def projectUpdate(request, prj_ref):
             print("Valid BK 1")
             nf.save()
 
-            return HttpResponseRedirect(reverse("monitor:projectDetail", args=[prj_ref]))
+            return HttpResponseRedirect(
+                reverse("monitor:projectDetail", args=[prj_ref])
+            )
     # if a GET (or any other method) we'll create a blank form
     else:
         nf = ProjectDetailForm(instance=prj)
@@ -366,16 +432,17 @@ def projectUpdate(request, prj_ref):
     print(context)
     return render(request, "monitor/projectUpdate.html", context)
 
+
 @login_required
 def projectAdd(request):
-    #prj = get_object_or_404(Team, pk=prj_ref)
+    # prj = get_object_or_404(Team, pk=prj_ref)
     print("BP1")
     if request.method == "POST":
         print("Post message received")
         nf = ProjectAddForm(request.POST)
         if nf.is_valid():
             print("Valid BK 1")
-            prj = Team(teamID=nf.cleaned_data['teamID'], descr=nf.cleaned_data['descr'])
+            prj = Team(teamID=nf.cleaned_data["teamID"], descr=nf.cleaned_data["descr"])
             prj.save()
 
             return HttpResponseRedirect(reverse("monitor:projectDetail", args=[prj.id]))
@@ -387,6 +454,7 @@ def projectAdd(request):
     context = {"form": nf}
     context["prjactive"] = "Y"
     return render(request, "monitor/projectAdd.html", context)
+
 
 def dashBoard(request):
     return render(request, "monitor/NetworkStatusPage.html")

@@ -13,12 +13,12 @@ Gateway list
 {% block web-body %}
   
   <div id="gateways" class="container-fluid">
-    <p>
+    
     {% comment %}<div class="card-columns">{% endcomment %}
       {% for gRow in gw_block %}
         <div class = "row row-cols-6">
           {% for node in gRow %}
-            <div class="col">
+            <div class="col mb-md-3">
             {% if node.status == "X" %}
               <div class="card bg-danger">
             {% else %}

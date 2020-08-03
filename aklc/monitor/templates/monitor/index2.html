@@ -1,0 +1,66 @@
+{% extends "monitor/webbase.html" %}
+{% load static %}
+{% comment %}
+{% block pagerefresh %}<meta http-equiv="refresh" content="300">{% endblock %}
+{% endcomment %}
+
+{% block title %}
+Node list
+{% endblock %}
+
+{% block background %}
+  <div class="container-fluid background1" style="background-image: url({% static 'monitor/at-work3.jpg' %});">
+{% endblock %}
+
+{% block web-body %}
+
+  <div id="nodes">
+    {% if nodeList %}
+      <div class="list-group">
+        {% for t1 in nodeBlock %}
+          <h2>{{t1.Name}}</h2>
+          
+          {% for b in t1.teamBlock %}
+          <div class = "row row-cols-6">
+            {% for node in b %}
+              <div class="col-md-2 mb-md-3">
+                {% if node.status == 'X' %} 
+                  <div class="card bg-danger">
+                {% elif node.battName %}
+                  {% if node.battLevel > node.battWarn %}
+                    <div class="card bg-success">
+                  {% elif node.battLevel > node.battCritical %}
+                    <div class="card bg-warning">
+                  {% endif %}
+                {% else %}
+                  <div class="card bg-info">
+                {% endif %}
+                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
+                  <p class="card-text">
+                  {% if node.descr %} {{node.descr }} <br> {% endif %}
+                  {% if node.battName %}Current battery value: {{node.battLevel}}<br>{% endif %}
+                  {% if node.status == 'X' %}
+                    Missing for: {{ node.lastseen|timesince }}
+                  {% else %}
+                    Online for: {{ node.cameOnline|timesince }}
+                  {% endif %}
+                  {% comment %}    {% if node.battName %}
+                    Current value: {{node.battLevel}}
+                  {% endif %}
+                  {% endcomment %}
+                  </p>
+                </div>
+              </div>
+            {% endfor %}
+            </div>
+          {% endfor %}
+          
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No nodes defined</p>>
+    {% endif %}
+  </div>
+
+  
+{% endblock %}
