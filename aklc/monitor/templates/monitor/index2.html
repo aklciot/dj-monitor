@@ -31,9 +31,11 @@ Node list
                     <div class="card bg-success">
                   {% elif node.battLevel > node.battCritical %}
                     <div class="card bg-warning">
+                  {% else %}
+                    <div class="card bg-success">
                   {% endif %}
                 {% else %}
-                  <div class="card bg-info">
+                  <div class="card bg-success">
                 {% endif %}
                   <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
                   <p class="card-text">

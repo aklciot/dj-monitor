@@ -103,7 +103,7 @@ def index(request):
     if request.user.groups.filter(name="BetaTesters").exists():
         return render(request, "monitor/index2.html", context)
     else:
-        return render(request, "monitor/index.html", context)
+        return render(request, "monitor/index2.html", context)
 
 
 def index_gw(request):
@@ -131,7 +131,7 @@ def index_gw(request):
     if request.user.groups.filter(name="BetaTesters").exists():
         return render(request, "monitor/index_gw2.html", context)
     else:
-        return render(request, "monitor/index_gw.html", context)
+        return render(request, "monitor/index_gw2.html", context)
 
 def index_rp(request):
     """
