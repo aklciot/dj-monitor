@@ -3,6 +3,7 @@
 {% comment %}
 {% block pagerefresh %}<meta http-equiv="refresh" content="300">{% endblock %}
 {% endcomment %}
+{% block pagerefresh %}<meta http-equiv="refresh" content="30">{% endblock %}
 
 {% block title %}
 Node list
@@ -18,12 +19,12 @@ Node list
     {% if nodeList %}
       <div class="list-group">
         {% for t1 in nodeBlock %}
-          <h2>{{t1.Name}}</h2>
-          
+          <button data-toggle="collapse" data-target="#{{t1.Name}}" class="btn btn-primary mb-md-1">{{t1.Name}}</button>
+          <div id="{{t1.Name}}" class="collapse show">
           {% for b in t1.teamBlock %}
           <div class = "row row-cols-6">
             {% for node in b %}
-              <div class="col-md-2 mb-md-3">
+              <div class="col-md-2 mb-md-2">
                 {% if node.status == 'X' %} 
                   <div class="card bg-danger">
                 {% elif node.battName %}
@@ -56,7 +57,7 @@ Node list
             {% endfor %}
             </div>
           {% endfor %}
-          
+          </div>
         {% endfor %}
       </div>
     {% else %}
