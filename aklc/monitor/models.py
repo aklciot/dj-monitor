@@ -17,6 +17,7 @@ class Team(models.Model):
     descr = models.TextField(blank=True, null=True)
 
     class Meta:
+        ordering = ["teamID"]
         verbose_name = "Project"
 
     def __str__(self):
