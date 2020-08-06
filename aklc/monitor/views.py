@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.views import generic
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.utils import timezone
+import datetime
 
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
@@ -35,14 +37,15 @@ def index(request):
     """
     View that displays all current nodes.
     """
+    dMonthAgo = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=31)
     # get all the nodes
-    nodeList = Node.objects.order_by("nodeID").exclude(status="M")
+    nodeList = Node.objects.order_by("nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
     # remove any Gateways
     nodeList = nodeList.exclude(isGateway=True)
 
-    nodeByTeam = Node.objects.order_by("team", "nodeID").exclude(status="M")
-    nodeByTeam = nodeByTeam.exclude(isGateway=True)
-    nodeByTeam = nodeByTeam.exclude(isRepeater=True)
+    nodeByTeam = Node.objects.order_by("team", "nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
+    nodeByTeam = nodeByTeam.exclude(isGateway=True).exclude(isRepeater=True)
+    
     noTeamNode = nodeByTeam.exclude(team__isnull=True)
     nodeBlock = []
     teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
@@ -110,7 +113,8 @@ def index_gw(request):
     """
     View for Gateways.
     """
-    nodeList = Node.objects.order_by("nodeID").exclude(status="M")
+    dMonthAgo = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=31)
+    nodeList = Node.objects.order_by("nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
     # Remove anything that is not a gateway
     nodeList = nodeList.exclude(isGateway=False)
     gw_block = []  # will be a list of lists
@@ -137,7 +141,8 @@ def index_rp(request):
     """
     View for repeaters.
     """
-    nodeList = Node.objects.order_by("nodeID").exclude(status="M")
+    dMonthAgo = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=31)
+    nodeList = Node.objects.order_by("nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
     # Remove anything that is not a repeater
     nodeList = nodeList.exclude(isRepeater=False)
     print(f"There are {len(nodeList)} repeaters")
