@@ -58,6 +58,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
         print(sub_topic)
         client.subscribe(sub_topic)
 
+
 # ********************************************************************
 def mqtt_on_disconnect(client, userdata, rc):
     """
@@ -87,7 +88,8 @@ def mqtt_on_message(client, userdata, msg):
         # print("Aklc message received, topic {}, payload {}".format(msg.topic, msg.payload))
         # Check types of message from the topic
         # print("Subtopic = |{}|".format(cTopic[1]))
-        if cTopic[1] == "Status":  # These are status messages sent by gateways. Data in CSV format
+        if cTopic[1] == "Status":
+            # These are status messages sent by gateways. Data in CSV format
             # print("Status message received")
             cPayload = sPayload.split(",")
             cNode = cPayload[0]
@@ -98,8 +100,21 @@ def mqtt_on_message(client, userdata, msg):
                 gw.msgReceived()
                 gw.isGateway = True
                 gw.lastStatus = sPayload
-                gw.lastStatusTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                gw.lastStatusTime = timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
                 gw.incrementMsgCnt()
+                nJson = gw.make_json(sPayload)
+                if "Uptime" in nJson:
+                    gw.bootTimeUpdate(nJson["Uptime"])
+                if "Uptime(s)" in nJson:
+                    gw.bootTimeUpdate(nJson["Uptime(s)"]/60)
+                if "Uptime(m)" in nJson:
+                    gw.bootTimeUpdate(nJson["Uptime(m)"])
+                if "HWType" in jOut["jStr"]:
+                    gw.hardware = jOut["jStr"]["HWType"]
+                if "Version" in jOut["jStr"]:
+                    gw.software = jOut["jStr"]["Version"]
                 gw.save()
 
         elif cTopic[1] == "Gateway":
@@ -107,19 +122,33 @@ def mqtt_on_message(client, userdata, msg):
             # print("Gateway message received")
             cPayload = sPayload.split(",")  # the payload should be CSV
 
-            print("Gateway msg received, Node {}, Gateway {}".format(cPayload[1], cPayload[0]))
+            print(
+                "Gateway msg received, Node {}, Gateway {}".format(
+                    cPayload[1], cPayload[0]
+                )
+            )
             if node_validate(cPayload[1]):  # check if the nodeID is valid
                 # get the node, or create it if not found
                 # print("Valid node {}".format(cPayload[1]))
                 nd, created = Node.objects.get_or_create(nodeID=cPayload[1])
                 nd.msgReceived()
                 nd.lastData = sPayload
-                nd.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                nd.lastDataTime = timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
                 nd.incrementMsgCnt()
                 if "RP" in nd.nodeID:
                     nd.isRepeater = True
                 else:
                     nd.isRepeater = False
+                nJson = nd.make_json(sPayload)
+                print(f"JSON is {nJson}")
+                if "Uptime" in nJson:
+                    nd.bootTimeUpdate(nJson["Uptime"])
+                if "Uptime(s)" in nJson:
+                    nd.bootTimeUpdate(nJson["Uptime(s)"]/60)
+                if "Uptime(m)" in nJson:
+                    nd.bootTimeUpdate(nJson["Uptime(m)"])
                 nd.save()
 
             # Check and update the gateways info
@@ -129,7 +158,9 @@ def mqtt_on_message(client, userdata, msg):
                 gw.msgReceived()
                 gw.isGateway = True
                 gw.lastData = sPayload
-                gw.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                gw.lastDataTime = timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
                 gw.incrementMsgCnt()
                 gw.save()
 
@@ -151,7 +182,9 @@ def mqtt_on_message(client, userdata, msg):
                     print(e)
                     print(f"Houston, we have an error {e}")
 
-        elif cTopic[1] == "Network":  # These are status messages sent by gateways and nodes. Data in JSON format
+        elif (
+            cTopic[1] == "Network"
+        ):  # These are status messages sent by gateways and nodes. Data in JSON format
             print(f"Network message received |{sPayload}|, topic |{msg.topic}|")
             # print("Topic length = {}".format(len(cTopic)))
             jPayload = json.loads(sPayload)  # the payload should be JSON
@@ -169,7 +202,9 @@ def mqtt_on_message(client, userdata, msg):
                             nd, created = Node.objects.get_or_create(nodeID=cTopic[2])
                             nd.msgReceived()
                             nd.lastStatus = sPayload
-                            nd.lastStatusTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                            nd.lastStatusTime = timezone.make_aware(
+                                datetime.datetime.now(), timezone.get_current_timezone()
+                            )
                             nd.jsonLoad(sPayload)
                             nd.incrementMsgCnt()
                             nd.save()
@@ -183,7 +218,10 @@ def mqtt_on_message(client, userdata, msg):
                                 )
                                 gw.msgReceived()
                                 gw.lastStatus = sPayload
-                                gw.lastStatusTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                                gw.lastStatusTime = timezone.make_aware(
+                                    datetime.datetime.now(),
+                                    timezone.get_current_timezone(),
+                                )
                                 gw.jsonLoad(sPayload)
                                 gw.incrementMsgCnt()
 
@@ -202,7 +240,9 @@ def mqtt_on_message(client, userdata, msg):
                 nd, created = Node.objects.get_or_create(nodeID=jPayload["NodeID"])
                 nd.msgReceived()
                 nd.lastData = sPayload
-                nd.lastDataTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                nd.lastDataTime = timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
                 nd.jsonLoad(sPayload)
                 nd.incrementMsgCnt()
                 try:
@@ -216,7 +256,6 @@ def mqtt_on_message(client, userdata, msg):
                 # print("Processed data for {}".format(nd.nodeID))
             except Exception as e:
                 print(f"Team error {e}")
-
 
 
 # ********************************************************************
@@ -262,13 +301,17 @@ def missing_node(node, mqtt_client):
                     mqtt_client,
                     usr.user,
                 )
-                print(f"Node {node.nodeID} marked as down and email notification sent to {usr.user.username}")
+                print(
+                    f"Node {node.nodeID} marked as down and email notification sent to {usr.user.username}"
+                )
                 usr.lastemail = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
             if usr.sms:
                 sendNotifySMS(node, "monitor/sms-down.html", mqtt_client, usr.user)
-                print(f"Node {node.nodeID} marked as down and SMS notification sent to {usr.user.username}")
+                print(
+                    f"Node {node.nodeID} marked as down and SMS notification sent to {usr.user.username}"
+                )
                 usr.smsSent = True
                 usr.lastsms = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
@@ -342,7 +385,10 @@ def sendReport(aNotifyUsers, mqttClient):
 
     # get all node data for reports
     allNodes = Node.objects.all().order_by("nodeID")
-    allNodes = allNodes.exclude(status="M")
+    dMonthAgo = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    ) - datetime.timedelta(days=31)
+    allNodes = allNodes.exclude(status="M").exclude(lastseen__lte=dMonthAgo)
     batWarnList = []
     batCritList = []
     nodeOKList = []
@@ -422,7 +468,7 @@ def sys_monitor():
     except Exception as e:
         print(f"MQTT connection error: {e}")
 
-     # used to manage mqtt subscriptions
+    # used to manage mqtt subscriptions
     client.loop_start()
 
     print("MQTT env set up done")
@@ -501,7 +547,10 @@ def sys_monitor():
                     > 7
                 ):  # run at certain time of the day
                     # print("Time now {}".format(timezone.now()))
-                    if (notification_data["LastSummary"].day != datetime.datetime.now().day ):
+                    if (
+                        notification_data["LastSummary"].day
+                        != datetime.datetime.now().day
+                    ):
                         print("Send 8am messages")
 
                         allUsers = Profile.objects.all()

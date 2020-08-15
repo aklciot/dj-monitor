@@ -171,24 +171,7 @@ def mqtt_on_message(client, userdata, msg):
                     jOut = csv_to_json(sPayload, node)
                     #print("Messagetype found")
                     #print(f"jOut is {jOut}")
-
-                    if "Uptime" in jOut["jStr"] or "Uptime(s)" in jOut["jStr"]:
-                        if "Uptime" in jOut["jStr"]:
-                            node.upTime = jOut["jStr"]["Uptime"]
-                        else:
-                            node.upTime = jOut["jStr"]["Uptime(s)"]
-                        node.bootTime = timezone.make_aware(
-                            datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(minutes=node.upTime)
-                        node.save()
-                        #print(f"Update updated to {node.upTime}")
                         
-                    if "HWType" in jOut["jStr"]:
-                        node.hardware = jOut["jStr"]["HWType"]
-                        
-                    if "Version" in jOut["jStr"]:
-                        node.software = jOut["jStr"]["Version"]
-                        
-                    node.save()
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
 

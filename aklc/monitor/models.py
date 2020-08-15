@@ -91,24 +91,31 @@ class Node(models.Model):
     nodeID = models.CharField(max_length=30)
     lastseen = models.DateTimeField(blank=True, null=True)
     cameOnline = models.DateTimeField(blank=True, null=True)
+    upTime = models.FloatField("Uptime in minutes", default=0.0)
+    #uptime = models.FloatField(default=0)
+
+    bootTime = models.DateTimeField(blank=True, null=True)
+    onlineTime = models.FloatField("Online in minutes", default=0.0)
     status_sent = models.DateTimeField(null=True, blank=True)
+    notification_sent = models.BooleanField(default=False)
+    nextUpdate = models.DateTimeField(blank=True, null=True)
+    lastStatusTime = models.DateTimeField(blank=True, null=True)
+    lastDataTime = models.DateTimeField(blank=True, null=True)
+
     isGateway = models.BooleanField(blank=True, default=False)
     isRepeater = models.BooleanField(blank=True, default=False)
-    notification_sent = models.BooleanField(default=False)
+
     status = models.CharField(
         max_length=1,
         default=" ",
         help_text="C is current, X is down, M in maintenance mode",
     )
     textStatus = models.CharField(max_length=10, blank=True, null=True)
-    nextUpdate = models.DateTimeField(blank=True, null=True)
     topic = models.CharField(max_length=50, blank=True, null=True)
     descr = models.TextField(blank=True, null=True, help_text="")
     lastData = models.TextField(blank=True, null=True)
-    lastDataTime = models.DateTimeField(blank=True, null=True)
     lastJSON = models.TextField(blank=True, null=True)
     lastStatus = models.TextField(blank=True, null=True)
-    lastStatusTime = models.DateTimeField(blank=True, null=True)
     allowedDowntime = models.IntegerField(
         default=60,
         help_text="Minutes that the node can be 'unheard' before being marked as Offline",
@@ -134,7 +141,6 @@ class Node(models.Model):
         help_text="The battery level, below which critical warning message are generated",
     )
     # dataMsgCount = models.IntegerField(default=0)
-    uptime = models.FloatField(default=0)
     RSSI = models.FloatField(default=0.0)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
     portal = models.URLField(
@@ -177,9 +183,7 @@ class Node(models.Model):
         null=True,
         help_text="The credentials needed for thingsboard data load",
     )
-    upTime = models.FloatField("Uptime in minutes", default=0.0)
-    bootTime = models.DateTimeField(blank=True, null=True)
-    onlineTime = models.FloatField("Uptime in minutes", default=0.0)
+    
 
     class Meta:
         ordering = ["nodeID"]
@@ -269,12 +273,12 @@ class Node(models.Model):
             else:
                 print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
         if "Uptime" in jPayload:
-            if isinstance(jPayload["Uptime"], int) or isinstance(jPayload["Uptime"], float):
-                self.upTime = jPayload["Uptime"]
-                self.bootTime = timezone.make_aware(
-                            datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(minutes=self.upTime)
-            else:
-                print(f"Invalid data for Uptime, recieved {jPayload['Uptime']}")
+            self.bootTimeUpdate(jPayload["Uptime"])
+        if "Uptime(m)" in jPayload:
+            self.bootTimeUpdate(jPayload["Uptime(m)"])
+        if "Uptime(s)" in jPayload:
+            self.bootTimeUpdate(jPayload["Uptime(s)"]/60)
+ 
         return ()
 
     def incrementMsgCnt(self):
@@ -311,7 +315,67 @@ class Node(models.Model):
         ) - datetime.timedelta(minutes=self.upTime)
 
         return dt
+
+    def make_json(self, payload):
+        """
+        This function will create a JSON representation of the CSV input if linked to a message_type
+        """
+        jStr = {}
+
+        if not self.messagetype:
+            return(jStr)
+        print(f"Message type found {self.messagetype.msgName}")
+        print(f"Payload is {payload}")
+        cPayload = payload.split(",")
+        # here we try and remove any references to any repeaters
+        lRepeater = True
+        
+        while lRepeater:
+            nCnt = 0
+            for itm in cPayload:
+                nCnt += 1
+                if nCnt < 3:
+                    continue
+                lRepeater = False
+                if itm.startswith("RP"):
+                    # print(f"Remove {itm} from input")
+                    cPayload.remove(itm)
+                    lRepeater = True
+        
+        for mItem in self.messagetype.messageitem_set.all():
+            # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
+            # some validation here
+
+            if mItem.order > len(cPayload):
+                # print(f"Message type mismatch, payload is {cPayload}, message type is {nNode.messagetype.msgName}, index is {mItem.order}")
+                break
+
+            try:
+                if mItem.fieldType == "I":
+                    val = float(cPayload[mItem.order - 1])
+                elif mItem.fieldType == "F":
+                    val = float(cPayload[mItem.order - 1])
+                else:
+                    val = cPayload[mItem.order - 1]
+
+            except Exception as e:
+                print(
+                    f"CSV to JSON error, cPayload is {cPayload}, message type is {nNode.messagetype.msgName}"
+                )
+                print(e)
+
+            jStr[mItem.name] = val
+
+        print(f"jStr is {jStr}")
+        return(jStr)
     
+    def bootTimeUpdate(self, inMinutes):
+        """Updates a node uptime and boottime based on seconds uptime"""
+        self.upTime = inMinutes
+        self.bootTime = timezone.make_aware(
+            datetime.datetime.now(), timezone.get_current_timezone()
+            ) - datetime.timedelta(minutes=inMinutes)
+        return
 
 class NodeUser(models.Model):
     """

@@ -83,6 +83,10 @@ Repeater Details
           {% if node.status == "C" %}
             <tr><td>Online for : </td><td class="lastseen">{{ node.cameOnline|timesince }}</td></tr>
           {% endif %}
+          {% if node.bootTime %}
+            <tr><td>Restarted : </td><td class="lastseen">{{ node.bootTime }} ({{ node.bootTime|timesince}}) ago</td></tr>
+          {% endif %}
+
           {% if not node.locationOverride %}
             {% if node.latitude %} {% if node.longitude %}
               <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
