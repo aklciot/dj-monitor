@@ -90,21 +90,27 @@ def mqtt_on_message(client, userdata, msg):
         # print("Subtopic = |{}|".format(cTopic[1]))
         if cTopic[1] == "Status":
             # These are status messages sent by gateways. Data in CSV format
-            # print("Status message received")
             cPayload = sPayload.split(",")
             cNode = cPayload[0]
-            print(f"Status message received for {cNode}")
+            print(f"Gateway status message received for {cNode}, payload is {cPayload}")
             # Check and update the gateway data
-            if node_validate(cPayload[0]):
+            if node_validate(cNode):
+                print(f"Make/get node {cNode}")
                 gw, created = Node.objects.get_or_create(nodeID=cNode)
+                print(f"MG Success")
+                if created:
+                    print(f"Gateway {gw.nodeID} created")
                 gw.msgReceived()
                 gw.isGateway = True
                 gw.lastStatus = sPayload
                 gw.lastStatusTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
+                print("Save")
                 gw.incrementMsgCnt()
+                gw.save()
                 nJson = gw.make_json(sPayload)
+                print(f"Gateway JSON is {nJson}")
                 if "Uptime" in nJson:
                     gw.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
@@ -116,6 +122,9 @@ def mqtt_on_message(client, userdata, msg):
                 if "Version" in jOut["jStr"]:
                     gw.software = jOut["jStr"]["Version"]
                 gw.save()
+                print(f"Gateway {gw.nodeID} saved")
+            else:
+                print(f"Gateway {cNode} not processed")
 
         elif cTopic[1] == "Gateway":
             # These are data messages from nodes sent on by a gateway, payload should be CSV
@@ -283,6 +292,7 @@ def missing_node(node, mqtt_client):
         node.status = "X"
         node.notification_sent = True
         node.upTime = 0
+        node.onlineTime = 0
         node.status_sent = timezone.make_aware(
             datetime.datetime.now(), timezone.get_current_timezone()
         )

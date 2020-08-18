@@ -46,49 +46,53 @@ def index(request):
     nodeByTeam = Node.objects.order_by("team", "nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
     nodeByTeam = nodeByTeam.exclude(isGateway=True).exclude(isRepeater=True)
     
-    noTeamNode = nodeByTeam.exclude(team__isnull=True)
+    noTeamNode = nodeByTeam.exclude(team__isnull=False)
+    #print(f"All nodes {len(nodeByTeam)}, no team nodes {len(noTeamNode)}")
+    #print(" ")
     nodeBlock = []
-    teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
-    # print(nodeDict)
-    tTeam = nodeByTeam[0].team
-    # teamBlock = []
-    innerBlock = []
-    nCnt = 0
+    if len(nodeByTeam) != len(noTeamNode):
+        teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
+        tTeam = nodeByTeam[0].team
+    
+        # teamBlock = []
+        innerBlock = []
+        nCnt = 0
 
-    for n in nodeByTeam:
+        for n in nodeByTeam:
 
-        if n.team != tTeam:  # change teams
-            print(f"Team change, now {n.team}")
-            teamDict["teamBlock"].append(innerBlock)
-            nodeBlock.append(teamDict)
-            if not n.team:
-                print(f"Break at {n.nodeID}")
-                break
+            if n.team != tTeam:  # change teams
+                #print(f"Team change, now {n.team}")
+                teamDict["teamBlock"].append(innerBlock)
+                nodeBlock.append(teamDict)
+                if not n.team:
+                    #print(f"Break at {n.nodeID}")
+                    break
 
-            # set up for next team
-            teamDict = {"Name": n.team.teamID, "teamBlock": []}
-            tTeam = n.team
-            nCnt = 0
-            innerBlock = []
-            teamBlock = []
+                # set up for next team
+                teamDict = {"Name": n.team.teamID, "teamBlock": []}
+                tTeam = n.team
+                nCnt = 0
+                innerBlock = []
+                teamBlock = []
 
-        if nCnt > 5:
-            nCnt = 0
-            teamDict["teamBlock"].append(innerBlock)
-            innerBlock = []
+            if nCnt > 5:
+                nCnt = 0
+                teamDict["teamBlock"].append(innerBlock)
+                innerBlock = []
 
-        innerBlock.append(n)
-        nCnt += 1
-
+            innerBlock.append(n)
+            nCnt += 1
+        else:
+            teamDict = {}
     # Now do those with no team assigned
     teamDict = {"Name": "No project", "teamBlock": []}
-    print("Process no team")
+    #print("Process no team")
     innerBlock = []
     nCnt = 0
     # teamBlock = []
     for n in nodeByTeam:
         if not n.team:
-            print(n.nodeID)
+            #print(n.nodeID)
             innerBlock.append(n)
             nCnt += 1
         if nCnt > 5:
@@ -99,7 +103,7 @@ def index(request):
         teamDict["teamBlock"].append(innerBlock)
     nodeBlock.append(teamDict)
 
-    print(nodeBlock)
+    #print(nodeBlock)
 
     context = {"nodeList": nodeList, "nodeactive": "Y", "nodeBlock": nodeBlock}
     # context = {"nodeList": nodeList, "nodeactive": "Y"}

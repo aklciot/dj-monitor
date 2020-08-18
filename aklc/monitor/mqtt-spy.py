@@ -125,6 +125,7 @@ def mqtt_on_message(client, userdata, msg):
         mqttMsg, created = MqttMessage.objects.get_or_create(node=node, mqttQueue=userdata)
         mqttMsg.topic = msg.topic
         mqttMsg.payload = sPayload
+        mqttMsg.received = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
         mqttMsg.save()
 
     except Exception as e:
