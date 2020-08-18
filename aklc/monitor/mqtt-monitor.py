@@ -95,9 +95,9 @@ def mqtt_on_message(client, userdata, msg):
             print(f"Gateway status message received for {cNode}, payload is {cPayload}")
             # Check and update the gateway data
             if node_validate(cNode):
-                print(f"Make/get node {cNode}")
+                #print(f"Make/get node {cNode}")
                 gw, created = Node.objects.get_or_create(nodeID=cNode)
-                print(f"MG Success")
+                #print(f"MG Success")
                 if created:
                     print(f"Gateway {gw.nodeID} created")
                 gw.msgReceived()
@@ -106,11 +106,11 @@ def mqtt_on_message(client, userdata, msg):
                 gw.lastStatusTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
-                print("Save")
+                #print("Save")
                 gw.incrementMsgCnt()
                 gw.save()
                 nJson = gw.make_json(sPayload)
-                print(f"Gateway JSON is {nJson}")
+                #print(f"Gateway JSON is {nJson}")
                 if "Uptime" in nJson:
                     gw.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
@@ -122,7 +122,7 @@ def mqtt_on_message(client, userdata, msg):
                 if "Version" in jOut["jStr"]:
                     gw.software = jOut["jStr"]["Version"]
                 gw.save()
-                print(f"Gateway {gw.nodeID} saved")
+                #print(f"Gateway {gw.nodeID} saved")
             else:
                 print(f"Gateway {cNode} not processed")
 
