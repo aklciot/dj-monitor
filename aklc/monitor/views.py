@@ -22,8 +22,8 @@ from .forms import (
     ProjectDetailForm,
     ProjectAddForm,
 )
-from django.forms import modelformset_factory
 
+from django.forms import modelformset_factory
 
 # class IndexView(generic.ListView):
 #    template_name = "monitor/index.html"
@@ -275,11 +275,11 @@ def nodeUpdate(request, node_ref):
     return render(request, "monitor/nodeUpdate.html", context)
 
 @login_required
-def repeaterUpdate(request, node_ref):
+def repeaterUpdate(request, rp_ref):
     """
     View to process info update form from nodes or gateways
     """
-    node = get_object_or_404(Node, pk=node_ref)
+    node = get_object_or_404(Node, pk=rp_ref)
     if request.method == "POST":
 
         nf = NodeDetailForm(

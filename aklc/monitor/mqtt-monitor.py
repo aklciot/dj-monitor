@@ -151,7 +151,7 @@ def mqtt_on_message(client, userdata, msg):
                 else:
                     nd.isRepeater = False
                 nJson = nd.make_json(sPayload)
-                print(f"JSON is {nJson}")
+                #print(f"JSON is {nJson}")
                 if "Uptime" in nJson:
                     nd.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
@@ -221,7 +221,7 @@ def mqtt_on_message(client, userdata, msg):
                         # print("Gateway not in topic")
                         if "Gateway" in jPayload:
                             if node_validate(jPayload["Gateway"]):
-                                print(f"Process gateway {jPayload['Gateway']}")
+                                #print(f"Process gateway {jPayload['Gateway']}")
                                 gw, created = Node.objects.get_or_create(
                                     nodeID=jPayload["Gateway"]
                                 )
@@ -242,7 +242,7 @@ def mqtt_on_message(client, userdata, msg):
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
         jPayload = json.loads(sPayload)
-        # print(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
+        print(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
         # print("The NodeID is {}".format(jPayload["NodeID"]))
         if "NodeID" in jPayload:
             try:
