@@ -56,6 +56,24 @@ Node down notification
         {% endif %}
     </div>
 
+    <div id="repeaterDown" class="devices">  
+        {% if repeaterDown %}
+        <p>Repeaters that are <b>DOWN</b> are:</p>
+        <ul id = "nodeDown">
+        {% for entry in repeaterDown %}
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+            {% if entry.descr %}
+              <br><span class="descr">{{ entry.descr }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+        {% else %}
+          <p class="nodeup">All repeaters are operational.</p>
+        {% endif %}
+    </div>
+
+
     <div id="gatewayDown" class="devices">  
       {% if gatewayDown %}
         <p>Gateways that are <b>DOWN</b> are:</p>

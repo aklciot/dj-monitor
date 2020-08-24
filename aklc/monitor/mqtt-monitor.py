@@ -405,12 +405,19 @@ def sendReport(aNotifyUsers, mqttClient):
     nodeDownList = []
     gatewayOKList = []
     gatewayDownList = []
+    repeaterOKList = []
+    repeaterDownList = []
     for a in allNodes:
         if a.isGateway:
             if a.status == "C":
                 gatewayOKList.append(a)
             else:
                 gatewayDownList.append(a)
+        elif a.isRepeater:
+            if a.status == "C":
+                repeaterOKList.append(a)
+            else:
+                repeaterDownList.append(a)
         else:
             if a.status == "C":
                 if a.battName == None or a.battLevel == 0:
@@ -430,6 +437,8 @@ def sendReport(aNotifyUsers, mqttClient):
         "nodeWarn": batWarnList,
         "nodeCrit": batCritList,
         "nodeDown": nodeDownList,
+        "repeaterOK": repeaterOKList,
+        "repeaterDown": repeaterDownList,
         "gatewayOK": gatewayOKList,
         "gatewayDown": gatewayDownList,
         "web_base_url": eWeb_Base_URL,

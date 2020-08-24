@@ -409,7 +409,7 @@ def msgUpdate(request, msg_ref):
     msg = get_object_or_404(MessageType, pk=msg_ref)
 
     MsgItemFormSet = modelformset_factory(
-        MessageItem, form=MessageItemDetailForm, extra=1, can_delete=True
+        MessageItem, form=MessageItemDetailForm, extra=3, can_delete=True
     )
 
     if request.method == "POST":
