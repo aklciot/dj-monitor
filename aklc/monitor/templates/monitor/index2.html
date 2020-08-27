@@ -43,9 +43,13 @@ Node list
                   {% if node.descr %} {{node.descr }} <br> {% endif %}
                   {% if node.battName %}Current battery value: {{node.battLevel}}<br>{% endif %}
                   {% if node.status == 'X' %}
-                    Missing for: {{ node.lastseen|timesince }}
+                    Missing for: {{ node.lastseen|timesince }} 
                   {% else %}
-                    Online for: {{ node.cameOnline|timesince }}
+                    {% if node.upTime %}
+                      Up time : {{ node.startTime|timesince }}
+                    {% else %}
+                      Online for: {{ node.cameOnline|timesince }}
+                    {% endif %}
                   {% endif %}
                   {% comment %}    {% if node.battName %}
                     Current value: {{node.battLevel}}

@@ -77,7 +77,7 @@ Node down notification
   <div id="repeaters">
     <div id="repeaterDown" class="devices">  
       {% if repeaterDown %}
-        <p>Repeater that are <b>DOWN</b> are:</p>
+        <p>Repeaters that are <b>DOWN</b> are:</p>
         <ul id = "repeaterDown">
         {% for entry in repeaterDown %}
           <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
