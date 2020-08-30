@@ -23,6 +23,7 @@ class NodeDetailForm(forms.ModelForm):
             "longitude",
             "email_down_template",
             "email_up_template",
+            "email_reminder_template",
         ]
         widgets = {
             "descr": forms.Textarea(attrs={"rows": 3}),
