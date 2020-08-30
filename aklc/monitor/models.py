@@ -358,10 +358,9 @@ class Node(models.Model):
             self.bootTimeUpdate(jPayload["Uptime"])
         if "Uptime(m)" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime(m)"])
-            self.save()
         if "Uptime(s)" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime(s)"] / 60)
-
+        self.save()
         return ()
 
     def incrementMsgCnt(self):

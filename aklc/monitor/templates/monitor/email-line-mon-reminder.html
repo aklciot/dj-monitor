@@ -9,11 +9,11 @@ Node down notification
 
   <div id="devices">
 
-  This is a reminder that the following systems are unresponsive:
-  {% for n in nodes %}
-    <p><b>{{n.nodeID}}</b> which is <b>{{n.descr}}</b> has not been seen since {{n.lastseen}}</p>
-  {% endfor %}
-
+  This is a reminder that <b>{{node.nodeID}} </b>
+  {% if node.descr %}
+   {{ node.descr }}
+  {% endif %}
+  is still not responding. It was last seen at {{ node.lastseen }} which is {{ node.lastseen|timesince }} ago.
   </div>  
 
 {% endblock %}

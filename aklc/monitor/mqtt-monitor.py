@@ -313,11 +313,11 @@ def missing_node(node, mqtt_client):
         for usr in uNotify:
             if usr.email:
                 # print(f"Send notification email to {usr.user.email}")
-                if usr.nodeID.email_template:
+                if usr.nodeID.email_down_template:
                     sendNotifyEmail(
                         "Node down notification for {}".format(node.nodeID),
                         cDict,
-                        f"monitor/{usr.nodeID.email_template.fileName}",
+                        f"monitor/{usr.nodeID.email_down_template.fileName}",
                         mqtt_client,
                         usr.user,
                     )
@@ -484,25 +484,24 @@ def sendDailyReminder(mqttClient):
     """
     Checks to see if reminder emails should be sent
     """
+    print("Daily reminder checks")
     allUsers = User.objects.all()
     for usr in allUsers:
-        cDict = {"user": usr}
-        nodes = []
         for nu in usr.nodeuser_set.all():
             print(f"Node user {nu}, status {nu.nodeID.status}")
             if nu.daily:
                 if nu.nodeID.status == "X":
-                    nodes.append(nu.nodeID)
-                    print(f"Node {nu.nodeID} is still down")
-            if nodes:
-                cDict["nodes"] = nodes
-                sendNotifyEmail(
-                    "Daily reminders",
-                    cDict,
-                    f"monitor/{nu.email_reminder_template.fileName}",
-                    mqttClient,
-                    usr,
-                )
+                    if nu.nodeID.email_reminder_template:
+                        print(f"Send reminder to {usr} that {nu.nodeID} is down")
+                        cDict = {"user": usr}
+                        cDict["node"] = nu.nodeID
+                        sendNotifyEmail(
+                            f"Daily reminder that {nu.nodeID} is still unresponsive",
+                            cDict,
+                            f"monitor/{nu.nodeID.email_reminder_template.fileName}",
+                            mqttClient,
+                            usr,
+                        )
 
 
 # ******************************************************************
