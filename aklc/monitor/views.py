@@ -329,7 +329,7 @@ def nodeModNotify(request, node_ref):
     else:
         nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
 
-    context = {"form": nf, "node": node}
+    context = {"form": nf, "node": node} 
     if node.isGateway:
         context["gatewayactive"] = "Y"
     else:

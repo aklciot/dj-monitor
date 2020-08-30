@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import datetime
 from django.utils import timezone
+from django import template
 import json
 
 # Create your models here.
@@ -45,7 +46,7 @@ class MessageType(models.Model):
 
 class MessageItem(models.Model):
     """
-    Model for message items which are part og the MessageType element.
+    Model for message items which are part of the MessageType element.
     """
 
     FIELD_TYPE_CHOICES = [
@@ -77,6 +78,18 @@ class MessageItem(models.Model):
         return f"{self.msgID.msgName}: {self.name}"
 
 
+class HtmlTemplate(models.Model):
+    """
+    This model is used to list available templates
+    """
+
+    templateName = models.CharField(max_length=50, blank=True, null=True)
+    fileName = models.CharField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return self.templateName
+
+
 class Node(models.Model):
     """
     Model definition for the Node object.
@@ -92,7 +105,7 @@ class Node(models.Model):
     lastseen = models.DateTimeField(blank=True, null=True)
     cameOnline = models.DateTimeField(blank=True, null=True)
     upTime = models.FloatField("Uptime in minutes", default=0.0)
-    #uptime = models.FloatField(default=0)
+    # uptime = models.FloatField(default=0)
 
     bootTime = models.DateTimeField(blank=True, null=True)
     onlineTime = models.FloatField("Online in minutes", default=0.0)
@@ -183,7 +196,46 @@ class Node(models.Model):
         null=True,
         help_text="The credentials needed for thingsboard data load",
     )
-    
+    sms_template = models.ForeignKey(
+        HtmlTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="smsTemplate",
+        help_text="Optional HTML template to be used for SMS node down messages",
+    )
+    email_down_template = models.ForeignKey(
+        HtmlTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="emailDownTemplate",
+        help_text="Optional HTML template to be used for email node down messages",
+    )
+    email_up_template = models.ForeignKey(
+        HtmlTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="emailUpTemplate",
+        help_text="Optional HTML template to be used for email node up messages",
+    )
+    email_reminder_template = models.ForeignKey(
+        HtmlTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="emailReminderTemplate",
+        help_text="Optional HTML template to be used for daily email node down reminder messages",
+    )
+    email_status_template = models.ForeignKey(
+        HtmlTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="emailStatusTemplate",
+        help_text="Optional HTML template to be used for weekly email status messages",
+    )
 
     class Meta:
         ordering = ["nodeID"]
@@ -216,7 +268,7 @@ class Node(models.Model):
         )
         return passAll
 
-    def msgReceived(self):
+    def msgReceived(self, mqttClient, emailFrom, eMail_topic):
         """
         This function updates node data when a new message is received.
         """
@@ -229,8 +281,38 @@ class Node(models.Model):
             self.cameOnline = timezone.make_aware(
                 datetime.datetime.now(), timezone.get_current_timezone()
             )
-        minDelta = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - self.cameOnline
-        self.onlineTime = minDelta.total_seconds()/60
+
+            if self.email_up_template:
+                for usr in self.nodeuser_set.all():
+                    if usr.email:
+                        print(f"Send email to {usr.user} that {self.nodeID} is back up")
+                    
+                        payload = {}
+                        try:
+                            inDataDict = {"node": self}
+                            #inDataDict["web_base_url"] = eWeb_Base_URL
+                            inDataDict["user"] = usr.user
+                            t = template.loader.get_template(f"monitor/{self.email_up_template.fileName}")
+                            body = t.render(inDataDict)
+
+                            payload["To"] = usr.user.email
+                            payload["From"] = emailFrom
+                            payload["Body"] = body
+                            payload["Subject"] = f"Device {self.nodeID} is back up"
+                            mqttClient.publish(eMail_topic, json.dumps(payload))
+                            print(f"Email sent to {usr.user.email}")
+
+                        except Exception as e:
+                            print(e)
+                            print(f"Houston, we have an error {e}")
+                    
+        minDelta = (
+            timezone.make_aware(
+                datetime.datetime.now(), timezone.get_current_timezone()
+            )
+            - self.cameOnline
+        )
+        self.onlineTime = minDelta.total_seconds() / 60
         return ()
 
     def jsonLoad(self, sInput):
@@ -276,9 +358,10 @@ class Node(models.Model):
             self.bootTimeUpdate(jPayload["Uptime"])
         if "Uptime(m)" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime(m)"])
+            self.save()
         if "Uptime(s)" in jPayload:
-            self.bootTimeUpdate(jPayload["Uptime(s)"]/60)
- 
+            self.bootTimeUpdate(jPayload["Uptime(s)"] / 60)
+
         return ()
 
     def incrementMsgCnt(self):
@@ -323,13 +406,13 @@ class Node(models.Model):
         jStr = {}
 
         if not self.messagetype:
-            return(jStr)
+            return jStr
         print(f"Message type found {self.messagetype.msgName}")
         print(f"Payload is {payload}")
         cPayload = payload.split(",")
         # here we try and remove any references to any repeaters
         lRepeater = True
-        
+
         while lRepeater:
             nCnt = 0
             for itm in cPayload:
@@ -341,7 +424,7 @@ class Node(models.Model):
                     # print(f"Remove {itm} from input")
                     cPayload.remove(itm)
                     lRepeater = True
-        
+
         for mItem in self.messagetype.messageitem_set.all():
             # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
             # some validation here
@@ -367,15 +450,17 @@ class Node(models.Model):
             jStr[mItem.name] = val
 
         print(f"jStr is {jStr}")
-        return(jStr)
-    
+        return jStr
+
     def bootTimeUpdate(self, inMinutes):
         """Updates a node uptime and boottime based on seconds uptime"""
         self.upTime = inMinutes
         self.bootTime = timezone.make_aware(
             datetime.datetime.now(), timezone.get_current_timezone()
-            ) - datetime.timedelta(minutes=inMinutes)
+        ) - datetime.timedelta(minutes=inMinutes)
+        self.save()
         return
+
 
 class NodeUser(models.Model):
     """
@@ -389,6 +474,7 @@ class NodeUser(models.Model):
     lastemail = models.DateTimeField(blank=True, null=True)
     lastsms = models.DateTimeField(blank=True, null=True)
     smsSent = models.BooleanField(blank=True, default=False)
+    daily = models.BooleanField(blank=True, default=False)
 
     def __str__(self):
         return f"{self.nodeID}: {self.user.username}"
@@ -406,6 +492,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phoneNumber = models.CharField(max_length=50, blank=True, null=True)
     reportType = models.CharField(max_length=1, blank=True, null=True, default="S")
+    customer = models.BooleanField(blank=True, default=False)
 
     def __str__(self):
         return self.user.username

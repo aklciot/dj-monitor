@@ -95,34 +95,36 @@ def mqtt_on_message(client, userdata, msg):
             print(f"Gateway status message received for {cNode}, payload is {cPayload}")
             # Check and update the gateway data
             if node_validate(cNode):
-                #print(f"Make/get node {cNode}")
+                # print(f"Make/get node {cNode}")
                 gw, created = Node.objects.get_or_create(nodeID=cNode)
-                #print(f"MG Success")
+                # print(f"MG Success")
                 if created:
                     print(f"Gateway {gw.nodeID} created")
-                gw.msgReceived()
+                gw.msgReceived(client, eMail_From, eMail_topic)
                 gw.isGateway = True
                 gw.lastStatus = sPayload
                 gw.lastStatusTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
-                #print("Save")
+                # print("Save")
                 gw.incrementMsgCnt()
                 gw.save()
                 nJson = gw.make_json(sPayload)
-                #print(f"Gateway JSON is {nJson}")
+                print(f"Gateway JSON is {nJson}")
                 if "Uptime" in nJson:
                     gw.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
-                    gw.bootTimeUpdate(nJson["Uptime(s)"]/60)
+                    gw.bootTimeUpdate(nJson["Uptime(s)"] / 60)
                 if "Uptime(m)" in nJson:
                     gw.bootTimeUpdate(nJson["Uptime(m)"])
                 if "HWType" in jOut["jStr"]:
                     gw.hardware = jOut["jStr"]["HWType"]
                 if "Version" in jOut["jStr"]:
                     gw.software = jOut["jStr"]["Version"]
+                if "Reply" in jOut["jStr"]:
+                    client.publish(f"AKLC/Control/{gw.nodeID}", "Status received")
                 gw.save()
-                #print(f"Gateway {gw.nodeID} saved")
+                # print(f"Gateway {gw.nodeID} saved")
             else:
                 print(f"Gateway {cNode} not processed")
 
@@ -140,7 +142,7 @@ def mqtt_on_message(client, userdata, msg):
                 # get the node, or create it if not found
                 # print("Valid node {}".format(cPayload[1]))
                 nd, created = Node.objects.get_or_create(nodeID=cPayload[1])
-                nd.msgReceived()
+                nd.msgReceived(client, eMail_From, eMail_topic)
                 nd.lastData = sPayload
                 nd.lastDataTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
@@ -151,11 +153,11 @@ def mqtt_on_message(client, userdata, msg):
                 else:
                     nd.isRepeater = False
                 nJson = nd.make_json(sPayload)
-                #print(f"JSON is {nJson}")
+                # print(f"JSON is {nJson}")
                 if "Uptime" in nJson:
                     nd.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
-                    nd.bootTimeUpdate(nJson["Uptime(s)"]/60)
+                    nd.bootTimeUpdate(nJson["Uptime(s)"] / 60)
                 if "Uptime(m)" in nJson:
                     nd.bootTimeUpdate(nJson["Uptime(m)"])
                 nd.save()
@@ -164,7 +166,7 @@ def mqtt_on_message(client, userdata, msg):
             if node_validate(cPayload[0]):  # payload[0] is the gateway
                 # print("Valid gateway {}".format(cPayload[0]))
                 gw, created = Node.objects.get_or_create(nodeID=cPayload[0])
-                gw.msgReceived()
+                gw.msgReceived(client, eMail_From, eMail_topic)
                 gw.isGateway = True
                 gw.lastData = sPayload
                 gw.lastDataTime = timezone.make_aware(
@@ -209,23 +211,27 @@ def mqtt_on_message(client, userdata, msg):
                             # print("Processing network message")
                             # print(jPayload)
                             nd, created = Node.objects.get_or_create(nodeID=cTopic[2])
-                            nd.msgReceived()
+                            nd.msgReceived(client, eMail_From, eMail_topic)
                             nd.lastStatus = sPayload
                             nd.lastStatusTime = timezone.make_aware(
                                 datetime.datetime.now(), timezone.get_current_timezone()
                             )
                             nd.jsonLoad(sPayload)
                             nd.incrementMsgCnt()
+                            if "Reply" in jPayload:
+                                client.publish(
+                                    f"AKLC/Control/{nd.nodeID}", "Status received"
+                                )
                             nd.save()
                     else:
                         # print("Gateway not in topic")
                         if "Gateway" in jPayload:
                             if node_validate(jPayload["Gateway"]):
-                                #print(f"Process gateway {jPayload['Gateway']}")
+                                # print(f"Process gateway {jPayload['Gateway']}")
                                 gw, created = Node.objects.get_or_create(
                                     nodeID=jPayload["Gateway"]
                                 )
-                                gw.msgReceived()
+                                gw.msgReceived(client, eMail_From, eMail_topic)
                                 gw.lastStatus = sPayload
                                 gw.lastStatusTime = timezone.make_aware(
                                     datetime.datetime.now(),
@@ -233,7 +239,10 @@ def mqtt_on_message(client, userdata, msg):
                                 )
                                 gw.jsonLoad(sPayload)
                                 gw.incrementMsgCnt()
-
+                                if "Reply" in jPayload:
+                                    client.publish(
+                                        f"AKLC/Control/{gw.nodeID}", "Status received"
+                                    )
                                 gw.save()
             except Exception as e:
                 print(e)
@@ -247,7 +256,7 @@ def mqtt_on_message(client, userdata, msg):
         if "NodeID" in jPayload:
             try:
                 nd, created = Node.objects.get_or_create(nodeID=jPayload["NodeID"])
-                nd.msgReceived()
+                nd.msgReceived(client, eMail_From, eMail_topic)
                 nd.lastData = sPayload
                 nd.lastDataTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
@@ -303,14 +312,23 @@ def missing_node(node, mqtt_client):
         )  # get a list af those users to send notifications to
         for usr in uNotify:
             if usr.email:
-                # print(usr.user.email)
-                sendNotifyEmail(
-                    "Node down notification for {}".format(node.nodeID),
-                    cDict,
-                    "monitor/email-down.html",
-                    mqtt_client,
-                    usr.user,
-                )
+                # print(f"Send notification email to {usr.user.email}")
+                if usr.nodeID.email_template:
+                    sendNotifyEmail(
+                        "Node down notification for {}".format(node.nodeID),
+                        cDict,
+                        f"monitor/{usr.nodeID.email_template.fileName}",
+                        mqtt_client,
+                        usr.user,
+                    )
+                else:
+                    sendNotifyEmail(
+                        "Node down notification for {}".format(node.nodeID),
+                        cDict,
+                        "monitor/email-down.html",
+                        mqtt_client,
+                        usr.user,
+                    )
                 print(
                     f"Node {node.nodeID} marked as down and email notification sent to {usr.user.username}"
                 )
@@ -462,6 +480,32 @@ def sendReport(aNotifyUsers, mqttClient):
 
 
 # ******************************************************************
+def sendDailyReminder(mqttClient):
+    """
+    Checks to see if reminder emails should be sent
+    """
+    allUsers = User.objects.all()
+    for usr in allUsers:
+        cDict = {"user": usr}
+        nodes = []
+        for nu in usr.nodeuser_set.all():
+            print(f"Node user {nu}, status {nu.nodeID.status}")
+            if nu.daily:
+                if nu.nodeID.status == "X":
+                    nodes.append(nu.nodeID)
+                    print(f"Node {nu.nodeID} is still down")
+            if nodes:
+                cDict["nodes"] = nodes
+                sendNotifyEmail(
+                    "Daily reminders",
+                    cDict,
+                    f"monitor/{nu.email_reminder_template.fileName}",
+                    mqttClient,
+                    usr,
+                )
+
+
+# ******************************************************************
 def sys_monitor():
     """ The main program that sends updates to the MQTT system
     """
@@ -518,6 +562,8 @@ def sys_monitor():
         print("Send test daily report")
         allUsers = Profile.objects.filter(user__username__startswith="jim")
 
+        sendDailyReminder(client)
+
         # uReport = []
         # for usr in allUsers:
         # print("User is {}, email is {}".format(usr.user.user, usr.user.email))
@@ -525,7 +571,18 @@ def sys_monitor():
         #      uReport.append(usr.user)
         #      print("Full report to {}".format(usr.user.email))
 
-        sendReport(allUsers, client)
+        # sendReport(allUsers, client)
+
+        allNodes = Node.objects.all()
+        for n in allNodes:
+            # if nothing then our 'patience' will run out
+            if (timezone.now() - n.lastseen) > datetime.timedelta(
+                minutes=n.allowedDowntime
+            ):
+                print(
+                    "Node {} not seen for over {} minutes".format(n, n.allowedDowntime)
+                )
+                missing_node(n, client)
 
     print("About to start loop")
 
@@ -573,6 +630,9 @@ def sys_monitor():
                         print("Send 8am messages")
 
                         allUsers = Profile.objects.all()
+
+                        sendDailyReminder(allUsers)
+
                         uReport = []
                         for usr in allUsers:
                             # print("User is {}, email is {}".format(usr.user.username, usr.user.email))

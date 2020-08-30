@@ -12,6 +12,7 @@ from .models import (
     NodeMsgStats,
     MqttQueue,
     MqttMessage,
+    HtmlTemplate,
 )
 
 admin.site.register(Node)
@@ -24,4 +25,5 @@ admin.site.register(MessageItem)
 admin.site.register(NodeMsgStats)
 admin.site.register(MqttQueue)
 admin.site.register(MqttMessage)
+admin.site.register(HtmlTemplate)
 

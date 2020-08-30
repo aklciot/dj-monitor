@@ -1,0 +1,17 @@
+{% extends "monitor/email-base.html" %}
+
+{% block title %}
+Node down notification
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ user.username|capfirst }}</p>
+
+  <div id="devices">
+
+This is to inform you that <b>{{node.nodeID}}</b> which is <b>{{node.descr}}</b> has been non-responsive for more than an hour.
+
+  </div>  
+
+{% endblock %}
+   
