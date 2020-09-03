@@ -49,6 +49,8 @@ eInflux_user = os.getenv("AKLC_INFLUX_USER", "aklciot")
 eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
 eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
+eTesting = os.getenv("AKLC_TESTING", 0)
+
 # ********************************************************************
 """
 This function is called when the MQTT client connects to the MQTT broker
@@ -128,6 +130,8 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
         # print(f"Influx json from function {json_body}")
         try:
             influxClient.write_points(json_body)
+            if eTesting:
+                print(f"Store {json_body} in Influx")
         except Exception as e:
             print(e)
             print(f"Influx error: {e}, json_body is {json_body}")
