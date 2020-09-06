@@ -569,7 +569,7 @@ class MqttMessage(models.Model):
 
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
     mqttQueue = models.ForeignKey(MqttQueue, on_delete=models.CASCADE)
-    received = models.DateTimeField()
+    received = models.DateTimeField(auto_now=True)
     first_msg = models.DateTimeField(auto_now_add=True)
     topic = models.CharField(max_length=100)
     payload = models.TextField()
@@ -579,4 +579,4 @@ class MqttMessage(models.Model):
         verbose_name = "Mqtt Message"
 
     def __str__(self):
-        return f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, payload: {self.payload}, received: {self.received}"
+        return f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}"

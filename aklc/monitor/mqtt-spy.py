@@ -67,7 +67,7 @@ def mqtt_on_message(client, userdata, msg):
     """
       This procedure is called when a msg is recieved
     """
-    #print(f"Msg recived on {userdata.descr}, topic {msg.topic}, payload {msg.payload}")
+    print(f"Msg recived on {userdata.descr}, topic {msg.topic}, payload {msg.payload}")
     
     # first have to find a node id
     cNode = ""
@@ -115,7 +115,7 @@ def mqtt_on_message(client, userdata, msg):
     # Lets get the node record
     try:
         node = Node.objects.get(nodeID=cNode)
-        #print(f"Node found {node.nodeID}")
+        print(f"Node found {node.nodeID}")
     except:
         return
 
@@ -123,14 +123,17 @@ def mqtt_on_message(client, userdata, msg):
     try:
         print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
         mqttMsg, created = MqttMessage.objects.get_or_create(node=node, mqttQueue=userdata)
+        if created:
+            print(f"New record created")
         mqttMsg.topic = msg.topic
         mqttMsg.payload = sPayload
         mqttMsg.received = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+        print(f"Time received is {timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())}")
         mqttMsg.save()
 
     except Exception as e:
         print(e)
-        print(f"Houston, we have an error {e}")
+        print(f"Houston, we have an mqtt storing error {e}")
     return
 
 
