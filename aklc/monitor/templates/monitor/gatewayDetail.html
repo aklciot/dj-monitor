@@ -97,6 +97,9 @@ Node Details
           <ul>
           {% for mq in gateway.mqttmessage_set.all %}
               <li><span class = "nodename">{{ mq.mqttQueue.descr }}</span> ({{mq.received}})<br>
+              Topic <span class = "mqtt_info">{{mq.topic}}</span><br>
+              Payload <span class = "mqtt_info">{{mq.payload}}</span></li> 
+
               <!-- Topic <span class = "mqtt_info">{{mq.topic}}</span><br>
               Payload <span class = "mqtt_info">{{mq.payload}}</span></li> -->
             {% endfor %}
