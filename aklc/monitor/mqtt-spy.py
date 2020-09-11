@@ -121,14 +121,14 @@ def mqtt_on_message(client, userdata, msg):
 
     
     try:
-        print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
+        #print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
         mqttMsg, created = MqttMessage.objects.get_or_create(node=node, mqttQueue=userdata)
         if created:
             print(f"New record created")
         mqttMsg.topic = msg.topic
         mqttMsg.payload = sPayload
         mqttMsg.received = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
-        print(f"Time received is {timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())}")
+        #print(f"Time received is {timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())}")
         mqttMsg.save()
 
     except Exception as e:

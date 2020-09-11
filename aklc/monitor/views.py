@@ -7,7 +7,7 @@ from django.views import generic
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.utils import timezone
-import datetime
+import datetime, os
 
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
@@ -25,35 +25,40 @@ from .forms import (
 
 from django.forms import modelformset_factory
 
-# class IndexView(generic.ListView):
-#    template_name = "monitor/index.html"
-#    context_object_name = "nodeList"
-#
-#    def get_queryset(self):
-#        return Node.objects.order_by("nodeID").exclude(status="M")
+testFlag = os.getenv("AKLC_TESTING", False)
 
 
 def index(request):
     """
     View that displays all current nodes.
     """
-    dMonthAgo = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=31)
+    dMonthAgo = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    ) - datetime.timedelta(days=31)
     # get all the nodes
-    nodeList = Node.objects.order_by("nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
+    nodeList = (
+        Node.objects.order_by("nodeID")
+        .exclude(status="M")
+        .exclude(lastseen__lte=dMonthAgo)
+    )
     # remove any Gateways
     nodeList = nodeList.exclude(isGateway=True)
 
-    nodeByTeam = Node.objects.order_by("team", "nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
+    nodeByTeam = (
+        Node.objects.order_by("team", "nodeID")
+        .exclude(status="M")
+        .exclude(lastseen__lte=dMonthAgo)
+    )
     nodeByTeam = nodeByTeam.exclude(isGateway=True).exclude(isRepeater=True)
-    
+
     noTeamNode = nodeByTeam.exclude(team__isnull=False)
-    #print(f"All nodes {len(nodeByTeam)}, no team nodes {len(noTeamNode)}")
-    #print(" ")
+    # print(f"All nodes {len(nodeByTeam)}, no team nodes {len(noTeamNode)}")
+    # print(" ")
     nodeBlock = []
     if len(nodeByTeam) != len(noTeamNode):
         teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
         tTeam = nodeByTeam[0].team
-    
+
         # teamBlock = []
         innerBlock = []
         nCnt = 0
@@ -61,11 +66,11 @@ def index(request):
         for n in nodeByTeam:
 
             if n.team != tTeam:  # change teams
-                #print(f"Team change, now {n.team}")
+                # print(f"Team change, now {n.team}")
                 teamDict["teamBlock"].append(innerBlock)
                 nodeBlock.append(teamDict)
                 if not n.team:
-                    #print(f"Break at {n.nodeID}")
+                    # print(f"Break at {n.nodeID}")
                     break
 
                 # set up for next team
@@ -86,13 +91,13 @@ def index(request):
             teamDict = {}
     # Now do those with no team assigned
     teamDict = {"Name": "No project", "teamBlock": []}
-    #print("Process no team")
+    # print("Process no team")
     innerBlock = []
     nCnt = 0
     # teamBlock = []
     for n in nodeByTeam:
         if not n.team:
-            #print(n.nodeID)
+            # print(n.nodeID)
             innerBlock.append(n)
             nCnt += 1
         if nCnt > 5:
@@ -103,9 +108,11 @@ def index(request):
         teamDict["teamBlock"].append(innerBlock)
     nodeBlock.append(teamDict)
 
-    #print(nodeBlock)
+    # print(nodeBlock)
 
     context = {"nodeList": nodeList, "nodeactive": "Y", "nodeBlock": nodeBlock}
+    if os.getenv("AKLC_TESTING", False):
+        context["dev_msg"] = "(Development)"
     # context = {"nodeList": nodeList, "nodeactive": "Y"}
     if request.user.groups.filter(name="BetaTesters").exists():
         return render(request, "monitor/index2.html", context)
@@ -117,8 +124,14 @@ def index_gw(request):
     """
     View for Gateways.
     """
-    dMonthAgo = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=31)
-    nodeList = Node.objects.order_by("nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
+    dMonthAgo = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    ) - datetime.timedelta(days=31)
+    nodeList = (
+        Node.objects.order_by("nodeID")
+        .exclude(status="M")
+        .exclude(lastseen__lte=dMonthAgo)
+    )
     # Remove anything that is not a gateway
     nodeList = nodeList.exclude(isGateway=False)
     gw_block = []  # will be a list of lists
@@ -131,22 +144,32 @@ def index_gw(request):
             gw_block.append(innerList)
             nCnt = 1
             innerList = []
-    
+
     if len(innerList) > 0:
         gw_block.append(innerList)
 
     context = {"nodeList": nodeList, "gatewayactive": "Y", "gw_block": gw_block}
+    if os.getenv("AKLC_TESTING", False):
+        context["dev_msg"] = "(Development)"
+
     if request.user.groups.filter(name="BetaTesters").exists():
         return render(request, "monitor/index_gw2.html", context)
     else:
         return render(request, "monitor/index_gw2.html", context)
 
+
 def index_rp(request):
     """
     View for repeaters.
     """
-    dMonthAgo = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - datetime.timedelta(days=31)
-    nodeList = Node.objects.order_by("nodeID").exclude(status="M").exclude(lastseen__lte=dMonthAgo)
+    dMonthAgo = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    ) - datetime.timedelta(days=31)
+    nodeList = (
+        Node.objects.order_by("nodeID")
+        .exclude(status="M")
+        .exclude(lastseen__lte=dMonthAgo)
+    )
     # Remove anything that is not a repeater
     nodeList = nodeList.exclude(isRepeater=False)
     print(f"There are {len(nodeList)} repeaters")
@@ -160,11 +183,14 @@ def index_rp(request):
             rp_block.append(innerList)
             nCnt = 1
             innerList = []
-    
+
     if len(innerList) > 0:
         rp_block.append(innerList)
 
     context = {"repeaterList": rp_block, "repeateractive": "Y"}
+    if os.getenv("AKLC_TESTING", False):
+        context["dev_msg"] = "(Development)"
+
     return render(request, "monitor/index_rp.html", context)
 
 
@@ -175,6 +201,9 @@ def index_msg(request):
     """
     msgList = MessageType.objects.order_by("msgName")
     context = {"msgList": msgList, "msgactive": "Y"}
+    if testFlag:
+        context["dev_msg"] = "(Development)"
+
     return render(request, "monitor/index_msg.html", context)
 
 
@@ -185,6 +214,8 @@ def index_prj(request):
     """
     prjList = Team.objects.order_by("teamID")
     context = {"prjList": prjList, "prjactive": "Y"}
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/index_prj.html", context)
 
 
@@ -205,6 +236,8 @@ def nodeDetail(request, node_ref):
         "passData": passList,
         "nodeactive": "Y",
     }
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeDetail.html", context)
 
 
@@ -225,7 +258,10 @@ def gatewayDetail(request, gateway_ref):
         "passData": passList,
         "gatewayactive": "Y",
     }
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/gatewayDetail.html", context)
+
 
 @login_required
 def repeaterDetail(request, rp_ref):
@@ -244,6 +280,8 @@ def repeaterDetail(request, rp_ref):
         "passData": passList,
         "repeateractive": "Y",
     }
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/repeaterDetail.html", context)
 
 
@@ -272,7 +310,10 @@ def nodeUpdate(request, node_ref):
         context["gatewayactive"] = "Y"
     else:
         context["nodeactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeUpdate.html", context)
+
 
 @login_required
 def repeaterUpdate(request, rp_ref):
@@ -294,11 +335,10 @@ def repeaterUpdate(request, rp_ref):
     else:
         nf = NodeDetailForm(instance=node)
     context = {"form": nf, "node": node}
-    2
-    if node.isGateway:
-        context["gatewayactive"] = "Y"
-    else:
-        context["nodeactive"] = "Y"
+
+    context["repeateractive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeUpdate.html", context)
 
 
@@ -329,12 +369,15 @@ def nodeModNotify(request, node_ref):
     else:
         nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
 
-    context = {"form": nf, "node": node} 
+    context = {"form": nf, "node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
     else:
         context["nodeactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeModNotify.html", context)
+
 
 @login_required
 def nodeModNotifyOthers(request, node_ref):
@@ -343,7 +386,7 @@ def nodeModNotifyOthers(request, node_ref):
     """
     node = get_object_or_404(Node, pk=node_ref)
     people = User.objects.all()
-    
+
     if request.method == "POST":
         nf = NodeNotifyForm(request.POST)
         if nf.is_valid():
@@ -363,11 +406,13 @@ def nodeModNotifyOthers(request, node_ref):
     else:
         nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
 
-    context = {"form": nf, "node": node} 
+    context = {"form": nf, "node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
     else:
         context["nodeactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeModNotify.html", context)
 
 
@@ -392,6 +437,8 @@ def nodeMsgUpdate(request, node_ref):
         context["gatewayactive"] = "Y"
     else:
         context["nodeactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeMsgUpdate.html", context)
 
 
@@ -413,18 +460,24 @@ def nodeRemove(request, node_ref):
         context["gatewayactive"] = "Y"
     else:
         context["nodeactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeRemove.html", context)
 
 
 def tb1(request, node_ref):
     node = Node.objects.get(id=node_ref)
     context = {"node": node}
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/tb1.html", context)
 
 
 def tb2(request, node_ref):
     node = Node.objects.get(id=node_ref)
     context = {"node": node}
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/tb2.html", context)
 
 
@@ -435,6 +488,8 @@ def msgDetail(request, msg_ref):
     msgNodes = msg.node_set.all()
     context = {"msg": msg, "msgItems": msgItems, "msgNodes": msgNodes}
     context["msgactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/msgDetail.html", context)
 
 
@@ -480,6 +535,8 @@ def msgUpdate(request, msg_ref):
     context = {"form": nf, "msg": msg, "fItems": fItems}
 
     context["msgactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/msgUpdate.html", context)
 
 
@@ -515,6 +572,8 @@ def msgAdd(request):
     context = {"form": nf, "fItems": fItems}
 
     context["msgactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
     return render(request, "monitor/msgAdd.html", context)
 
 

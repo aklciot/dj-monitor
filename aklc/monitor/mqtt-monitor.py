@@ -37,6 +37,13 @@ sMs_topic = os.getenv("AKLC_SMS_TOPIC", "AKLC/sms/send")
 eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz")
 
 testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
+testFlag = os.getenv("AKLC_TESTING", False)
+
+# ********************************************************************
+def testPr(tStr):
+    if testFlag:
+        print(tStr)
+    return
 
 
 # ********************************************************************
@@ -85,14 +92,16 @@ def mqtt_on_message(client, userdata, msg):
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
-        # print("Aklc message received, topic {}, payload {}".format(msg.topic, msg.payload))
+        # testPr("Aklc TEST message received, topic {}, payload {}".format(msg.topic, msg.payload))
         # Check types of message from the topic
-        # print("Subtopic = |{}|".format(cTopic[1]))
+
         if cTopic[1] == "Status":
             # These are status messages sent by gateways. Data in CSV format
             cPayload = sPayload.split(",")
             cNode = cPayload[0]
-            print(f"Gateway status message received for {cNode}, payload is {cPayload}")
+            print(
+                f"Gateway status (AKLC/Status) message received for {cNode}, payload is {cPayload}"
+            )
             # Check and update the gateway data
             if node_validate(cNode):
                 # print(f"Make/get node {cNode}")
@@ -106,11 +115,11 @@ def mqtt_on_message(client, userdata, msg):
                 gw.lastStatusTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
-                # print("Save")
+
                 gw.incrementMsgCnt()
                 gw.save()
                 nJson = gw.make_json(sPayload)
-                print(f"Gateway JSON is {nJson}")
+                testPr(f"Gateway JSON is {nJson}")
                 if "Uptime" in nJson:
                     gw.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
@@ -124,7 +133,6 @@ def mqtt_on_message(client, userdata, msg):
                 if "Reply" in jOut["jStr"]:
                     client.publish(f"AKLC/Control/{gw.nodeID}", "Status received")
                 gw.save()
-                # print(f"Gateway {gw.nodeID} saved")
             else:
                 print(f"Gateway {cNode} not processed")
 
@@ -134,10 +142,13 @@ def mqtt_on_message(client, userdata, msg):
             cPayload = sPayload.split(",")  # the payload should be CSV
 
             print(
-                "Gateway msg received, Node {}, Gateway {}".format(
-                    cPayload[1], cPayload[0]
-                )
+                f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}"
             )
+
+            if cPayload[1].startswith("Test"):
+                print("Test message, ignored")
+                return
+
             if node_validate(cPayload[1]):  # check if the nodeID is valid
                 # get the node, or create it if not found
                 # print("Valid node {}".format(cPayload[1]))
@@ -153,7 +164,7 @@ def mqtt_on_message(client, userdata, msg):
                 else:
                     nd.isRepeater = False
                 nJson = nd.make_json(sPayload)
-                # print(f"JSON is {nJson}")
+                testPr(f"JSON is {nJson}")
                 if "Uptime" in nJson:
                     nd.bootTimeUpdate(nJson["Uptime"])
                 if "Uptime(s)" in nJson:
@@ -196,7 +207,9 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Network"
         ):  # These are status messages sent by gateways and nodes. Data in JSON format
-            print(f"Network message received |{sPayload}|, topic |{msg.topic}|")
+            print(
+                f"Network message (AKLC/Network) received |{sPayload}|, topic |{msg.topic}|"
+            )
             # print("Topic length = {}".format(len(cTopic)))
             jPayload = json.loads(sPayload)  # the payload should be JSON
 
@@ -227,7 +240,7 @@ def mqtt_on_message(client, userdata, msg):
                         # print("Gateway not in topic")
                         if "Gateway" in jPayload:
                             if node_validate(jPayload["Gateway"]):
-                                # print(f"Process gateway {jPayload['Gateway']}")
+                                testPr(f"Process gateway {jPayload['Gateway']}")
                                 gw, created = Node.objects.get_or_create(
                                     nodeID=jPayload["Gateway"]
                                 )
@@ -247,12 +260,32 @@ def mqtt_on_message(client, userdata, msg):
             except Exception as e:
                 print(e)
                 print(f"Houston, we have an error {e}")
+        elif (
+            cTopic[1] == "Node"
+        ):  # These are status messages sent by gateways and nodes. Data in JSON format
+            print(
+                f"Node message (AKLC/Node) received |{sPayload}|, topic |{msg.topic}|"
+            )
+            jPayload = json.loads(sPayload)  # the payload should be JSON
+            if len(cTopic) > 2:
+                # print("Topic[2] is {}".format(cTopic[2]))
+                if node_validate(cTopic[2]):
+                    testPr(f"Processing node message for {cTopic[2]}")
+                    nd, created = Node.objects.get_or_create(nodeID=cTopic[2])
+                    nd.msgReceived(client, eMail_From, eMail_topic)
+                    nd.lastData = sPayload
+                    nd.lastDataTime = timezone.make_aware(
+                        datetime.datetime.now(), timezone.get_current_timezone()
+                    )
+                    nd.incrementMsgCnt()
+                    if "Reply" in jPayload:
+                        client.publish(f"AKLC/Control/{nd.nodeID}", "Data received")
+                    nd.save()
 
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
         jPayload = json.loads(sPayload)
         print(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
-        # print("The NodeID is {}".format(jPayload["NodeID"]))
         if "NodeID" in jPayload:
             try:
                 nd, created = Node.objects.get_or_create(nodeID=jPayload["NodeID"])
@@ -270,10 +303,8 @@ def mqtt_on_message(client, userdata, msg):
                     print("team {} not found".format(cTopic[0]))
 
                 nd.save()
-                # print(nd.team.teamID)
-                # print("Processed data for {}".format(nd.nodeID))
             except Exception as e:
-                print(f"Team error {e}")
+                print(f"Team error {e}, message topic:{msg.topic}, payload :{sPayload}")
 
 
 # ********************************************************************
@@ -363,6 +394,8 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         payload["From"] = eMail_From
         payload["Body"] = body
         payload["Subject"] = inSubject
+        if testFlag:
+            payload["Subject"] += " from development system"
         mqtt_client.publish(eMail_topic, json.dumps(payload))
         print(f"Email sent to {mailUser.email}")
 
@@ -390,9 +423,10 @@ def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
         body = t.render(dataDict)
 
         payload["Number"] = uProfile.phoneNumber
-        payload["Text"] = body
-
-        # print("The topic used is {}".format(sMs_topic))
+        if testFlag:
+            payload["Text"] = "(Dev) " + body
+        else:
+            payload["Text"] = body
         mqtt_client.publish(sMs_topic, json.dumps(payload))
     except Exception as e:
         print(e)
