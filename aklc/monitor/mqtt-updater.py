@@ -49,7 +49,14 @@ eInflux_user = os.getenv("AKLC_INFLUX_USER", "aklciot")
 eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
 eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
-eTesting = os.getenv("AKLC_TESTING", 0)
+testFlag = os.getenv("AKLC_TESTING", False)
+
+# ********************************************************************
+def testPr(tStr):
+    if testFlag:
+        print(tStr)
+    return
+
 
 # ********************************************************************
 """
@@ -130,11 +137,9 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
         # print(f"Influx json from function {json_body}")
         try:
             influxClient.write_points(json_body)
-            if eTesting:
-                print(f"Store {json_body} in Influx")
+            testPr(f"Store {json_body} in Influx")
         except Exception as e:
-            print(e)
-            print(f"Influx error: {e}, json_body is {json_body}")
+            print(f"Influx load error: {e}, json_body is {json_body}")
 
     return
 
@@ -165,7 +170,7 @@ def mqtt_on_message(client, userdata, msg):
         # Check types of message from the topic
 
         if cTopic[1] == "Status":  # Status messages from Gateways, data in CSV format
-            #print(f"AKLC Status message received, payload is {sPayload}")
+            print(f"AKLC/Status message received, payload is {sPayload}")
 
             try:
                 node = Node.objects.get(nodeID=cPayload[0])  # Lets
@@ -173,9 +178,8 @@ def mqtt_on_message(client, userdata, msg):
 
                 if node.messagetype:
                     jOut = csv_to_json(sPayload, node)
-                    #print("Messagetype found")
-                    #print(f"jOut is {jOut}")
-                        
+                    testPr("Messagetype found, jOut is {jOut}")
+
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
 
@@ -191,7 +195,7 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
-            # print(f"AKLC Gateway message received, payload is {sPayload}")
+            print(f"AKLC/Gateway message received, payload is {sPayload}")
 
             if "Test" in cPayload[1]:
                 # print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
@@ -208,23 +212,27 @@ def mqtt_on_message(client, userdata, msg):
                 return
 
             if node.messagetype:
-                print(f"Message type found in Gateway message, node is {node.nodeID}")
                 jOut = csv_to_json(sPayload, node)
-
+                testPr(
+                    f"Message type found in Gateway message, node is {node.nodeID}, jOut is {jOut}"
+                )
                 if node.influxUpload:
                     if node.team:
                         cTeam = node.team.teamID
                     else:
                         cTeam = "unknown"
-                    json_body = [
-                        {
-                            "measurement": cTeam,
-                            "tags": jOut["jTags"],
-                            "fields": jOut["jData"],
-                        }
-                    ]
-                    print(f"Influx JSON {json_body}")
-                    InClient.write_points(json_body)
+                    # json_body = [
+                    #    {
+                    #        "measurement": cTeam,
+                    #        "tags": jOut["jTags"],
+                    #        "fields": jOut["jData"],
+                    #    }
+                    # ]
+                    # testPr(f"Influx JSON {json_body}")
+                    # InClient.write_points(json_body)
+                    influxUpload(
+                        node, InClient, msg, cTeam, jOut["jTags"], jOut["jData"]
+                    )
 
                 if node.thingsboardUpload:
                     thingsboardUpload(node, msg)
@@ -234,9 +242,9 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Node" or cTopic[1] == "Network"
         ):  # These are JSON messages, both data & status
-            # print(
-            #    f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}"
-            # )
+            print(
+                f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}"
+            )
 
             if is_json(sPayload):  # these messages should always be JSON
                 jStr = json.loads(sPayload)
@@ -251,7 +259,7 @@ def mqtt_on_message(client, userdata, msg):
                     cNode = jStr["NodeID"]
                 else:
                     print("No node info could be found, ignore message")
-                    cNode = "XXXXXXXXX"
+                    return
 
                 try:
                     node = Node.objects.get(nodeID=cNode)
@@ -282,7 +290,7 @@ def mqtt_on_message(client, userdata, msg):
         # the payload is expected to be json
 
         jPayload = json.loads(sPayload)
-        # print("Team message arrived, topic is {}".format(msg.topic))
+        print("Team message arrived, topic is {}".format(msg.topic))
 
         if "NodeID" in jPayload:
             # print("The NodeID is {}".format(jPayload["NodeID"]))
