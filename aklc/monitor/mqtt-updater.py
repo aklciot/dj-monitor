@@ -123,7 +123,7 @@ def thingsboardUpload(node, msg):
                 port=eTB_port,
                 auth={"username": node.thingsboardCred},
             )
-        # print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
+            # print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
         except ValueError as e:
             print(f"Thingsboard load error: {e}, node is {node.nodeID}")
         return

@@ -150,10 +150,10 @@ def mqtt_on_message(client, userdata, msg):
             # These are data messages from nodes sent on by a gateway, payload should be CSV
             # print("Gateway message received")
             cPayload = sPayload.split(",")  # the payload should be CSV
-
-            print(
-                f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}"
-            )
+            if len(cPayload) < 2:
+                print(f"Gateway msg (AKLC/Gateway) received, invalid payload {sPayload}")
+                return
+            testpr(f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}")
 
             if cPayload[1].startswith("Test"):
                 print("Test message, ignored")
