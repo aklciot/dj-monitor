@@ -7,6 +7,7 @@ import datetime
 from django.utils import timezone
 from django import template
 import json
+import numbers
 
 # Create your models here.
 class Team(models.Model):
@@ -453,14 +454,17 @@ class Node(models.Model):
 
     def bootTimeUpdate(self, inMinutes):
         """Updates a node uptime and boottime based on seconds uptime"""
-        try:
-            self.upTime = inMinutes
-            self.bootTime = timezone.make_aware(
-                datetime.datetime.now(), timezone.get_current_timezone()
-            ) - datetime.timedelta(minutes=inMinutes)
-            self.save()
-        except Exception as e:
-            print(f"Error in bootTimeUpdate, {e}, input was {inMinutes}")   
+        if isinstance(inMinutes, numbers.Number):
+            try:
+                self.upTime = inMinutes
+                self.bootTime = timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                ) - datetime.timedelta(minutes=inMinutes)
+                self.save()
+            except Exception as e:
+                print(f"Error in bootTimeUpdate, {e}, input was {inMinutes}")
+        else: 
+            print(f"Input to bootTimeUpdate was not numeric {inMinutes}")
         return
 
 
