@@ -97,6 +97,7 @@ def is_json(myjson):
 
 # ********************************************************************
 def thingsboardUpload(node, msg):
+    testPr(f"Thingsboard upload for {node.nodeID}")
     if node.thingsboardUpload:
         sPayload = msg.payload.decode()
 
