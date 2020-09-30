@@ -453,11 +453,14 @@ class Node(models.Model):
 
     def bootTimeUpdate(self, inMinutes):
         """Updates a node uptime and boottime based on seconds uptime"""
-        self.upTime = inMinutes
-        self.bootTime = timezone.make_aware(
-            datetime.datetime.now(), timezone.get_current_timezone()
-        ) - datetime.timedelta(minutes=inMinutes)
-        self.save()
+        try:
+            self.upTime = inMinutes
+            self.bootTime = timezone.make_aware(
+                datetime.datetime.now(), timezone.get_current_timezone()
+            ) - datetime.timedelta(minutes=inMinutes)
+            self.save()
+        except Exception as e:
+            print(f"Error in bootTimeUpdate, {e}, input was {inMinutes}")   
         return
 
 
