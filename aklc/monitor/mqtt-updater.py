@@ -113,15 +113,18 @@ def thingsboardUpload(node, msg):
             jStr["latitude"] = node.latitude
             jStr["longitude"] = node.longitude
 
-        sPayload = json.dumps(jStr)
-        tbRes = publish.single(
-            topic=eTB_topic,
-            payload=sPayload,
-            hostname=eTB_host,
-            port=eTB_port,
-            auth={"username": node.thingsboardCred},
-        )
+        try:
+            sPayload = json.dumps(jStr)
+            tbRes = publish.single(
+                topic=eTB_topic,
+                payload=sPayload,
+                hostname=eTB_host,
+                port=eTB_port,
+                auth={"username": node.thingsboardCred},
+            )
         # print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
+        except ValueError as e:
+            print(f"Thingsboard load error: {e}, node is {node.nodeID}")
         return
 
 
