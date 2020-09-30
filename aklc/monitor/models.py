@@ -442,7 +442,7 @@ class Node(models.Model):
 
             except Exception as e:
                 print(
-                    f"CSV to JSON error, cPayload is {cPayload}, message type is {nNode.messagetype.msgName}"
+                    f"CSV to JSON error, cPayload is {cPayload}, message type is {self.messagetype.msgName}"
                 )
                 print(e)
 
