@@ -166,7 +166,7 @@ def mqtt_on_message(client, userdata, msg):
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
-        # print(f"Aklc message received, topic {msg.topic}, payload { msg.payload.decode()}")
+        # testPr(f"Aklc message received, topic {msg.topic}, payload { msg.payload.decode()}")
         # Check types of message from the topic
 
         if cTopic[1] == "Status":  # Status messages from Gateways, data in CSV format
@@ -263,6 +263,11 @@ def mqtt_on_message(client, userdata, msg):
 
                 try:
                     node = Node.objects.get(nodeID=cNode)
+
+                    cMeasurement = cTopic[0]
+                    if node.team:
+                        cMeasurement = node.team.teamID
+
                     # print("Found node {}".format(cNode))
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
@@ -278,7 +283,7 @@ def mqtt_on_message(client, userdata, msg):
                             sMeasure = "AKLC"
 
                         influxUpload(
-                            node, InClient, msg, cTopic[0], jOut["jTags"], jOut["jData"]
+                            node, InClient, msg, cMeasurement, jOut["jTags"], jOut["jData"]
                         )
 
                 except Exception as e:
@@ -458,17 +463,12 @@ def mqtt_updater():
     # print(aDb)
     InClient.switch_database("aklc")
 
-    # print(eMqtt_client_id)
-    print(eMqtt_host)
-    print(eMqtt_port)
-
     # The mqtt client is initialised
     client = mqtt.Client()
 
     # functions called by mqtt client
     client.on_connect = mqtt_on_connect
     client.on_message = mqtt_on_message
-    print("MQTT env set up done")
 
     try:
         # set up the MQTT environment
@@ -479,6 +479,8 @@ def mqtt_updater():
 
     # used to manage mqtt subscriptions
     client.loop_start()
+
+    print(f"MQTT env set up done - using host {eMqtt_host}")
 
     # get any pickled stats update data
     try:
