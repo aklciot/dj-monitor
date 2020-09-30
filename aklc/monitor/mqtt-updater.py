@@ -170,6 +170,10 @@ def mqtt_on_message(client, userdata, msg):
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
+        if len(cTopic) < 2:
+            print(f"Bad topic in AKLC message, topic is {msg.topic}, payload is {sPayload}")
+            return
+            
         # testPr(f"Aklc message received, topic {msg.topic}, payload { msg.payload.decode()}")
         # Check types of message from the topic
 
@@ -200,6 +204,10 @@ def mqtt_on_message(client, userdata, msg):
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
             print(f"AKLC/Gateway message received, payload is {sPayload}")
+
+            if len(cPayload) < 2:
+                print(f"Bad payload in Gateway message, topic is {msg.topic}, payload is {sPayload}")
+                return
 
             if "Test" in cPayload[1]:
                 # print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
