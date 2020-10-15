@@ -458,7 +458,11 @@ def mqtt_updater():
     """
     global InClient
 
+    print(" ")
+    print(" ")
+    print("------------------")
     print("Start Updater v1.3")
+    print("------------------")
 
     # InClient = InfluxDBClient(host='influxdb', port=8086, username='aklciot', password='iotiscool', database='aklc')
     InClient = InfluxDBClient(
@@ -474,6 +478,10 @@ def mqtt_updater():
     aDb = InClient.get_list_database()
     # print(aDb)
     InClient.switch_database("aklc")
+    if testFlag:
+        nodeID = "DJ_Mon_Updater-TEST"
+    else:
+        nodeID = "DJ_Mon_Updater"
 
     # The mqtt client is initialised
     client = mqtt.Client()
@@ -481,6 +489,8 @@ def mqtt_updater():
     # functions called by mqtt client
     client.on_connect = mqtt_on_connect
     client.on_message = mqtt_on_message
+    client.will_set(f"AKLC/monitor/{nodeID}", payload="Failed", qos=0, retain=True)
+    print("Set WILL message")
 
     try:
         # set up the MQTT environment
@@ -491,6 +501,9 @@ def mqtt_updater():
 
     # used to manage mqtt subscriptions
     client.loop_start()
+
+    client.publish(f"AKLC/monitor/{nodeID}", payload="Running", qos=0, retain=True)
+    print("Sent start up message")
 
     print(f"MQTT env set up done - using host {eMqtt_host}")
 

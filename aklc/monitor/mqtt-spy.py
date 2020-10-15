@@ -24,6 +24,19 @@ from monitor.models import (
 )
 from django.contrib.auth.models import User
 
+testFlag = os.getenv("AKLC_TESTING", False)
+
+# ********************************************************************
+def is_json(myjson):
+    """
+    Function to check if an input is a valid JSON message
+    """
+    try:
+        json_object = json.loads(myjson)
+    except ValueError as e:
+        return False
+    return True
+
 
 # ********************************************************************
 """
@@ -152,12 +165,19 @@ def mqtt_spy():
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
     
+    if testFlag:
+        nodeID = "DJ_Mon_Spy-TEST"
+    else:
+        nodeID = "DJ_Mon_Spy"
+
     for m in aMqtt:
         print(f"Set up mqtt queue {m.descr}")
         #clnt = mqtt.Client(userdata=m)
         cMqtt.append(mqtt.Client(userdata=m))
         cMqtt[-1].on_connect = mqtt_on_connect
         cMqtt[-1].on_message = mqtt_on_message
+        cMqtt[-1].will_set(f"AKLC/monitor/{nodeID}", payload="Failed", qos=0, retain=True)
+        print("Set WILL message")
         print(f"User is {m.user}, pw is {m.pw}")
         if m.user:
             print("User present")
@@ -169,11 +189,13 @@ def mqtt_spy():
         
             print("Client connect requested")
             cMqtt[-1].loop_start()
+            cMqtt[-1].publish(f"AKLC/monitor/{nodeID}", payload="Running", qos=0, retain=True)
+            print("Sent start up message")
         except Exception as e:
             print(e)
             print(f"Houston, we have an mqtt connection error {e}")
             # cMqtt.pop()     # remove this from the list 
-        
+
         #time.sleep(5)
     
     checkDt = datetime.date(2020, 1, 1)
@@ -181,7 +203,7 @@ def mqtt_spy():
     while True:
 
         if datetime.date.today() != checkDt:
-            print("Clean old mqtt messages")
+            print("Clean old mqtt messages from database")
             aMqttMsgAll = MqttMessage.objects.all()
             refDt = timezone.make_aware(
                         datetime.datetime.now(), timezone.get_current_timezone()

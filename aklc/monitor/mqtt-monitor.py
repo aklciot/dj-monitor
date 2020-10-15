@@ -579,6 +579,8 @@ def sys_monitor():
     print(eMqtt_port)
 
     # The mqtt client is initialised
+    print(f"Connect to MQTT queue {eMqtt_host}")
+
     client = mqtt.Client()
 
     # functions called by mqtt client
@@ -586,14 +588,25 @@ def sys_monitor():
     client.on_message = mqtt_on_message
     client.on_disconnect = mqtt_on_disconnect
 
+    if testFlag:
+        nodeID = "DJ_Mon_Script-TEST"
+    else:
+        nodeID = "DJ_Mon_Script"
+
+    client.will_set(f"AKLC/monitor/{nodeID}", payload="Failed", qos=0, retain=True)
+    print("Set WILL message")
+
     try:
         # set up the MQTT environment
         client.username_pw_set(eMqtt_user, eMqtt_password)
-        client.connect(eMqtt_host, int(eMqtt_port), 60)
+        client.connect(eMqtt_host, int(eMqtt_port), 30)
     except Exception as e:
         print(f"MQTT connection error: {e}")
 
     # used to manage mqtt subscriptions
+    client.publish(f"AKLC/monitor/{nodeID}", payload="Running", qos=0, retain=True)
+    print("Sent start up message")
+    
     client.loop_start()
 
     print("MQTT env set up done")
