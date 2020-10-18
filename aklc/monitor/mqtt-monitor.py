@@ -98,7 +98,11 @@ def mqtt_on_message(client, userdata, msg):
     cDict = {}
 
     # get the payload as a string
-    sPayload = msg.payload.decode()
+    try:
+        sPayload = msg.payload.decode()
+    except Exception as e:
+        print(f"Houston, we had an error {e} decoding the payload. Topic was {msg.topic}, payload was {msg.payload}")
+        return
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
