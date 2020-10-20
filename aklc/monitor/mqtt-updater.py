@@ -165,15 +165,24 @@ def mqtt_on_message(client, userdata, msg):
     cDict = {}
 
     # get the payload as a string
-    sPayload = msg.payload.decode()
+    try:
+        sPayload = msg.payload.decode()
+    except Exception as e:
+        print(
+            f"Houston, we had an error {e} decoding the payload. Topic was {msg.topic}, payload was {msg.payload}"
+        )
+        return
+
     cPayload = sPayload.split(",")  # should the payload should be CSV
 
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
         if len(cTopic) < 2:
-            print(f"Bad topic in AKLC message, topic is {msg.topic}, payload is {sPayload}")
+            print(
+                f"Bad topic in AKLC message, topic is {msg.topic}, payload is {sPayload}"
+            )
             return
-            
+
         # testPr(f"Aklc message received, topic {msg.topic}, payload { msg.payload.decode()}")
         # Check types of message from the topic
 
@@ -206,7 +215,9 @@ def mqtt_on_message(client, userdata, msg):
             print(f"AKLC/Gateway message received, payload is {sPayload}")
 
             if len(cPayload) < 2:
-                print(f"Bad payload in Gateway message, topic is {msg.topic}, payload is {sPayload}")
+                print(
+                    f"Bad payload in Gateway message, topic is {msg.topic}, payload is {sPayload}"
+                )
                 return
 
             if "Test" in cPayload[1]:
@@ -295,7 +306,12 @@ def mqtt_on_message(client, userdata, msg):
                             sMeasure = "AKLC"
 
                         influxUpload(
-                            node, InClient, msg, cMeasurement, jOut["jTags"], jOut["jData"]
+                            node,
+                            InClient,
+                            msg,
+                            cMeasurement,
+                            jOut["jTags"],
+                            jOut["jData"],
                         )
 
                 except Exception as e:
