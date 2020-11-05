@@ -82,8 +82,8 @@ def mqtt_on_connect(client, userdata, flags, rc):
         f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
     )
 
-    connectionCount = connectionCount + 1
-    print(f"Sent connection message, connection count is now {connectionCount}")
+    
+    print(f"Sent connection message")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
@@ -99,9 +99,11 @@ def mqtt_on_disconnect(client, userdata, rc):
     """
       This procedure is called on connection to the mqtt broker
     """
+    global connectionCount
     print(f"MQTT has disconnected, the code was {rc}, attempting to reconnect")
     res = client.reconnect()
-    print(f"Reconnect result was {res}")
+    connectionCount = connectionCount + 1
+    print(f"Reconnect result was {res}, connection count is now {connectionCount}")
     return
 
 
