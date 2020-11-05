@@ -49,11 +49,12 @@ eInflux_user = os.getenv("AKLC_INFLUX_USER", "aklciot")
 eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
 eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
-testFlag = os.getenv("AKLC_TESTING", False)
-
-if testFlag:
+eTesting = os.getenv("AKLC_TESTING", "N")
+if eTesting == 'Y':
+    testFlag = True
     scriptID = "DJ_Mon_Updater-TEST"
 else:
+    testFlag = False
     scriptID = "DJ_Mon_Updater"
 connectionCount = 0
 
