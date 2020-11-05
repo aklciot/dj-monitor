@@ -68,8 +68,6 @@ def testPr(tStr):
 """
 This function is called when the MQTT client connects to the MQTT broker
 """
-
-
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -83,8 +81,9 @@ def mqtt_on_connect(client, userdata, flags, rc):
     client.publish(
         f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
     )
-    print("Sent connection message")
+
     connectionCount = connectionCount + 1
+    print(f"Sent connection message, connection count is now {connectionCount}")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
