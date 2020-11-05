@@ -308,6 +308,8 @@ def nodeUpdate(request, node_ref):
     2
     if node.isGateway:
         context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
     else:
         context["nodeactive"] = "Y"
     if testFlag:
@@ -372,11 +374,53 @@ def nodeModNotify(request, node_ref):
     context = {"form": nf, "node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
     else:
         context["nodeactive"] = "Y"
     if testFlag:
         context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeModNotify.html", context)
+
+"""
+@login_required
+def nodeModOtherNotify(request, node_ref):
+    
+    #View to process the form that manages OTHER peoples notification preferences for a specific node
+    
+    node = get_object_or_404(Node, pk=node_ref)
+    nu, created = NodeUser.objects.get_or_create(nodeID=node, user=request.user)
+
+    if request.method == "POST":
+        nf = NodeNotifyForm(request.POST)
+        if nf.is_valid():
+            # print("Get or create")
+
+            if nf.cleaned_data["notification"] == "N":
+                nu.delete()
+            else:
+                if nf.cleaned_data["sms"] or nf.cleaned_data["email"]:
+                    nu.sms = nf.cleaned_data["sms"]
+                    nu.email = nf.cleaned_data["email"]
+                    nu.save()
+                else:
+                    nu.delete()
+        return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
+
+    context = {"form": nf, "node": node}
+    if node.isGateway:
+        context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
+    else:
+        context["nodeactive"] = "Y"
+    if testFlag:
+        context["dev_msg"] = "(Development)"
+    return render(request, "monitor/nodeModOtherNotify.html", context)
+"""
 
 
 @login_required
@@ -409,6 +453,8 @@ def nodeModNotifyOthers(request, node_ref):
     context = {"form": nf, "node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
     else:
         context["nodeactive"] = "Y"
     if testFlag:
@@ -435,6 +481,8 @@ def nodeMsgUpdate(request, node_ref):
     context = {"form": nf, "node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
     else:
         context["nodeactive"] = "Y"
     if testFlag:
@@ -458,6 +506,8 @@ def nodeRemove(request, node_ref):
     context = {"node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
     else:
         context["nodeactive"] = "Y"
     if testFlag:
@@ -556,8 +606,6 @@ def msgAdd(request):
             for i in fItems:
                 if i.is_valid() and i.cleaned_data:
                     i.instance.msgID = nf.instance
-                    # print(i.__dict__)
-                    # print("Order is {}".format(i.cleaned_data))
                     i.save()
 
                 else:

@@ -39,11 +39,17 @@ eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz"
 testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
 testFlag = os.getenv("AKLC_TESTING", False)
 
+if testFlag:
+    scriptID = "DJ_Mon_Script-TEST"
+else:
+    scriptID = "DJ_Mon_Script"
+
 # ********************************************************************
 def testPr(tStr):
     if testFlag:
         print(tStr)
     return
+
 
 # ********************************************************************
 def is_json(myjson):
@@ -56,16 +62,21 @@ def is_json(myjson):
         return False
     return True
 
+
 # ********************************************************************
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
     """
-
+    global scriptID
     print(f"Connected to mqtt with result code {str(rc)}")
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
     print(f"MQTT Subscribed to {sub_topic}")
+    client.publish(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+    )
+    print("Sent connection message")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
@@ -101,7 +112,9 @@ def mqtt_on_message(client, userdata, msg):
     try:
         sPayload = msg.payload.decode()
     except Exception as e:
-        print(f"Houston, we had an error {e} decoding the payload. Topic was {msg.topic}, payload was {msg.payload}")
+        print(
+            f"Houston, we had an error {e} decoding the payload. Topic was {msg.topic}, payload was {msg.payload}"
+        )
         return
 
     # Check for nodes using regular topic structure
@@ -155,9 +168,13 @@ def mqtt_on_message(client, userdata, msg):
             # print("Gateway message received")
             cPayload = sPayload.split(",")  # the payload should be CSV
             if len(cPayload) < 2:
-                print(f"Gateway msg (AKLC/Gateway) received, invalid payload {sPayload}")
+                print(
+                    f"Gateway msg (AKLC/Gateway) received, invalid payload {sPayload}"
+                )
                 return
-            testPr(f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}")
+            testPr(
+                f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}"
+            )
 
             if cPayload[1].startswith("Test"):
                 print("Test message, ignored")
@@ -290,8 +307,6 @@ def mqtt_on_message(client, userdata, msg):
                 print(f"Node style message error, payload is |{sPayload}|")
                 return
 
-
-
             jPayload = json.loads(sPayload)  # the payload should be JSON
             if len(cTopic) > 2:
                 # print("Topic[2] is {}".format(cTopic[2]))
@@ -422,7 +437,6 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         payload["Subject"] = inSubject
         if testFlag:
             payload["Subject"] += " from development system"
-
 
         # Error happening here
         mqtt_client.publish(eMail_topic, json.dumps(payload))
@@ -572,6 +586,8 @@ def sys_monitor():
     """ The main program that sends updates to the MQTT system
     """
 
+    global scriptID
+
     print(" ")
     print(" ")
     print("---------------------------------")
@@ -592,12 +608,9 @@ def sys_monitor():
     client.on_message = mqtt_on_message
     client.on_disconnect = mqtt_on_disconnect
 
-    if testFlag:
-        nodeID = "DJ_Mon_Script-TEST"
-    else:
-        nodeID = "DJ_Mon_Script"
-
-    client.will_set(f"AKLC/monitor/{nodeID}", payload="Failed", qos=0, retain=True)
+    client.will_set(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Failed", qos=0, retain=True
+    )
     print("Set WILL message")
 
     try:
@@ -607,10 +620,6 @@ def sys_monitor():
     except Exception as e:
         print(f"MQTT connection error: {e}")
 
-    # used to manage mqtt subscriptions
-    client.publish(f"AKLC/monitor/{nodeID}", payload="Running", qos=0, retain=True)
-    print("Sent start up message")
-    
     client.loop_start()
 
     print("MQTT env set up done")

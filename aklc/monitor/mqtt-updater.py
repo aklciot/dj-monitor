@@ -51,6 +51,11 @@ eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
 testFlag = os.getenv("AKLC_TESTING", False)
 
+if testFlag:
+    scriptID = "DJ_Mon_Updater-TEST"
+else:
+    scriptID = "DJ_Mon_Updater"
+
 # ********************************************************************
 def testPr(tStr):
     if testFlag:
@@ -68,11 +73,16 @@ def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
     """
-
+    global scriptID
     print("Connected to mqtt with result code " + str(rc))
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
     print("mqtt Subscribed to " + sub_topic)
+
+    client.publish(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+    )
+    print("Sent connection message")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
@@ -81,6 +91,17 @@ def mqtt_on_connect(client, userdata, flags, rc):
         sub_topic = t.teamID + "/#"
         print("MQTT Subscribed to {}".format(sub_topic))
         client.subscribe(sub_topic)
+
+
+# ********************************************************************
+def mqtt_on_disconnect(client, userdata, rc):
+    """
+      This procedure is called on connection to the mqtt broker
+    """
+    print(f"MQTT has disconnected, the code was {rc}, attempting to reconnect")
+    res = client.reconnect()
+    print(f"Reconnect result was {res}")
+    return
 
 
 # ********************************************************************
@@ -472,7 +493,7 @@ def csv_to_json(payload, nNode):
 def mqtt_updater():
     """ The main program that sends updates to the MQTT system
     """
-    global InClient
+    global InClient, scriptID
 
     print(" ")
     print(" ")
@@ -494,18 +515,17 @@ def mqtt_updater():
     aDb = InClient.get_list_database()
     # print(aDb)
     InClient.switch_database("aklc")
-    if testFlag:
-        nodeID = "DJ_Mon_Updater-TEST"
-    else:
-        nodeID = "DJ_Mon_Updater"
 
     # The mqtt client is initialised
     client = mqtt.Client()
 
     # functions called by mqtt client
     client.on_connect = mqtt_on_connect
+    client.on_disconnect = mqtt_on_disconnect
     client.on_message = mqtt_on_message
-    client.will_set(f"AKLC/monitor/{nodeID}", payload="Failed", qos=0, retain=True)
+    client.will_set(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Failed", qos=0, retain=True
+    )
     print("Set WILL message")
 
     try:
@@ -517,9 +537,6 @@ def mqtt_updater():
 
     # used to manage mqtt subscriptions
     client.loop_start()
-
-    client.publish(f"AKLC/monitor/{nodeID}", payload="Running", qos=0, retain=True)
-    print("Sent start up message")
 
     print(f"MQTT env set up done - using host {eMqtt_host}")
 

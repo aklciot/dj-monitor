@@ -7,8 +7,10 @@ Node Details
 {% block web-body %}
 <div class="iot_background">
 
-  <div id="node-header"><h3>Update your notifications for <b>{{node.nodeID}}</b></h3></div>
-    <div id="node_detail" class="content_block">
+  <div id="node-header"><h3>Notifications update for <b>{{node.nodeID}}</b></h3></div>
+  
+    <div id="your_update" class="content_block">
+      Change how you are notified
       <div id="node_not_table">
         <form action="{% url 'monitor:nodeModNotify' node.id %}" method="POST">
           {% csrf_token %}
@@ -21,7 +23,26 @@ Node Details
           <a href="{% url 'monitor:nodeDetail' node.id %}" class="btn btn-link btn-outline-warning" role="button">Cancel</a>
         </span>
 
-      </form>
+        </form>
+      </div>
+    </div>
+
+    <div id="others_update" class="content_block">
+      Change how others are notified
+      <div id="node_not_table">
+        <form action="{% url 'monitor:nodeModNotifyOthers' node.id %}" method="POST">
+          {% csrf_token %}
+          <table>
+            {{ form.as_table }}
+
+          </table>
+        <input type="submit" value="Submit">
+        <span id="node_cancel_button" class="cancel_button">
+          <a href="{% url 'monitor:nodeDetail' node.id %}" class="btn btn-link btn-outline-warning" role="button">Cancel</a>
+        </span>
+
+        </form>
+      </div>
     </div>
   </div>
  
