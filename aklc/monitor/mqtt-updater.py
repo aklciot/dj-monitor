@@ -83,7 +83,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
     )
 
     
-    print(f"Sent connection message")
+    print(f"Sent connection message for {scriptID}")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
     # We subscribe to all devined teams
