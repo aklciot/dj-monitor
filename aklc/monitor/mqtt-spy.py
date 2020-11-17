@@ -24,11 +24,13 @@ from monitor.models import (
 )
 from django.contrib.auth.models import User
 
-testFlag = os.getenv("AKLC_TESTING", False)
-if testFlag:
+eTesting = os.getenv("AKLC_TESTING", "N")
+if eTesting == "Y":
+    testFlag = True
     scriptID = "DJ_Mon_Spy-TEST"
 else:
     scriptID = "DJ_Mon_Spy"
+    testFlag = False
 
 # ********************************************************************
 def is_json(myjson):
