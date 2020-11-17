@@ -298,7 +298,7 @@ def mqtt_on_message(client, userdata, msg):
                 print(f"Houston, we have an error {e}")
         elif (
             cTopic[1] == "Node"
-        ):  # These are status messages sent by gateways and nodes. Data in JSON format
+        ):  # These are data messages sent by gateways and nodes. Data in JSON format
             print(
                 f"Node message (AKLC/Node) received |{sPayload}|, topic |{msg.topic}|"
             )

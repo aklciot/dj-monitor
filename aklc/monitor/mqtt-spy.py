@@ -46,16 +46,20 @@ def is_json(myjson):
 """
 This function is called when the MQTT client connects to the MQTT broker
 """
+
+
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
     """
     global scriptID
-    print(f"Connected to {userdata.descr} with result code {rc}")
+    print(f"Connected to {userdata['dbRec'].descr} with result code {rc}")
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
     print("mqtt Subscribed to " + sub_topic)
-    client.publish(f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True)
+    client.publish(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+    )
     print("Sent connection message")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
@@ -68,16 +72,18 @@ def mqtt_on_connect(client, userdata, flags, rc):
     return
 
 
+# ********************************************************************
 def mqtt_on_disconnect(client, userdata, rc):
     """
       This procedure is called on when a disconnection is noted
       Attempt to reconnect
     """
     print(
-        f"Disconnected to {userdata.descr} with result code {rc}, attempt to reconnect"
+        f"Disconnected to {userdata['dbRec'].descr} with result code {rc}, attempt to reconnect"
     )
     res = client.reconnect()
     print(f"Reconnect result was {res}")
+    userdata["nConnCnt"] = userdata["nConnCnt"] + 1
     return
 
 
@@ -91,7 +97,9 @@ def mqtt_on_message(client, userdata, msg):
     """
       This procedure is called when a msg is recieved
     """
-    print(f"Msg recived on {userdata.descr}, topic {msg.topic}, payload {msg.payload}")
+    print(
+        f"Msg recived on {userdata['dbRec'].descr}, topic {msg.topic}, payload {msg.payload}"
+    )
 
     # first have to find a node id
     cNode = ""
@@ -146,7 +154,7 @@ def mqtt_on_message(client, userdata, msg):
     try:
         # print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
         mqttMsg, created = MqttMessage.objects.get_or_create(
-            node=node, mqttQueue=userdata
+            node=node, mqttQueue=userdata["dbRec"]
         )
         if created:
             print(f"New record created")
@@ -177,11 +185,12 @@ def mqtt_spy():
 
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
+    lConnCnt = {}  # Dict to hold connection count data
 
     for m in aMqtt:
         print(f"Set up mqtt queue {m.descr}")
-        # clnt = mqtt.Client(userdata=m)
-        cMqtt.append(mqtt.Client(userdata=m))
+        uData = {"dbRec": m, "nConnCnt": 1}
+        cMqtt.append(mqtt.Client(userdata=uData))
         cMqtt[-1].on_connect = mqtt_on_connect
         cMqtt[-1].on_message = mqtt_on_message
         cMqtt[-1].will_set(
@@ -208,6 +217,12 @@ def mqtt_spy():
         # time.sleep(5)
 
     checkDt = datetime.date(2020, 1, 1)
+    startTime = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    )
+
+    # initialise the checkpoint timer
+    checkTimer = timezone.now()
 
     while True:
 
@@ -225,6 +240,34 @@ def mqtt_spy():
                     print(f"Delete mqtt record reference {msg}")
                     msg.delete()
             checkDt = datetime.date.today()
+
+        # regular MQTT connection status updates
+        if (timezone.now() - checkTimer) > datetime.timedelta(
+            minutes=1
+        ):  
+            checkTimer = timezone.now()  # reset timer
+            upTime = (
+                timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
+                - startTime
+            )
+            for c in cMqtt:
+                payLoad = {
+                    "scriptName": scriptID,
+                    "connectionCount": c._userdata["nConnCnt"],
+                    "QueueName": c._userdata["dbRec"].descr,
+                    "upTime(s)": upTime.total_seconds(),
+                }
+                print(
+                    f"Regular reporting payload is {payLoad}, send to {c._userdata['dbRec'].descr}"
+                )
+                c.publish(
+                    f"AKLC/monitor/{scriptID}/status",
+                    payload=json.dumps(payLoad),
+                    qos=0,
+                    retain=False,
+                )
 
         time.sleep(1)
 

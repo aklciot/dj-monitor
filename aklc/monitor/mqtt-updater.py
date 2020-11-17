@@ -50,7 +50,7 @@ eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
 eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
 eTesting = os.getenv("AKLC_TESTING", "N")
-if eTesting == 'Y':
+if eTesting == "Y":
     testFlag = True
     scriptID = "DJ_Mon_Updater-TEST"
 else:
@@ -69,6 +69,8 @@ def testPr(tStr):
 """
 This function is called when the MQTT client connects to the MQTT broker
 """
+
+
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -83,7 +85,6 @@ def mqtt_on_connect(client, userdata, flags, rc):
         f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
     )
 
-    
     print(f"Sent connection message for {scriptID}")
 
     # Teams are 1st level TOPICs, used to separate data for various communities
@@ -557,7 +558,9 @@ def mqtt_updater():
             "LastStats": datetime.datetime.now() + datetime.timedelta(days=-3)
         }
 
-    startTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+    startTime = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    )
 
     while True:
         time.sleep(1)
@@ -567,16 +570,27 @@ def mqtt_updater():
             datetime.datetime.now(), timezone.get_current_timezone()
         )
 
-        #Check and send messages on the hour
+        # Check and send messages on the hour
         if (stats_data["LastStats"].day == tDate.day) and (
             stats_data["LastStats"].hour == tDate.hour
         ):
             # print("No need to send updates")
             x = 1
         else:
-            upTime = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()) - startTime
-            status_json = {"scriptID": scriptID, "ConnectionCount": connectionCount, "upTime(s)": upTime.total_seconds()}
-            client.publish(f"AKLC/monitor/{scriptID}/Status", payload=json.dumps(status_json))
+            upTime = (
+                timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
+                - startTime
+            )
+            status_json = {
+                "scriptID": scriptID,
+                "ConnectionCount": connectionCount,
+                "upTime(s)": upTime.total_seconds(),
+            }
+            client.publish(
+                f"AKLC/monitor/{scriptID}/Status", payload=json.dumps(status_json)
+            )
             print(
                 "Time to send radio stats, pickle date is {}, current date is {}".format(
                     stats_data["LastStats"], tDate
