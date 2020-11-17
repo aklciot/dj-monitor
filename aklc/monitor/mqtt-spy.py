@@ -243,7 +243,7 @@ def mqtt_spy():
 
         # regular MQTT connection status updates
         if (timezone.now() - checkTimer) > datetime.timedelta(
-            minutes=1
+            minutes=5
         ):  
             checkTimer = timezone.now()  # reset timer
             upTime = (
