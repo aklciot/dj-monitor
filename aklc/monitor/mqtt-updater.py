@@ -70,7 +70,6 @@ def testPr(tStr):
 This function is called when the MQTT client connects to the MQTT broker
 """
 
-
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -106,6 +105,9 @@ def mqtt_on_disconnect(client, userdata, rc):
     res = client.reconnect()
     connectionCount = connectionCount + 1
     print(f"Reconnect result was {res}, connection count is now {connectionCount}")
+    client.publish(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+    )
     return
 
 

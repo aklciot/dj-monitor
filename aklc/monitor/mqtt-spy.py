@@ -86,6 +86,9 @@ def mqtt_on_disconnect(client, userdata, rc):
     res = client.reconnect()
     print(f"Reconnect result was {res}")
     userdata["nConnCnt"] = userdata["nConnCnt"] + 1
+    client.publish(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+    )
     return
 
 
@@ -245,7 +248,7 @@ def mqtt_spy():
 
         # regular MQTT connection status updates
         if (timezone.now() - checkTimer) > datetime.timedelta(
-            minutes=5
+            minutes=1
         ):  
             checkTimer = timezone.now()  # reset timer
             upTime = (
