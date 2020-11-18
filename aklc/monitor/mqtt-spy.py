@@ -43,6 +43,11 @@ def is_json(myjson):
         return False
     return True
 
+# ********************************************************************
+def testPr(tStr):
+    if testFlag:
+        print(tStr)
+    return
 
 # ********************************************************************
 """
@@ -152,7 +157,7 @@ def mqtt_on_message(client, userdata, msg):
     # Lets get the node record
     try:
         node = Node.objects.get(nodeID=cNode)
-        print(f"Node found {node.nodeID}")
+        testPr(f"Node found {node.nodeID}")
     except:
         return
 
@@ -248,7 +253,7 @@ def mqtt_spy():
 
         # regular MQTT connection status updates
         if (timezone.now() - checkTimer) > datetime.timedelta(
-            minutes=1
+            minutes=5
         ):  
             checkTimer = timezone.now()  # reset timer
             upTime = (
