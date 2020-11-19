@@ -56,7 +56,7 @@ if eTesting == "Y":
 else:
     testFlag = False
     scriptID = "DJ_Mon_Updater"
-connectionCount = 0
+connectionCount = 1
 
 # ********************************************************************
 def testPr(tStr):
