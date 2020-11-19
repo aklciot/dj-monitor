@@ -38,6 +38,7 @@ eWeb_Base_URL = os.getenv("AKLC_WEB_BASE_URL", "http://aws2.innovateauckland.nz"
 
 testRunDaily = os.getenv("AKLC_TEST_DAILY", "F")
 testFlag = os.getenv("AKLC_TESTING", False)
+connectionCount = 1
 
 if testFlag:
     scriptID = "DJ_Mon_Script-TEST"
@@ -92,9 +93,15 @@ def mqtt_on_disconnect(client, userdata, rc):
     """
       This procedure is called on connection to the mqtt broker
     """
+    global connectionCount
     print(f"MQTT has disconnected, the code was {rc}, attempting to reconnect")
     res = client.reconnect()
     print(f"Reconnect result was {res}")
+    connectionCount = connectionCount + 1
+    print(f"Reconnect result was {res}, connection count is now {connectionCount}")
+    client.publish(
+        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+    )
     return
 
 
@@ -626,6 +633,10 @@ def sys_monitor():
 
     # initialise the checkpoint timer
     checkTimer = timezone.now()
+    statusTimer = timezone.now()
+    startTime = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    )
 
     # remember when we started
     startedTime = timezone.now()
@@ -754,6 +765,28 @@ def sys_monitor():
 
         except Exception as e:
             print(f"Houston, we have an error {e}")
+
+        if (timezone.now() - statusTimer) > datetime.timedelta(minutes=1):
+            statusTimer = timezone.now()  # reset timer
+            upTime = (
+                timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
+                - startTime
+            )
+
+            payLoad = {
+                "scriptName": scriptID,
+                "connectionCount": connectionCount,
+                "upTime(s)": upTime.total_seconds(),
+            }
+            print(f"Regular reporting payload is {payLoad}")
+            client.publish(
+                f"AKLC/monitor/{scriptID}/status",
+                payload=json.dumps(payLoad),
+                qos=0,
+                retain=False,
+            )
 
 
 # ********************************************************************
