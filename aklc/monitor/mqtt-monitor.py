@@ -766,7 +766,7 @@ def sys_monitor():
         except Exception as e:
             print(f"Houston, we have an error {e}")
 
-        if (timezone.now() - statusTimer) > datetime.timedelta(minutes=1):
+        if (timezone.now() - statusTimer) > datetime.timedelta(minutes=5):
             statusTimer = timezone.now()  # reset timer
             upTime = (
                 timezone.make_aware(
