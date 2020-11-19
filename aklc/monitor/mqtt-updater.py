@@ -70,6 +70,7 @@ def testPr(tStr):
 This function is called when the MQTT client connects to the MQTT broker
 """
 
+
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -563,9 +564,31 @@ def mqtt_updater():
     startTime = timezone.make_aware(
         datetime.datetime.now(), timezone.get_current_timezone()
     )
+    checkTimer = timezone.now()
 
     while True:
         time.sleep(1)
+
+        #if (timezone.now() - checkTimer) > datetime.timedelta(minutes=5):
+        #    checkTimer = timezone.now()  # reset timer
+        #    upTime = (
+        #        timezone.make_aware(
+        #            datetime.datetime.now(), timezone.get_current_timezone()
+        #        )
+        #        - startTime
+        #    )
+        #    payLoad = {
+        #        "scriptName": scriptID,
+        #        "connectionCount": connectionCount,
+        #        "upTime(s)": upTime.total_seconds(),
+        #    }
+        #    print(f"Regular reporting payload is {payLoad}")
+        #    client.publish(
+        #        f"AKLC/monitor/{scriptID}/status",
+        #        payload=json.dumps(payLoad),
+        #        qos=0,
+        #        retain=False,
+        #    )
 
         # check if we need to send stats
         tDate = timezone.make_aware(
