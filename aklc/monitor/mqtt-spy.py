@@ -272,6 +272,7 @@ def mqtt_spy():
                 print(
                     f"Regular reporting payload is {payLoad}, send to {c._userdata['dbRec'].descr}"
                 )
+                c.reconnect()
                 c.publish(
                     f"AKLC/monitor/{scriptID}/status",
                     payload=json.dumps(payLoad),
