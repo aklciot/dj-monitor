@@ -207,7 +207,7 @@ def mqtt_on_message(client, userdata, msg):
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
         if len(cTopic) < 2:
-            print(
+            testPr(
                 f"Bad topic in AKLC message, topic is {msg.topic}, payload is {sPayload}"
             )
             return
@@ -220,7 +220,7 @@ def mqtt_on_message(client, userdata, msg):
 
             try:
                 node = Node.objects.get(nodeID=cPayload[0])  # Lets
-                # print(f"Gateway {node.nodeID} found")
+                # testPr(f"Gateway {node.nodeID} found")
 
                 if node.messagetype:
                     jOut = csv_to_json(sPayload, node)
@@ -241,7 +241,7 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
-            print(f"AKLC/Gateway message received, payload is {sPayload}")
+            testPr(f"AKLC/Gateway message received, payload is {sPayload}")
 
             if len(cPayload) < 2:
                 print(
@@ -294,7 +294,7 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Node" or cTopic[1] == "Network"
         ):  # These are JSON messages, both data & status
-            print(
+            testPr(
                 f"NODE/NETWORK type message received, topic: { msg.topic}, payload: {sPayload}"
             )
 
@@ -325,7 +325,7 @@ def mqtt_on_message(client, userdata, msg):
                         thingsboardUpload(node, msg)
 
                     if node.influxUpload:
-                        # print("Publish to Influx")
+                        # testPr("Publish to Influx")
                         jOut = json_for_influx(sPayload, node)
                         if node.team:
                             sMeasure = node.team.teamID
@@ -352,7 +352,7 @@ def mqtt_on_message(client, userdata, msg):
         # the payload is expected to be json
 
         jPayload = json.loads(sPayload)
-        print("Team message arrived, topic is {}".format(msg.topic))
+        testPr("Team message arrived, topic is {}".format(msg.topic))
 
         if "NodeID" in jPayload:
             # print("The NodeID is {}".format(jPayload["NodeID"]))
@@ -506,7 +506,7 @@ def mqtt_updater():
     print(" ")
     print(" ")
     print("------------------")
-    print("Start Updater v1.4")
+    print("Start Updater v1.5")
     print("------------------")
 
     # InClient = InfluxDBClient(host='influxdb', port=8086, username='aklciot', password='iotiscool', database='aklc')
@@ -602,6 +602,7 @@ def mqtt_updater():
             # print("No need to send updates")
             x = 1
         else:
+            client.reconnect()      # put this in as I am betting LWT messages while script is still running
             upTime = (
                 timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
