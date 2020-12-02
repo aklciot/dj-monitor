@@ -60,7 +60,8 @@ def mqtt_on_connect(client, userdata, flags, rc):
       This procedure is called on connection to the mqtt broker
     """
     global scriptID
-    print(f"Connected to {userdata['dbRec'].descr} with result code {rc}")
+    userdata['nConnCnt'] = userdata['nConnCnt'] + 1
+    print(f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}")
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
     print("mqtt Subscribed to " + sub_topic)
@@ -115,6 +116,9 @@ def mqtt_on_message(client, userdata, msg):
     cNode = ""
     cTopic = msg.topic.split("/")
     sPayload = msg.payload.decode()
+    if sPayload == "":      # empty payload
+        print("Empty payload received")
+        return
 
     if cTopic[0] == "AKLC":
         # print(f"AKLC msg received, next is {cTopic[1]}, payload is {sPayload}")
@@ -131,6 +135,8 @@ def mqtt_on_message(client, userdata, msg):
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
             cPayload = sPayload.split(",")
+            if len(cPayload) < 1:      #empty payload
+                return
             if "Test" in cPayload[1]:
                 # print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
                 return
@@ -157,7 +163,7 @@ def mqtt_on_message(client, userdata, msg):
     # Lets get the node record
     try:
         node = Node.objects.get(nodeID=cNode)
-        testPr(f"Node found {node.nodeID}")
+        #testPr(f"Node found {node.nodeID}")
     except:
         return
 
@@ -195,11 +201,11 @@ def mqtt_spy():
 
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
-    lConnCnt = {}  # Dict to hold connection count data
+    #lConnCnt = {}  # Dict to hold connection count data
 
     for m in aMqtt:
         print(f"Set up mqtt queue {m.descr}")
-        uData = {"dbRec": m, "nConnCnt": 1}
+        uData = {"dbRec": m, "nConnCnt": 0}
         cMqtt.append(mqtt.Client(userdata=uData))
         cMqtt[-1].on_connect = mqtt_on_connect
         cMqtt[-1].on_message = mqtt_on_message
@@ -214,7 +220,7 @@ def mqtt_spy():
 
         try:
             print(f"Connect to {m.host} on port {m.port}")
-            cMqtt[-1].connect(m.host, m.port, 60)
+            cMqtt[-1].connect(m.host, m.port, keepalive=60)
 
             print("Client connect requested")
             cMqtt[-1].loop_start()
@@ -253,7 +259,7 @@ def mqtt_spy():
 
         # regular MQTT connection status updates
         if (timezone.now() - checkTimer) > datetime.timedelta(
-            minutes=15
+            minutes=2
         ):  
             checkTimer = timezone.now()  # reset timer
             upTime = (
@@ -272,13 +278,26 @@ def mqtt_spy():
                 print(
                     f"Regular reporting payload is {payLoad}, send to {c._userdata['dbRec'].descr}"
                 )
-                c.reconnect()
-                c.publish(
+                
+                res = c.publish(
                     f"AKLC/monitor/{scriptID}/status",
                     payload=json.dumps(payLoad),
                     qos=0,
                     retain=False,
                 )
+                print(f"Queue name: {c._userdata['dbRec'].descr}, Result code {res.rc}")
+                if res.rc == mqtt.MQTT_ERR_NO_CONN:      # no connection
+                    try:
+                        print(f"Dicconnect & reconnect to {c._userdata['dbRec'].descr}")
+                        c.disconnect()
+                        c.username_pw_set(c._userdata['dbRec'].user, c._userdata['dbRec'].pw)
+                        c.will_set(
+                            f"AKLC/monitor/{scriptID}/LWT", payload="Failed", qos=0, retain=True
+                        )
+                        c.connect(host=c._userdata['dbRec'].host, port=c._userdata['dbRec'].port, keepalive=60)
+                    except Exception as e:
+                        print(e)
+                        print(f"Houston, we have an mqtt re-connection error {e}")
 
         time.sleep(1)
 
