@@ -192,7 +192,8 @@ def mqtt_on_message(client, userdata, msg):
                 # print("Valid node {}".format(cPayload[1]))
                 nd, created = Node.objects.get_or_create(nodeID=cPayload[1])
                 nd.msgReceived(client, eMail_From, eMail_topic)
-                nd.lastData = sPayload
+                if cPayload[2] != "OK":
+                    nd.lastData = sPayload
                 nd.lastDataTime = timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
@@ -300,6 +301,26 @@ def mqtt_on_message(client, userdata, msg):
                                         f"AKLC/Control/{gw.nodeID}", "Status received"
                                     )
                                 gw.save()
+                            if "NodeID" in jPayload:
+                                if node_validate(jPayload["NodeID"]):
+                                    testPr(f"Process node {jPayload['NodeID']}")
+                                    nd, created = Node.objects.get_or_create(
+                                        nodeID=jPayload["NodeID"]
+                                    )
+                                    nd.msgReceived(client, eMail_From, eMail_topic)
+                                    nd.lastStatus = sPayload
+                                    nd.lastStatusTime = timezone.make_aware(
+                                        datetime.datetime.now(),
+                                        timezone.get_current_timezone(),
+                                    )
+                                    nd.jsonLoad(sPayload)
+                                    nd.incrementMsgCnt()
+                                    if "Reply" in jPayload:
+                                        client.publish(
+                                            f"AKLC/Control/{nd.nodeID}",
+                                            "Status received",
+                                        )
+                                    nd.save()
             except Exception as e:
                 print(e)
                 print(f"Houston, we have an error {e}")

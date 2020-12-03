@@ -410,6 +410,11 @@ class Node(models.Model):
         print(f"Message type found {self.messagetype.msgName}")
         print(f"Payload is {payload}")
         cPayload = payload.split(",")
+
+        # Don't try and process if a Status message. Status message has 'OK' as second value
+        if len(cPayload) > 1 and cPayload[1] == "OK":
+            return(jStr)
+
         # here we try and remove any references to any repeaters
         lRepeater = True
 
