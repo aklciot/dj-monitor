@@ -43,11 +43,13 @@ def is_json(myjson):
         return False
     return True
 
+
 # ********************************************************************
 def testPr(tStr):
     if testFlag:
         print(tStr)
     return
+
 
 # ********************************************************************
 """
@@ -60,8 +62,10 @@ def mqtt_on_connect(client, userdata, flags, rc):
       This procedure is called on connection to the mqtt broker
     """
     global scriptID
-    userdata['nConnCnt'] = userdata['nConnCnt'] + 1
-    print(f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}")
+    userdata["nConnCnt"] = userdata["nConnCnt"] + 1
+    print(
+        f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}"
+    )
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
     print("mqtt Subscribed to " + sub_topic)
@@ -116,7 +120,7 @@ def mqtt_on_message(client, userdata, msg):
     cNode = ""
     cTopic = msg.topic.split("/")
     sPayload = msg.payload.decode()
-    if sPayload == "":      # empty payload
+    if sPayload == "":  # empty payload
         print("Empty payload received")
         return
 
@@ -135,7 +139,7 @@ def mqtt_on_message(client, userdata, msg):
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
             cPayload = sPayload.split(",")
-            if len(cPayload) < 1:      #empty payload
+            if len(cPayload) < 1:  # empty payload
                 return
             if "Test" in cPayload[1]:
                 # print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
@@ -163,7 +167,7 @@ def mqtt_on_message(client, userdata, msg):
     # Lets get the node record
     try:
         node = Node.objects.get(nodeID=cNode)
-        #testPr(f"Node found {node.nodeID}")
+        # testPr(f"Node found {node.nodeID}")
     except:
         return
 
@@ -201,7 +205,7 @@ def mqtt_spy():
 
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
-    #lConnCnt = {}  # Dict to hold connection count data
+    # lConnCnt = {}  # Dict to hold connection count data
 
     for m in aMqtt:
         print(f"Set up mqtt queue {m.descr}")
@@ -258,9 +262,7 @@ def mqtt_spy():
             checkDt = datetime.date.today()
 
         # regular MQTT connection status updates
-        if (timezone.now() - checkTimer) > datetime.timedelta(
-            minutes=2
-        ):  
+        if (timezone.now() - checkTimer) > datetime.timedelta(minutes=5):
             checkTimer = timezone.now()  # reset timer
             upTime = (
                 timezone.make_aware(
@@ -278,7 +280,7 @@ def mqtt_spy():
                 print(
                     f"Regular reporting payload is {payLoad}, send to {c._userdata['dbRec'].descr}"
                 )
-                
+
                 res = c.publish(
                     f"AKLC/monitor/{scriptID}/status",
                     payload=json.dumps(payLoad),
@@ -286,15 +288,24 @@ def mqtt_spy():
                     retain=False,
                 )
                 print(f"Queue name: {c._userdata['dbRec'].descr}, Result code {res.rc}")
-                if res.rc == mqtt.MQTT_ERR_NO_CONN:      # no connection
+                if res.rc == mqtt.MQTT_ERR_NO_CONN:  # no connection
                     try:
                         print(f"Dicconnect & reconnect to {c._userdata['dbRec'].descr}")
                         c.disconnect()
-                        c.username_pw_set(c._userdata['dbRec'].user, c._userdata['dbRec'].pw)
-                        c.will_set(
-                            f"AKLC/monitor/{scriptID}/LWT", payload="Failed", qos=0, retain=True
+                        c.username_pw_set(
+                            c._userdata["dbRec"].user, c._userdata["dbRec"].pw
                         )
-                        c.connect(host=c._userdata['dbRec'].host, port=c._userdata['dbRec'].port, keepalive=60)
+                        c.will_set(
+                            f"AKLC/monitor/{scriptID}/LWT",
+                            payload="Failed",
+                            qos=0,
+                            retain=True,
+                        )
+                        c.connect(
+                            host=c._userdata["dbRec"].host,
+                            port=c._userdata["dbRec"].port,
+                            keepalive=60,
+                        )
                     except Exception as e:
                         print(e)
                         print(f"Houston, we have an mqtt re-connection error {e}")
