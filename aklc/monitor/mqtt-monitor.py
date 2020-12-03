@@ -194,9 +194,9 @@ def mqtt_on_message(client, userdata, msg):
                 nd.msgReceived(client, eMail_From, eMail_topic)
                 if cPayload[2] != "OK":
                     nd.lastData = sPayload
-                nd.lastDataTime = timezone.make_aware(
-                    datetime.datetime.now(), timezone.get_current_timezone()
-                )
+                    nd.lastDataTime = timezone.make_aware(
+                        datetime.datetime.now(), timezone.get_current_timezone()
+                    )
                 nd.incrementMsgCnt()
                 if "RP" in nd.nodeID:
                     nd.isRepeater = True
@@ -359,10 +359,16 @@ def mqtt_on_message(client, userdata, msg):
             try:
                 nd, created = Node.objects.get_or_create(nodeID=jPayload["NodeID"])
                 nd.msgReceived(client, eMail_From, eMail_topic)
-                nd.lastData = sPayload
-                nd.lastDataTime = timezone.make_aware(
-                    datetime.datetime.now(), timezone.get_current_timezone()
-                )
+                if "Status" in jPayload:
+                    nd.lastStatus = sPayload
+                    nd.lastStatusTime = timezone.make_aware(
+                        datetime.datetime.now(), timezone.get_current_timezone()
+                        )
+                else:
+                    nd.lastData = sPayload
+                    nd.lastDataTime = timezone.make_aware(
+                        datetime.datetime.now(), timezone.get_current_timezone()
+                    )
                 nd.jsonLoad(sPayload)
                 nd.incrementMsgCnt()
                 try:
