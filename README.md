@@ -1,5 +1,5 @@
 # dj-monitor
-The IoT monitoring system consists of 3 components configured to run in docker containers.
+The IoT monitoring system consists of 5 components configured to run in docker containers.
 #### Postgres database
 The database is used to maintain a persistent record of nodes operating and reporting through the MQTT broker
 #### Web system
@@ -17,9 +17,7 @@ This script listens to all MQTT queues defined (in the postgres database) and re
 
 ## Installation
 1. Install docker and docker-compose
-2. Clone this repository
-3. When the system is run up the first time a bash shell is needed, the wen container is best for this. Then run:
+2. Clone this repository 
+3. When the system is run up the first time a bash shell is needed, the web container is best for this. Then run:
     * python manage.py migrate
     * python manage.py createsuperuser
-
-    
