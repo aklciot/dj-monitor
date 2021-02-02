@@ -19,6 +19,7 @@ class NodeDetailForm(forms.ModelForm):
             "battCritical",
             "portal",
             "team",
+            "production",
             "latitude",
             "longitude",
             "email_down_template",

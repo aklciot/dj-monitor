@@ -9,6 +9,8 @@ import json
 import datetime
 import time
 
+import inspect
+
 from django.utils import timezone
 
 # need this to access django models and templates
@@ -21,6 +23,7 @@ from monitor.models import (
     Team,
     MqttQueue,
     MqttMessage,
+    MqttStore,
 )
 from django.contrib.auth.models import User
 
@@ -116,10 +119,26 @@ def mqtt_on_message(client, userdata, msg):
         f"Msg recived on {userdata['dbRec'].descr}, topic {msg.topic}, payload {msg.payload}"
     )
 
-    # first have to find a node id
-    cNode = ""
     cTopic = msg.topic.split("/")
     sPayload = msg.payload.decode()
+    #print(f"Topic: {msg.topic}")
+    #print(f"Payload: {msg.payload}")
+    #print(f"QoS: {msg.qos}")
+    #print(f"Retained: {msg.retain}")    
+
+    if testFlag:
+        m = MqttStore(mqttQueue=userdata["dbRec"], 
+        topic = msg.topic, 
+        payload = sPayload,
+        qos = msg.qos,
+        retained = msg.retain)
+        m.save()
+        print("Mqtt message saved")
+
+
+    # first have to find a node id
+    cNode = ""
+
     if sPayload == "":  # empty payload
         print("Empty payload received")
         return

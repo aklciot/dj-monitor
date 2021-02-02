@@ -154,9 +154,15 @@ def thingsboardUpload(node, msg):
             )
             # print(f"Publish to TB from function, payload is {sPayload}, response is {tbRes}")
         except ValueError as e:
-            print(f"Thingsboard load error: {e}, node is {node.nodeID}")
+            testPr(f"Thingsboard load error: {e}, node is {node.nodeID}")
         return
 
+
+# ********************************************************************
+def dictDel(inDict, inKey):
+    if inKey in inDict:
+        inDict.pop(inKey)
+    return
 
 # ********************************************************************
 def influxUpload(node, influxClient, msg, measurement, aTags, aData):
@@ -166,6 +172,55 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
 
     if node.influxUpload:  # check if we should do this
         sPayload = msg.payload.decode()
+
+        # The following attempts to only store valid data in influx
+        dictDel(aData, "EOM")
+        dictDel(aData, "End")
+
+        if "RSSI" in aData:
+            if not (type(aData["RSSI"]) is int or type(aData["RSSI"]) is float):
+                dictDel(aData, "RSSI")
+
+        if "RP-RSSI" in aData:
+            if not (type(aData["RP-RSSI"]) is int or type(aData["RP-RSSI"]) is float):
+                dictDel(aData, "RP-RSSI")
+
+        if "Latitude" in aData:
+            aData["latitude"] = aData["Latitude"]
+            dictDel(aData, "Latitude")
+
+        if "lat" in aData:
+            aData["latitude"] = aData["lat"]
+            dictDel(aData, "lat")
+
+        if "Lat" in aData:
+            aData["latitude"] = aData["Lat"]
+            dictDel(aData, "Lat")
+
+        if "latitude" in aData:
+            if type(aData["latitude"]) is not float:
+                dictDel(aData, "latitude")
+
+        if "Longitude" in aData:
+            aData["longitude"] = aData["Longitude"]
+            dictDel(aData, "Longitude")
+
+        if "lon" in aData:
+            aData["longitude"] = aData["lon"]
+            dictDel(aData, "lon")
+
+        if "Lon" in aData:
+            aData["longitude"] = aData["Lon"]
+            dictDel(aData, "Lon")
+
+        if "longitude" in aData:
+            if type(aData["longitude"]) is not float:
+                dictDel(aData, "longitude")
+
+        if "Longitude" in aData:
+            if type(aData["Longitude"]) is not float:
+                dictDel(aData, "Longitude")
+
         json_body = [{"measurement": measurement, "tags": aTags, "fields": aData,}]
         # print(f"Influx json from function {json_body}")
         try:
@@ -207,7 +262,7 @@ def mqtt_on_message(client, userdata, msg):
     # Check for nodes using regular topic structure
     if cTopic[0] == "AKLC":
         if len(cTopic) < 2:
-            testPr(
+            print(
                 f"Bad topic in AKLC message, topic is {msg.topic}, payload is {sPayload}"
             )
             return
@@ -216,7 +271,7 @@ def mqtt_on_message(client, userdata, msg):
         # Check types of message from the topic
 
         if cTopic[1] == "Status":  # Status messages from Gateways, data in CSV format
-            print(f"AKLC/Status message received, payload is {sPayload}")
+            testPr(f"AKLC/Status message received, payload is {sPayload}")
 
             try:
                 node = Node.objects.get(nodeID=cPayload[0])  # Lets
@@ -235,7 +290,7 @@ def mqtt_on_message(client, userdata, msg):
                         )
 
             except Exception as e:
-                print(e)
+                testPr(e)
                 print("Cant find {} in database, error is {}".format(cPayload[1], e))
 
         elif (
@@ -257,7 +312,7 @@ def mqtt_on_message(client, userdata, msg):
                 node = Node.objects.get(nodeID=cPayload[1])  # Lets
                 # print("Node {} found".format(node.nodeID))
             except Exception as e:
-                print(e)
+                testPr(e)
                 print(
                     f"Cant find {cPayload[1]} in database, error is {e}, payload is {sPayload}, topic is {msg.topic}"
                 )
@@ -310,7 +365,7 @@ def mqtt_on_message(client, userdata, msg):
                 elif "NodeID" in jStr:
                     cNode = jStr["NodeID"]
                 else:
-                    print("No node info could be found, ignore message")
+                    testPr("No node info could be found, ignore message")
                     return
 
                 try:
@@ -344,9 +399,9 @@ def mqtt_on_message(client, userdata, msg):
                         )
 
                 except Exception as e:
-                    print(e)
+                    testPr(e)
             else:
-                print("Payload not JSON")
+                testPr("Payload not JSON")
 
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
@@ -355,6 +410,10 @@ def mqtt_on_message(client, userdata, msg):
         testPr("Team message arrived, topic is {}".format(msg.topic))
 
         if "NodeID" in jPayload:
+
+            #if "PPC" in jPayload["NodeID"]:
+            #    print("Yay - People counter")
+
             # print("The NodeID is {}".format(jPayload["NodeID"]))
             try:
                 node = Node.objects.get(nodeID=jPayload["NodeID"])
@@ -408,7 +467,7 @@ def json_for_influx(sPayload, nNode):
             if type(val) is str:
                 jTags[jD] = val
             else:
-                print(
+                testPr(
                     f"Tag value should be a string, {jD} has a value of {val} which is a {type(val)}"
                 )
                 # jTags[jD] = val
@@ -484,7 +543,7 @@ def csv_to_json(payload, nNode):
             print(
                 f"CSV to JSON error, cPayload is {cPayload}, message type is {nNode.messagetype.msgName}"
             )
-            print(e)
+            testPr(e)
 
         jStr[mItem.name] = val
         if mItem.isTag:

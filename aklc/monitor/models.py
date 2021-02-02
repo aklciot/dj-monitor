@@ -136,6 +136,11 @@ class Node(models.Model):
     )
     hardware = models.CharField(max_length=50, blank=True, null=True)
     software = models.CharField(max_length=50, blank=True, null=True)
+    production = models.BooleanField(
+        "Production node",
+        default=False,
+        help_text="If selected, node will be treated as production, not test",
+    )
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     battName = models.CharField(
@@ -274,7 +279,7 @@ class Node(models.Model):
         This function updates node data when a new message is received.
         """
         self.lastseen = timezone.make_aware(
-            datetime.datetime.now(), timezone.get_current_timezone()
+            datetime.datetime.now(), timezone.get_current_timezone() 
         )
         if self.status != "C":  # if the node is not current, update the status
             self.textStatus = "Online"
@@ -504,6 +509,7 @@ class Profile(models.Model):
     phoneNumber = models.CharField(max_length=50, blank=True, null=True)
     reportType = models.CharField(max_length=1, blank=True, null=True, default="S")
     customer = models.BooleanField(blank=True, default=False)
+    pushbulletApi = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -592,3 +598,21 @@ class MqttMessage(models.Model):
 
     def __str__(self):
         return f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}"
+
+class MqttStore(models.Model):
+    """
+    Stores all mqtt messages
+    """
+
+    mqttQueue = models.ForeignKey(MqttQueue, on_delete=models.CASCADE)
+    received = models.DateTimeField(auto_now=True)
+    topic = models.CharField(max_length=100)
+    payload = models.TextField()
+    qos = models.IntegerField()
+    retained = models.BooleanField()
+
+    class Meta:
+        verbose_name = "Mqtt Store"
+
+    def __str__(self):
+        return f"mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}, retained: {self.retained}"
