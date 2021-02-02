@@ -160,9 +160,10 @@ def thingsboardUpload(node, msg):
 
 # ********************************************************************
 def dictDel(inDict, inKey):
+    #testPr(f"in dict is {inDict}, in key is {inKey}")
     if inKey in inDict:
         inDict.pop(inKey)
-    return
+    return(inDict)
 
 # ********************************************************************
 def influxUpload(node, influxClient, msg, measurement, aTags, aData):
@@ -170,64 +171,62 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
     A function to load data to Influx
     """
 
-    if node.influxUpload:  # check if we should do this
-        sPayload = msg.payload.decode()
+    #if node.influxUpload:  # check if we should do this
+    sPayload = msg.payload.decode()
 
-        # The following attempts to only store valid data in influx
-        dictDel(aData, "EOM")
-        dictDel(aData, "End")
+    # The following attempts to only store valid data in influx
+    aData = dictDel(aData, "EOM")
+    aData = dictDel(aData, "End")
 
-        if "RSSI" in aData:
-            if not (type(aData["RSSI"]) is int or type(aData["RSSI"]) is float):
-                dictDel(aData, "RSSI")
+    if "RSSI" in aData:
+        if not (type(aData["RSSI"]) is int or type(aData["RSSI"]) is float):
+            aData = dictDel(aData, "RSSI")
 
-        if "RP-RSSI" in aData:
-            if not (type(aData["RP-RSSI"]) is int or type(aData["RP-RSSI"]) is float):
-                dictDel(aData, "RP-RSSI")
+    if "RP-RSSI" in aData:
+        if not (type(aData["RP-RSSI"]) is int or type(aData["RP-RSSI"]) is float):
+            aData = dictDel(aData, "RP-RSSI")
 
-        if "Latitude" in aData:
-            aData["latitude"] = aData["Latitude"]
-            dictDel(aData, "Latitude")
+    if "Latitude" in aData:
+        aData["latitude"] = aData["Latitude"]
+        aData = dictDel(aData, "Latitude")
 
-        if "lat" in aData:
-            aData["latitude"] = aData["lat"]
-            dictDel(aData, "lat")
+    if "lat" in aData:
+        aData["latitude"] = aData["lat"]
+        aData = dictDel(aData, "lat")
 
-        if "Lat" in aData:
-            aData["latitude"] = aData["Lat"]
-            dictDel(aData, "Lat")
+    if "Lat" in aData:
+        aData["latitude"] = aData["Lat"]
+        aData = dictDel(aData, "Lat")
 
-        if "latitude" in aData:
-            if type(aData["latitude"]) is not float:
-                dictDel(aData, "latitude")
+    if "latitude" in aData:
+        if type(aData["latitude"]) is not float:
+            aData = dictDel(aData, "latitude")
 
-        if "Longitude" in aData:
-            aData["longitude"] = aData["Longitude"]
-            dictDel(aData, "Longitude")
+    if "Longitude" in aData:
+        aData["longitude"] = aData["Longitude"]
+        aData = dictDel(aData, "Longitude")
 
-        if "lon" in aData:
-            aData["longitude"] = aData["lon"]
-            dictDel(aData, "lon")
+    if "lon" in aData:
+        aData["longitude"] = aData["lon"]
+        aData = dictDel(aData, "lon")
 
-        if "Lon" in aData:
-            aData["longitude"] = aData["Lon"]
-            dictDel(aData, "Lon")
+    if "Lon" in aData:
+        aData["longitude"] = aData["Lon"]
+        aData = dictDel(aData, "Lon")
 
-        if "longitude" in aData:
-            if type(aData["longitude"]) is not float:
-                dictDel(aData, "longitude")
+    if "longitude" in aData:
+        if type(aData["longitude"]) is not float:
+            aData = dictDel(aData, "longitude")
 
-        if "Longitude" in aData:
-            if type(aData["Longitude"]) is not float:
-                dictDel(aData, "Longitude")
+    aTags["upload_src"] = "PyUpdater"
 
-        json_body = [{"measurement": measurement, "tags": aTags, "fields": aData,}]
-        # print(f"Influx json from function {json_body}")
-        try:
-            influxClient.write_points(json_body)
-            testPr(f"Store {json_body} in Influx")
-        except Exception as e:
-            print(f"Influx load error: {e}, json_body is {json_body}")
+    json_body = [{"measurement": measurement, "tags": aTags, "fields": aData,}]
+    # print(f"Influx json from function {json_body}")
+    try:
+        influxClient.write_points(json_body)
+        testPr(f"Store {json_body} in Influx")
+    except Exception as e:
+        print(f"Influx load error: {e}, json_body is {json_body}")
 
     return
 
@@ -405,9 +404,10 @@ def mqtt_on_message(client, userdata, msg):
 
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
-
+        if not is_json(sPayload):
+            print(f"Team message error, payload is not JSON")
         jPayload = json.loads(sPayload)
-        testPr("Team message arrived, topic is {}".format(msg.topic))
+        testPr(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
 
         if "NodeID" in jPayload:
 
