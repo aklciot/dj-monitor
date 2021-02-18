@@ -541,9 +541,9 @@ def csv_to_json(payload, nNode):
                     val = nNode.longitude
         except Exception as e:
             print(
-                f"CSV to JSON error, cPayload is {cPayload}, message type is {nNode.messagetype.msgName}"
+                f"CSV to JSON error, cPayload is {cPayload}, message type is {nNode.messagetype.msgName}, error was {e}"
             )
-            testPr(e)
+            print(e)
 
         jStr[mItem.name] = val
         if mItem.isTag:

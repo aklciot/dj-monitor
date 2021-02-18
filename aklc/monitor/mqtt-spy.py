@@ -35,6 +35,12 @@ else:
     scriptID = "DJ_Mon_Spy"
     testFlag = False
 
+eLogging = os.getenv("AKLC_LOGGING", "N")
+if eLogging == "Y":
+    logFlag = True
+else:
+    logFlag = False
+
 # ********************************************************************
 def is_json(myjson):
     """
@@ -121,20 +127,21 @@ def mqtt_on_message(client, userdata, msg):
 
     cTopic = msg.topic.split("/")
     sPayload = msg.payload.decode()
-    #print(f"Topic: {msg.topic}")
-    #print(f"Payload: {msg.payload}")
-    #print(f"QoS: {msg.qos}")
-    #print(f"Retained: {msg.retain}")    
+    # print(f"Topic: {msg.topic}")
+    # print(f"Payload: {msg.payload}")
+    # print(f"QoS: {msg.qos}")
+    # print(f"Retained: {msg.retain}")
 
-    if testFlag:
-        m = MqttStore(mqttQueue=userdata["dbRec"], 
-        topic = msg.topic, 
-        payload = sPayload,
-        qos = msg.qos,
-        retained = msg.retain)
+    if logFlag:
+        m = MqttStore(
+            mqttQueue=userdata["dbRec"],
+            topic=msg.topic,
+            payload=sPayload,
+            qos=msg.qos,
+            retained=msg.retain,
+        )
         m.save()
-        print("Mqtt message saved")
-
+        # print("Mqtt message saved")
 
     # first have to find a node id
     cNode = ""
@@ -225,6 +232,12 @@ def mqtt_spy():
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
     # lConnCnt = {}  # Dict to hold connection count data
+
+    if not logFlag:
+        print("NOT caputing MQTT messages, delete all those that currently exist")
+        MqttStore.objects.all().delete()
+    else:
+        print("Capture all MQTT messages")
 
     for m in aMqtt:
         print(f"Set up mqtt queue {m.descr}")
