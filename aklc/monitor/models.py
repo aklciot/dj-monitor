@@ -616,3 +616,20 @@ class MqttStore(models.Model):
 
     def __str__(self):
         return f"mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}, retained: {self.retained}"
+
+class JsonError(models.Model):
+    """
+    Stores JSON error messages
+    """
+
+    node = models.ForeignKey(Node, on_delete=models.CASCADE)
+    mqttQueue = models.ForeignKey(MqttQueue, on_delete=models.CASCADE)
+    received = models.DateTimeField(auto_now=True)
+    fieldKey = models.CharField(max_length=100)
+    message = models.TextField()
+
+    class Meta:
+        ordering = ["mqttQueue", "node", "fieldKey"]
+
+    def __str__(self):
+        return f"Node: {self.node.nodeID}, MQTT Q: {self.mqttQueue.descr}, field: {self.fieldKey}, error: {self.message}"

@@ -13,6 +13,7 @@ from .models import (
     MqttQueue,
     MqttMessage,
     HtmlTemplate,
+    JsonError,
 )
 
 admin.site.register(Node)
@@ -26,4 +27,4 @@ admin.site.register(NodeMsgStats)
 admin.site.register(MqttQueue)
 admin.site.register(MqttMessage)
 admin.site.register(HtmlTemplate)
-
+admin.site.register(JsonError)

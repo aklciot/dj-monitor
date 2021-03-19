@@ -13,6 +13,26 @@ import inspect
 
 from django.utils import timezone
 
+knownKeys = {"RSSI": "I",
+            "RP-RSSI": "I",
+            "NodeID": "S",
+            "Gateway": "S",
+            "Software": "S",
+            "Project": "S",
+            "location": "S",
+            "Status": "S",
+            "latitude": "F",
+            "longitude": "F",
+            "lat": "F",
+            "long": "F",
+            "Latitude": "F",
+            "Longitude": "F",
+            "Lat": "F",
+            "Long": "F",
+            "VBat": "F",
+            "Level": "I",
+            }
+
 # need this to access django models and templates
 sys.path.append("/code/aklc")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aklc.settings")
@@ -24,6 +44,7 @@ from monitor.models import (
     MqttQueue,
     MqttMessage,
     MqttStore,
+    JsonError,
 )
 from django.contrib.auth.models import User
 
@@ -58,6 +79,7 @@ def testPr(tStr):
     if testFlag:
         print(tStr)
     return
+
 
 
 # ********************************************************************
@@ -110,20 +132,73 @@ def mqtt_on_disconnect(client, userdata, rc):
     )
     return
 
+# ********************************************************************
+def jsonMsgCheck(inMsg, mqttQueue):
+    """
+    Function to check the type of various key/value pairs
+    """
+    
+    errorList = []
+    sPayload = inMsg.payload.decode()
+    if not is_json(sPayload):
+        errorList.append(f"Payload not JSON {sPayload}")
+        return(errorList)
+
+    jStr = json.loads(sPayload)
+    if "NodeID" in jStr:
+        cNode = jStr["NodeID"]
+        try:
+            node = Node.objects.get(nodeID=cNode)
+            # testPr(f"Node found {node.nodeID}")
+        except:
+            return
+    else:
+        cNode = "Unknown"
+        return
+    
+    for k, v in jStr.items():
+        if k in knownKeys:
+            #print(f"k is {k}, knownKeys[k] is {knownKeys[k]}, type of {v} is {type(v)}")
+            jErr = False
+            if knownKeys[k] == 'S' and type(v) != str:
+                jErr = True
+                err = f"JSON error for {cNode}, the value of {k} should be 'String', but is {type(v)} ({k} = {v})"
+
+            if knownKeys[k] == 'I' and type(v) != int:
+                jErr = True
+                err = f"JSON error for {cNode}, the value of {k} should be 'Int', but is {type(v)} ({k} = {v})"
+
+            if knownKeys[k] == 'F' and type(v) != float:
+                jErr = True
+                err = f"JSON error for {cNode}, the value of {k} should be 'Float', but is {type(v)} ({k} = {v})"
+
+            if jErr:
+                errorList.append(err)
+                jes = node.jsonerror_set.filter(fieldKey = k).filter(mqttQueue = mqttQueue)
+
+                if len(jes) > 0:
+                    jes[0].message = err
+                    jes[0].save()
+                else:
+                    je = JsonError(node=node, mqttQueue = mqttQueue, fieldKey = k, message = err)
+                    je.save()
+    
+    return(errorList)
 
 # ********************************************************************
 """
 This function is called when an mqtt message is received
 """
 
-
 def mqtt_on_message(client, userdata, msg):
     """
       This procedure is called when a msg is recieved
     """
-    print(
+    testPr(
         f"Msg recived on {userdata['dbRec'].descr}, topic {msg.topic}, payload {msg.payload}"
     )
+
+    jsonMsgCheck(msg, userdata["dbRec"])
 
     cTopic = msg.topic.split("/")
     sPayload = msg.payload.decode()
@@ -214,7 +289,7 @@ def mqtt_on_message(client, userdata, msg):
 
     except Exception as e:
         print(e)
-        print(f"Houston, we have an mqtt storing error {e}")
+        print(f"Houston, we have an mqtt storing error {e} in the SPY program")
     return
 
 
