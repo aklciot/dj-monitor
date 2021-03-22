@@ -21,3 +21,5 @@ This script listens to all MQTT queues defined (in the postgres database) and re
 3. When the system is run up the first time a bash shell is needed, the web container is best for this. Then run:
     * python manage.py migrate
     * python manage.py createsuperuser
+
+Branch update
