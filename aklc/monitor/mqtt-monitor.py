@@ -289,13 +289,13 @@ def mqtt_on_message(client, userdata, msg):
                                     nodeID=jPayload["Gateway"]
                                 )
                                 gw.msgReceived(client, eMail_From, eMail_topic)
-                                gw.lastStatus = sPayload
-                                gw.lastStatusTime = timezone.make_aware(
-                                    datetime.datetime.now(),
-                                    timezone.get_current_timezone(),
-                                )
-                                gw.jsonLoad(sPayload)
-                                gw.incrementMsgCnt()
+                                #gw.lastStatus = sPayload
+                                #gw.lastStatusTime = timezone.make_aware(
+                                #    datetime.datetime.now(),
+                                #    timezone.get_current_timezone(),
+                                #)
+                                #gw.jsonLoad(sPayload)
+                                #gw.incrementMsgCnt()
                                 if "Reply" in jPayload:
                                     client.publish(
                                         f"AKLC/Control/{gw.nodeID}", "Status received"
