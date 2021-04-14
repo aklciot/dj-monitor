@@ -69,8 +69,6 @@ def testPr(tStr):
 """
 This function is called when the MQTT client connects to the MQTT broker
 """
-
-
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -218,6 +216,10 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
         if type(aData["longitude"]) is not float:
             aData = dictDel(aData, "longitude")
 
+    if "Version" in aData:
+        if type(aData["Version"]) is not str:
+            aData["Version"] = str(aData["Version"])
+
     aTags["upload_src"] = "PyUpdater"
 
     json_body = [{"measurement": measurement, "tags": aTags, "fields": aData,}]
@@ -278,7 +280,7 @@ def mqtt_on_message(client, userdata, msg):
 
                 if node.messagetype:
                     jOut = csv_to_json(sPayload, node)
-                    testPr("Messagetype found, jOut is {jOut}")
+                    testPr(f"Messagetype {node.messagetype.msgName} found, jOut is {jOut}")
 
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
@@ -287,6 +289,23 @@ def mqtt_on_message(client, userdata, msg):
                         influxUpload(
                             node, InClient, msg, "Gateway", jOut["jTags"], jOut["jData"]
                         )
+
+                    lUpdate = False
+
+                    if "Version" in jOut["jTags"]:
+                        if node.software != jOut["jTags"]["Version"] and isinstance(jOut["jTags"]["Version"], str):
+                            node.software = jOut["jTags"]["Version"]
+                            lUpdate = True
+
+                    if "HWType" in jOut["jTags"]:
+                        if node.hardware != jOut["jTags"]["HWType"] and isinstance(jOut["jTags"]["HWType"], str):
+                            node.hardware = jOut["jTags"]["HWType"]
+                            lUpdate = True
+
+                    if lUpdate:
+                        testPr(f"{node.nodeID} updated with HW/SW details HW {jOut['jTags']['HWType']}, SW {jOut['jTags']['Version']}")
+                        node.save()
+
 
             except Exception as e:
                 testPr(e)

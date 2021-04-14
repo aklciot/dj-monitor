@@ -246,13 +246,13 @@ def mqtt_on_message(client, userdata, msg):
         elif (
             cTopic[1] == "Network"
         ):  # These are status messages sent by gateways and nodes. Data in JSON format
-            print(
+            testPr(
                 f"Network message (AKLC/Network) received |{sPayload}|, topic |{msg.topic}|"
             )
             # print("Topic length = {}".format(len(cTopic)))
 
             if not is_json(sPayload):
-                print(f"Network style message error, payload is |{sPayload}|")
+                print(f"Network style message error, payload is |{sPayload}|, topic is |{msg.topic}|")
                 return
 
             jPayload = json.loads(sPayload)  # the payload should be JSON
@@ -289,13 +289,13 @@ def mqtt_on_message(client, userdata, msg):
                                     nodeID=jPayload["Gateway"]
                                 )
                                 gw.msgReceived(client, eMail_From, eMail_topic)
-                                #gw.lastStatus = sPayload
-                                #gw.lastStatusTime = timezone.make_aware(
-                                #    datetime.datetime.now(),
-                                #    timezone.get_current_timezone(),
-                                #)
-                                #gw.jsonLoad(sPayload)
-                                #gw.incrementMsgCnt()
+                                gw.lastStatus = sPayload
+                                gw.lastStatusTime = timezone.make_aware(
+                                    datetime.datetime.now(),
+                                    timezone.get_current_timezone(),
+                                )
+                                gw.jsonLoad(sPayload)
+                                gw.incrementMsgCnt()
                                 if "Reply" in jPayload:
                                     client.publish(
                                         f"AKLC/Control/{gw.nodeID}", "Status received"
