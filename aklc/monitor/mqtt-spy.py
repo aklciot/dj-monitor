@@ -240,7 +240,7 @@ def mqtt_on_message(client, userdata, msg):
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
             cPayload = sPayload.split(",")
-            if len(cPayload) < 1:  # empty payload
+            if len(cPayload) < 2:  # need at least 2 entries
                 return
             if "Test" in cPayload[1]:
                 # print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")

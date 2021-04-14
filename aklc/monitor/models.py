@@ -366,6 +366,10 @@ class Node(models.Model):
             self.bootTimeUpdate(jPayload["Uptime(m)"])
         if "Uptime(s)" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime(s)"] / 60)
+        if "Version" in jPayload and isinstance(jPayload['Version'], str):
+            self.software = jPayload['Version']
+        if "Type" in jPayload and isinstance(jPayload['Type'], str):
+            self.hardware = jPayload['Type']
         self.save()
         return ()
 
