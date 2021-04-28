@@ -1,0 +1,80 @@
+{% extends "monitor/webbase.html" %}
+
+{% block pagerefresh %}<meta http-equiv="refresh" content="60">{% endblock %}
+
+{% block title %}
+Node MQTT Log
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="node-header"><H2>Node MQTT Log</H2></div>
+    <div id="node_detail" class="content_block">
+      <div id="node_det_table">
+        <table>
+          <tr>
+
+          {% if node.isGateway %}
+            <th>GatewayID: </th><th><a href="{% url 'monitor:gatewayDetail' node.id %}">{{ node.nodeID }}</a></th>
+          {% elif node.isRepeater %}
+            <th>RepeaterID: </th><th><a href="{% url 'monitor:repeaterDetail' node.id %}">{{ node.nodeID }}</a></th>
+          {% else %}
+            <th>NodeID: </th><th><a href="{% url 'monitor:nodeDetail' node.id %}">{{ node.nodeID }}</a></th>
+          {% endif %}
+
+          </tr>
+          <tr><td>Description: </td><td class = "wrap_cell">{{ node.descr }}</td></tr>
+          <tr><td>Team: </td><td>{{ node.team.teamID }}</td></tr>
+          {% if node.hardware %}
+            <tr><td>Hardware: </td><td>{{ node.hardware }}</td></tr>
+          {% endif %}
+          {% if node.software %}
+            <tr><td>Software: </td><td>{{ node.software }}</td></tr>
+          {% endif %}
+          {% if node.battName %}
+            <tr><td>Battery attribute name: </td><td>{{ node.battName }}</td></tr>
+            <tr><td>Battery warning level: </td><td>{{ node.battWarn }}</td></tr>
+            <tr><td>Battery critical level: </td><td>{{ node.battCritical }}</td></tr>
+            <tr><td>Battery current value: </td><td class="lastseen">{{ node.battLevel }}</td></tr>
+          {% endif %}
+          {% if node.locationOverride %}
+            <tr><td>Latitude: </td><td>{{ node.latitude }}</td></tr>
+          <tr><td>Longitude: </td><td>{{ node.longitude }}</td></tr>
+            <tr><td>Map: </td><td><a href="http://www.openstreetmap.org/?mlat={{ node.latitude }}&mlon={{ node.longitude }}&zoom=14" target="_blank">View in OpenStreetMap</a></td></tr>
+          {% endif %}
+          {% if node.portal %}
+            <tr><td>Data link: </td><td><span  class='yellow'><a href = {{node.portal}} >{{ node.portal }}</a></span></td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+
+    {% if node.isGateway %}
+      <a href="{% url 'monitor:gatewayDetail' node.id %}" class="btn btn-info" role="button">Back to gateway</a>
+    {% elif node.isRepeater %}
+      <a href="{% url 'monitor:repeaterDetail' node.id %}" class="btn btn-info" role="button">Back to repeater</a>
+    {% else %}
+      <a href="{% url 'monitor:nodeDetail' node.id %}" class="btn btn-info" role="button">Back to node</a>
+    {% endif %}
+
+    <div id="node_MQTT" class="content_block">
+      <table class="table table-striped table-bordered text-white">
+        <th>{{ mqttQueue.descr }}</th>
+        {% if mqMsg %}
+          {% for msg in mqMsg %}
+            <tr>
+              <td>Topic: {{ msg.topic }}</td>
+              <td>Payload: {{msg.payload}}</td>
+              <td>Received: {{ msg.received }}</td>
+            </tr>
+          {% endfor %}
+      </table>
+      {% endif %}
+
+    
+    </div>
+
+  </div> 
+</div>
+{% endblock %}

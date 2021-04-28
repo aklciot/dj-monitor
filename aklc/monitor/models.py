@@ -279,7 +279,7 @@ class Node(models.Model):
         This function updates node data when a new message is received.
         """
         self.lastseen = timezone.make_aware(
-            datetime.datetime.now(), timezone.get_current_timezone() 
+            datetime.datetime.now(), timezone.get_current_timezone()
         )
         if self.status != "C":  # if the node is not current, update the status
             self.textStatus = "Online"
@@ -292,13 +292,15 @@ class Node(models.Model):
                 for usr in self.nodeuser_set.all():
                     if usr.email:
                         print(f"Send email to {usr.user} that {self.nodeID} is back up")
-                    
+
                         payload = {}
                         try:
                             inDataDict = {"node": self}
-                            #inDataDict["web_base_url"] = eWeb_Base_URL
+                            # inDataDict["web_base_url"] = eWeb_Base_URL
                             inDataDict["user"] = usr.user
-                            t = template.loader.get_template(f"monitor/{self.email_up_template.fileName}")
+                            t = template.loader.get_template(
+                                f"monitor/{self.email_up_template.fileName}"
+                            )
                             body = t.render(inDataDict)
 
                             payload["To"] = usr.user.email
@@ -311,7 +313,7 @@ class Node(models.Model):
                         except Exception as e:
                             print(e)
                             print(f"Houston, we have an error {e}")
-                    
+
         minDelta = (
             timezone.make_aware(
                 datetime.datetime.now(), timezone.get_current_timezone()
@@ -366,10 +368,10 @@ class Node(models.Model):
             self.bootTimeUpdate(jPayload["Uptime(m)"])
         if "Uptime(s)" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime(s)"] / 60)
-        if "Version" in jPayload and isinstance(jPayload['Version'], str):
-            self.software = jPayload['Version']
-        if "Type" in jPayload and isinstance(jPayload['Type'], str):
-            self.hardware = jPayload['Type']
+        if "Version" in jPayload and isinstance(jPayload["Version"], str):
+            self.software = jPayload["Version"]
+        if "Type" in jPayload and isinstance(jPayload["Type"], str):
+            self.hardware = jPayload["Type"]
         self.save()
         return ()
 
@@ -422,7 +424,7 @@ class Node(models.Model):
 
         # Don't try and process if a Status message. Status message has 'OK' as second value
         if len(cPayload) > 1 and cPayload[1] == "OK":
-            return(jStr)
+            return jStr
 
         # here we try and remove any references to any repeaters
         lRepeater = True
@@ -477,7 +479,7 @@ class Node(models.Model):
                 self.save()
             except Exception as e:
                 print(f"Error in bootTimeUpdate, {e}, input was {inMinutes}")
-        else: 
+        else:
             print(f"Input to bootTimeUpdate was not numeric {inMinutes}")
         return
 
@@ -603,12 +605,19 @@ class MqttMessage(models.Model):
     def __str__(self):
         return f"Node: {self.node.nodeID}, mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}"
 
+
 class MqttStore(models.Model):
     """
     Stores all mqtt messages
     """
 
     mqttQueue = models.ForeignKey(MqttQueue, on_delete=models.CASCADE)
+    node = models.ForeignKey(
+        Node, null=True, on_delete=models.SET_NULL, related_name="mqsNode"
+    )
+    gateway = models.ForeignKey(
+        Node, null=True, on_delete=models.SET_NULL, related_name="mqsGateway"
+    )
     received = models.DateTimeField(auto_now=True)
     topic = models.CharField(max_length=100)
     payload = models.TextField()
@@ -617,9 +626,11 @@ class MqttStore(models.Model):
 
     class Meta:
         verbose_name = "Mqtt Store"
+        ordering = ["-received"]
 
     def __str__(self):
-        return f"mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}, retained: {self.retained}"
+        return f"mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}, retained: {self.retained}, node: {node.nodeID}"
+
 
 class JsonError(models.Model):
     """

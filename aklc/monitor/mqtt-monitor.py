@@ -263,6 +263,34 @@ def mqtt_on_message(client, userdata, msg):
                     print("Picked up a status = missing message")
                 else:
                     if len(cTopic) > 2:
+                        devID = cTopic[2]
+                    elif "NodeID" in jPayload:
+                        devID = jPayload["NodeID"]
+                    elif "Gateway" in jPayload:
+                        devID = jPayload["Gateway"]
+                    else:
+                        print(f"Bad status message, topic: {msg.topic}, payload: {sPayload}")
+                        return
+                    if node_validate(devID):
+                        # print("Processing network message")
+                        # print(jPayload)
+                        nd, created = Node.objects.get_or_create(nodeID=devID)
+                        nd.msgReceived(client, eMail_From, eMail_topic)
+                        nd.lastStatus = sPayload
+                        nd.lastStatusTime = timezone.make_aware(
+                            datetime.datetime.now(), timezone.get_current_timezone()
+                        )
+                        nd.jsonLoad(sPayload)
+                        nd.incrementMsgCnt()
+                        if "Reply" in jPayload:
+                            client.publish(
+                                f"AKLC/Control/{nd.nodeID}", "Status received"
+                            )
+                        nd.save()
+
+
+                    """
+                    if len(cTopic) > 2:
                         # print("Topic[2] is {}".format(cTopic[2]))
                         if node_validate(cTopic[2]):
                             # print("Processing network message")
@@ -321,6 +349,7 @@ def mqtt_on_message(client, userdata, msg):
                                             "Status received",
                                         )
                                     nd.save()
+                                    """
             except Exception as e:
                 print(e)
                 print(f"Houston, we have an error {e}")

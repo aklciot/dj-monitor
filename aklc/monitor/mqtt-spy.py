@@ -57,6 +57,7 @@ else:
     testFlag = False
 
 eLogging = os.getenv("AKLC_LOGGING", "N")
+print(f"eLogging is {eLogging}")
 if eLogging == "Y":
     logFlag = True
 else:
@@ -95,7 +96,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
     global scriptID
     userdata["nConnCnt"] = userdata["nConnCnt"] + 1
     print(
-        f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}"
+        f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}, Message count is {{userdata['nMsgCnt']}}"
     )
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
@@ -197,7 +198,7 @@ def mqtt_on_message(client, userdata, msg):
     testPr(
         f"Msg recived on {userdata['dbRec'].descr}, topic {msg.topic}, payload {msg.payload}"
     )
-
+    userdata["nMsgCnt"] = userdata["nMsgCnt"] + 1
     jsonMsgCheck(msg, userdata["dbRec"])
 
     cTopic = msg.topic.split("/")
@@ -208,21 +209,22 @@ def mqtt_on_message(client, userdata, msg):
     # print(f"Retained: {msg.retain}")
 
     if logFlag:
-        m = MqttStore(
+        ms = MqttStore(
             mqttQueue=userdata["dbRec"],
             topic=msg.topic,
             payload=sPayload,
             qos=msg.qos,
             retained=msg.retain,
         )
-        m.save()
+        ms.save()
         # print("Mqtt message saved")
 
     # first have to find a node id
     cNode = ""
+    cGateway = ""
 
     if sPayload == "":  # empty payload
-        print("Empty payload received")
+        testPr(f"Empty payload received, topic is {msg.topic}")
         return
 
     if cTopic[0] == "AKLC":
@@ -231,7 +233,8 @@ def mqtt_on_message(client, userdata, msg):
             try:
                 cPayload = sPayload.split(",")
                 cNode = cPayload[0]
-                # print(f"Status - Node is {cNode}")
+                cGateway = cTopic[2]
+
             except Exception as e:
                 print(e)
                 print(f"Houston, we have an error {e}")
@@ -240,12 +243,20 @@ def mqtt_on_message(client, userdata, msg):
             cTopic[1] == "Gateway"
         ):  # Data message passed on by gateway, data in CSV format
             cPayload = sPayload.split(",")
-            if len(cPayload) < 2:  # need at least 2 entries
+            # we need to do unnecessary processing here as some people go off on tangents
+            if len(cPayload) < 3:  # need at least 3 entries
                 return
-            if "Test" in cPayload[1]:
+            #if "Test" in cPayload[1]:
                 # print(f"Test message received, topic is {msg.topic}, payload is {sPayload}, msg not processed")
                 return
-            cNode = cPayload[1]
+            if len(cTopic) > 2:
+                cGateway = cTopic[2]
+            else:
+                tespPr(f"Bad AKLC/Gateway message, opic: {msg.topic}, payload: {sPayload}")
+            
+            if cPayload[0] != "GWSTATUS" and "Test" not in cPayload[1]:
+                cNode = cPayload[1]
+            
 
         elif cTopic[1] == "Node" or cTopic[1] == "Network":
             if is_json(sPayload):  # these messages should always be JSON
@@ -272,13 +283,25 @@ def mqtt_on_message(client, userdata, msg):
     except:
         return
 
+    if logFlag:
+        #print(f"Gateway: {cGateway}, node {cNode}")
+        ms.node = node
+        if cGateway != "":
+            try:
+                gw = Node.objects.get(nodeID=cGateway)
+                ms.gateway = gw
+                #print("Gateway info saved")
+            except:
+                testPr(f"Missing gateway, looked for {cGateway}")
+        ms.save()
+
     try:
         # print(f"node is {node.nodeID}, mqttQueue is {userdata.descr}")
         mqttMsg, created = MqttMessage.objects.get_or_create(
             node=node, mqttQueue=userdata["dbRec"]
         )
         if created:
-            print(f"New record created")
+            testPr(f"New record created")
         mqttMsg.topic = msg.topic
         mqttMsg.payload = sPayload
         mqttMsg.received = timezone.make_aware(
@@ -303,20 +326,22 @@ def mqtt_spy():
     print("Start MQTT spy")
     print(" ")
     print(" ")
-
+    print(f"eLogging: {eLogging}")
+    
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
     # lConnCnt = {}  # Dict to hold connection count data
-
+    MqttStore.objects.all().delete()    
     if not logFlag:
-        print("NOT caputing MQTT messages, delete all those that currently exist")
+        print("NOT capturing MQTT messages, delete all those that currently exist")
         MqttStore.objects.all().delete()
+        print("MQTT Store deleted")
     else:
         print("Capture all MQTT messages")
 
     for m in aMqtt:
         print(f"Set up mqtt queue {m.descr}")
-        uData = {"dbRec": m, "nConnCnt": 0}
+        uData = {"dbRec": m, "nConnCnt": 0, "nMsgCnt": 0}
         cMqtt.append(mqtt.Client(userdata=uData))
         cMqtt[-1].on_connect = mqtt_on_connect
         cMqtt[-1].on_message = mqtt_on_message
@@ -383,6 +408,7 @@ def mqtt_spy():
                     "connectionCount": c._userdata["nConnCnt"],
                     "QueueName": c._userdata["dbRec"].descr,
                     "upTime(s)": upTime.total_seconds(),
+                    "messageCount": c._userdata["nMsgCnt"],
                 }
                 print(
                     f"Regular reporting payload is {payLoad}, send to {c._userdata['dbRec'].descr}"
