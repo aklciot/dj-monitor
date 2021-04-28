@@ -12,7 +12,8 @@ import datetime, os
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 
-from .models import Node, NodeUser, MessageType, MessageItem, Team
+from .models import Node, NodeUser, MessageType, MessageItem, Team, MqttQueue, MqttStore
+
 from .forms import (
     NodeDetailForm,
     NodeNotifyForm,
@@ -318,6 +319,38 @@ def nodeUpdate(request, node_ref):
 
 
 @login_required
+def nodeMqttLog(request, node_ref, mq_ref):
+    node = get_object_or_404(Node, pk=node_ref)
+    mqttQueue = get_object_or_404(MqttQueue, pk=mq_ref)
+    mqMsg = MqttStore.objects.filter(node=node, mqttQueue=mqttQueue)[:50]
+    context = {
+        "node": node,
+        "mqttQueue": mqttQueue,
+        "mqMsg": mqMsg,
+        # "aNodeUser": aNodeUsers,
+        # "passData": passList,
+        # "nodeactive": "Y",
+    }
+    return render(request, "monitor/nodeMqttLog.html", context)
+
+@login_required
+def gatewayMqttLog(request, gateway_ref, mq_ref):
+    gateway = get_object_or_404(Node, pk=gateway_ref)
+    mqttQueue = get_object_or_404(MqttQueue, pk=mq_ref)
+    mqMsg = MqttStore.objects.filter(gateway=gateway, mqttQueue=mqttQueue)[:50]
+    context = {
+        "node": gateway,
+        "mqttQueue": mqttQueue,
+        "mqMsg": mqMsg,
+        # "aNodeUser": aNodeUsers,
+        # "passData": passList,
+        # "nodeactive": "Y",
+    }
+    return render(request, "monitor/nodeMqttLog.html", context)
+
+
+
+@login_required
 def repeaterUpdate(request, rp_ref):
     """
     View to process info update form from nodes or gateways
@@ -381,6 +414,7 @@ def nodeModNotify(request, node_ref):
     if testFlag:
         context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeModNotify.html", context)
+
 
 """
 @login_required
