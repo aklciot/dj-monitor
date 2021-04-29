@@ -60,7 +60,8 @@ Node MQTT Log
 
     <div id="node_MQTT" class="content_block">
       <table class="table table-striped table-bordered text-white">
-        <th>{{ mqttQueue.descr }}</th>
+        <h3>MQTT Queue: {{ mqttQueue.descr }}</h3>
+        <tr><th>Topic</th><th>Payload</th><th>Recieved</th>
         {% if mqMsg %}
           {% for msg in mqMsg %}
             <tr>
