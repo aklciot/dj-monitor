@@ -629,7 +629,7 @@ class MqttStore(models.Model):
         ordering = ["-received"]
 
     def __str__(self):
-        return f"mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}, retained: {self.retained}, node: {node.nodeID}"
+        return f"mqtt: {self.mqttQueue.descr}, topic: {self.topic}, payload: {self.payload}, received: {self.received}, retained: {self.retained}"
 
 
 class JsonError(models.Model):

@@ -252,7 +252,7 @@ def mqtt_on_message(client, userdata, msg):
             if len(cTopic) > 2:
                 cGateway = cTopic[2]
             else:
-                tespPr(f"Bad AKLC/Gateway message, opic: {msg.topic}, payload: {sPayload}")
+                testPr(f"Bad AKLC/Gateway message, opic: {msg.topic}, payload: {sPayload}")
             
             if cPayload[0] != "GWSTATUS" and "Test" not in cPayload[1]:
                 cNode = cPayload[1]
@@ -331,7 +331,15 @@ def mqtt_spy():
     aMqtt = MqttQueue.objects.all()
     cMqtt = []
     # lConnCnt = {}  # Dict to hold connection count data
-    MqttStore.objects.all().delete()    
+    #MqttStore.objects.all().delete()    
+
+    mqStoreCutoff = timezone.make_aware(
+        datetime.datetime.now(), timezone.get_current_timezone()
+    ) - datetime.timedelta(days=7)
+    mqStore = MqttStore.objects.all().filter(received__lte = mqStoreCutoff)
+    print(f"MQTT Stored messages to delete is {len(mqStore)}")
+
+
     if not logFlag:
         print("NOT capturing MQTT messages, delete all those that currently exist")
         MqttStore.objects.all().delete()
@@ -393,6 +401,12 @@ def mqtt_spy():
                     msg.delete()
             checkDt = datetime.date.today()
 
+            # process MQTT stored messages
+            mqStoreCutoff = timezone.make_aware(
+                datetime.datetime.now(), timezone.get_current_timezone()
+            ) - datetime.timedelta(days=7)
+            mqStore = MqttStore.objects.all().filter(received__lte = mqStoreCutoff).delete()
+
         # regular MQTT connection status updates
         if (timezone.now() - checkTimer) > datetime.timedelta(minutes=5):
             checkTimer = timezone.now()  # reset timer
@@ -421,27 +435,27 @@ def mqtt_spy():
                     retain=False,
                 )
                 print(f"Queue name: {c._userdata['dbRec'].descr}, Result code {res.rc}")
-                if res.rc == mqtt.MQTT_ERR_NO_CONN:  # no connection
-                    try:
-                        print(f"Dicconnect & reconnect to {c._userdata['dbRec'].descr}")
-                        c.disconnect()
-                        c.username_pw_set(
-                            c._userdata["dbRec"].user, c._userdata["dbRec"].pw
-                        )
-                        c.will_set(
-                            f"AKLC/monitor/{scriptID}/LWT",
-                            payload="Failed",
-                            qos=0,
-                            retain=True,
-                        )
-                        c.connect(
-                            host=c._userdata["dbRec"].host,
-                            port=c._userdata["dbRec"].port,
-                            keepalive=60,
-                        )
-                    except Exception as e:
-                        print(e)
-                        print(f"Houston, we have an mqtt re-connection error {e}")
+                #if res.rc == mqtt.MQTT_ERR_NO_CONN:  # no connection
+                try:
+                    print(f"Dicconnect & reconnect to {c._userdata['dbRec'].descr}")
+                    #c.disconnect()
+                    c.username_pw_set(
+                        c._userdata["dbRec"].user, c._userdata["dbRec"].pw
+                    )
+                    c.will_set(
+                        f"AKLC/monitor/{scriptID}/LWT",
+                        payload="Failed",
+                        qos=0,
+                        retain=True,
+                    )
+                    c.connect(
+                        host=c._userdata["dbRec"].host,
+                        port=c._userdata["dbRec"].port,
+                        keepalive=60,
+                    )
+                except Exception as e:
+                    print(e)
+                    print(f"Houston, we have an mqtt re-connection error {e}")
 
         time.sleep(1)
 
