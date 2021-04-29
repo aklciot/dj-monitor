@@ -65,9 +65,9 @@ Node MQTT Log
         {% if mqMsg %}
           {% for msg in mqMsg %}
             <tr>
-              <td>Topic: {{ msg.topic }}</td>
-              <td>Payload: {{msg.payload}}</td>
-              <td>Received: {{ msg.received }}</td>
+              <td>{{ msg.topic }}</td>
+              <td>{{msg.payload}}</td>
+              <td>{{ msg.received }}</td>
             </tr>
           {% endfor %}
       </table>
