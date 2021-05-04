@@ -1,0 +1,15 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+    Logout - {{ block.super }}
+{% endblock %}
+
+{% block web-body %}
+
+    <div class="container">
+
+        <p>You are logged out. <a href="{% url 'monitor:login' %}">Click here</a> to login again.</p>
+
+    </div>
+
+{% endblock %}

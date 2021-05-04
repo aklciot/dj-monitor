@@ -437,9 +437,10 @@ class Node(models.Model):
                     continue
                 lRepeater = False
                 if itm.startswith("RP"):
-                    # print(f"Remove {itm} from input")
+                    print(f"Remove {itm} from input")
                     cPayload.remove(itm)
                     lRepeater = True
+                    break
 
         for mItem in self.messagetype.messageitem_set.all():
             # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
