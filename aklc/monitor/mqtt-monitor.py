@@ -186,7 +186,9 @@ def mqtt_on_message(client, userdata, msg):
             if cPayload[1].startswith("Test"):
                 print("Test message, ignored")
                 return
-
+            if "GWSTATUS" in cPayload[0]:
+                cPayload.pop(0)
+                
             if node_validate(cPayload[1]):  # check if the nodeID is valid
                 # get the node, or create it if not found
                 # print("Valid node {}".format(cPayload[1]))

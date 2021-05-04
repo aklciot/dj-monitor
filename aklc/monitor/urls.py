@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.urls import path
 
-from . import views
+from . import views, accounts
 
 app_name = "monitor"
 urlpatterns = [
@@ -30,4 +30,7 @@ urlpatterns = [
     path("index_rp/", views.index_rp, name="index_rp"),
     path("repeater/<int:rp_ref>/", views.repeaterDetail, name="repeaterDetail"),
     path("repeater/update/<int:rp_ref>/", views.repeaterUpdate, name="repeaterUpdate"),
+
+    path("login/", accounts.login, name="login"),
+    path("logout/", accounts.logout, name="logout"),
 ]

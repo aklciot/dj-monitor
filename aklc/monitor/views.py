@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.views import generic
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.urls import reverse
 from django.utils import timezone
 import datetime, os
@@ -195,7 +195,8 @@ def index_rp(request):
     return render(request, "monitor/index_rp.html", context)
 
 
-@login_required
+#@login_required
+@permission_required('monitor.view_messagetype')
 def index_msg(request):
     """
     View for message types.

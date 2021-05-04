@@ -96,7 +96,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
     global scriptID
     userdata["nConnCnt"] = userdata["nConnCnt"] + 1
     print(
-        f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}, Message count is {{userdata['nMsgCnt']}}"
+        f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}, Message count is {userdata['nMsgCnt']}"
     )
     sub_topic = "AKLC/#"
     client.subscribe(sub_topic)
