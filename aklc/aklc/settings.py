@@ -132,4 +132,4 @@ STATIC_URL = '/static/'
 
 # Login settings
 LOGOUT_REDIRECT_URL = "monitor:index"
-LOGIN_URL = "/accounts/login"
+LOGIN_URL = "/monitor/login"
