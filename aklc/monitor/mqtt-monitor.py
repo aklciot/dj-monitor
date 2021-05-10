@@ -713,10 +713,12 @@ def sys_monitor():
                 localTime = datetime.time(hour=timezone.localtime().hour, minute=timezone.localtime().minute)
 
                 if localTime > gConfig.SummaryReportTime:
-                    #print("Report time")
+                    print("Report time")
+                    #gConfig.refresh_from_db()
                     # run at certain time of the day
-
-                    if (gConfig.LastSummary.day != datetime.datetime.now().day):
+                    print(f"DB record: {gConfig.LastSummary}, Config day: {gConfig.LastSummary.day}, local day: {timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()).day}, datetime.datetime.now(): {datetime.datetime.now()} ")
+                    if False:
+                    #if (gConfig.LastSummary.day != timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()).day):
                         print("Send 8am messages")
 
                         allUsers = Profile.objects.all()

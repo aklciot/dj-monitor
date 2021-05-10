@@ -664,7 +664,7 @@ class Config(models.Model):
 
     NodeCheckDelay = models.IntegerField(
         default=60,
-        help_text="Minutes after starting script before node start getting marked unavailble",
+        help_text="Minutes after starting script before nodes start getting marked unavailble",
     )
 
     SummaryReportTime = models.TimeField(default = time(hour=8, minute=0), help_text="Time to run the summary report",)
