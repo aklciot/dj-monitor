@@ -27,8 +27,8 @@ Node Details
         <h3>Nodes using this message</h3>
         <table>
           <tr><th>Node</th></tr>
-          {% for node in msgNodes %}
-            <tr><td>{{node.nodeID}}</td></tr>
+          {% for node in msgNodes %} 
+            <tr><td><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a></td></tr>
           {% endfor %}
         </table>
       </div>      

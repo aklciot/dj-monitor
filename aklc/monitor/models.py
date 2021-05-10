@@ -8,6 +8,7 @@ from django.utils import timezone
 from django import template
 import json
 import numbers
+from datetime import time
 
 # Create your models here.
 class Team(models.Model):
@@ -308,7 +309,7 @@ class Node(models.Model):
                             payload["Body"] = body
                             payload["Subject"] = f"Device {self.nodeID} is back up"
                             mqttClient.publish(eMail_topic, json.dumps(payload))
-                            print(f"Email sent to {usr.user.email}")
+                            #print(f"Email sent to {usr.user.email}")
 
                         except Exception as e:
                             print(e)
@@ -360,8 +361,8 @@ class Node(models.Model):
         if "RSSI" in jPayload:
             if isinstance(jPayload["RSSI"], int) or isinstance(jPayload["RSSI"], float):
                 self.RSSI = jPayload["RSSI"]
-            else:
-                print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
+            #else:
+                #print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
         if "Uptime" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime"])
         if "Uptime(m)" in jPayload:
@@ -418,8 +419,8 @@ class Node(models.Model):
 
         if not self.messagetype:
             return jStr
-        print(f"Message type found {self.messagetype.msgName}")
-        print(f"Payload is {payload}")
+        #print(f"Message type found {self.messagetype.msgName}")
+        #print(f"Payload is {payload}")
         cPayload = payload.split(",")
 
         # Don't try and process if a Status message. Status message has 'OK' as second value
@@ -437,7 +438,7 @@ class Node(models.Model):
                     continue
                 lRepeater = False
                 if itm.startswith("RP"):
-                    print(f"Remove {itm} from input")
+                    #print(f"Remove {itm} from input")
                     cPayload.remove(itm)
                     lRepeater = True
                     break
@@ -466,7 +467,7 @@ class Node(models.Model):
 
             jStr[mItem.name] = val
 
-        print(f"jStr is {jStr}")
+        #print(f"jStr is {jStr}")
         return jStr
 
     def bootTimeUpdate(self, inMinutes):
@@ -649,3 +650,31 @@ class JsonError(models.Model):
 
     def __str__(self):
         return f"Node: {self.node.nodeID}, MQTT Q: {self.mqttQueue.descr}, field: {self.fieldKey}, error: {self.message}"
+
+class Config(models.Model):
+    """
+    Only intended for a single record
+    Will contain global config parameters
+    Can contain values needed between system restarts
+    """
+    NodeCheckPeriod = models.IntegerField(
+        default=15,
+        help_text="Seconds between checks for node unavailability",
+    )
+
+    NodeCheckDelay = models.IntegerField(
+        default=60,
+        help_text="Minutes after starting script before node start getting marked unavailble",
+    )
+
+    SummaryReportTime = models.TimeField(default = time(hour=8, minute=0), help_text="Time to run the summary report",)
+
+    MqttStatusPeriod = models.IntegerField(
+        default=5,
+        help_text="Minutes between MQTT status messages",
+    )
+
+    NodeCheckTime = models.DateTimeField(blank=True, null=True)  # system update only
+    LastSummary = models.DateTimeField(blank=True, null=True)  # system update only
+    LastStats = models.DateTimeField(blank=True, null=True)  # system update only
+  
