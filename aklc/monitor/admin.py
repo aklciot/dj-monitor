@@ -15,6 +15,7 @@ from .models import (
     HtmlTemplate,
     JsonError,
     MqttStore,
+    Config,
 )
 
 admin.site.register(Node)
@@ -30,3 +31,4 @@ admin.site.register(MqttMessage)
 admin.site.register(HtmlTemplate)
 admin.site.register(JsonError)
 admin.site.register(MqttStore)
+admin.site.register(Config)

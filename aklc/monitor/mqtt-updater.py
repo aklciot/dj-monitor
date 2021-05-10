@@ -29,6 +29,7 @@ from monitor.models import (
     MessageType,
     MessageItem,
     NodeMsgStats,
+    Config,
 )
 from django.contrib.auth.models import User
 
@@ -57,6 +58,8 @@ else:
     testFlag = False
     scriptID = "DJ_Mon_Updater"
 connectionCount = 1
+msgCount = 0
+msgUpdates = 0
 
 # ********************************************************************
 def testPr(tStr):
@@ -69,6 +72,8 @@ def testPr(tStr):
 """
 This function is called when the MQTT client connects to the MQTT broker
 """
+
+
 def mqtt_on_connect(client, userdata, flags, rc):
     """
       This procedure is called on connection to the mqtt broker
@@ -158,10 +163,11 @@ def thingsboardUpload(node, msg):
 
 # ********************************************************************
 def dictDel(inDict, inKey):
-    #testPr(f"in dict is {inDict}, in key is {inKey}")
+    # testPr(f"in dict is {inDict}, in key is {inKey}")
     if inKey in inDict:
         inDict.pop(inKey)
-    return(inDict)
+    return inDict
+
 
 # ********************************************************************
 def influxUpload(node, influxClient, msg, measurement, aTags, aData):
@@ -169,7 +175,7 @@ def influxUpload(node, influxClient, msg, measurement, aTags, aData):
     A function to load data to Influx
     """
 
-    #if node.influxUpload:  # check if we should do this
+    # if node.influxUpload:  # check if we should do this
     sPayload = msg.payload.decode()
 
     # The following attempts to only store valid data in influx
@@ -243,11 +249,15 @@ def mqtt_on_message(client, userdata, msg):
     | AKLC | Node    | Data & Status direct from a Node, data in JSON format
 
     """
+    global msgCount, msgUpdates
 
     # print("mqtt message received {} : {}".format(msg.topic, msg.payload))
     # separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
     cDict = {}
+
+    msgCount = msgCount + 1
+    dbUpdate = False
 
     # get the payload as a string
     try:
@@ -280,32 +290,41 @@ def mqtt_on_message(client, userdata, msg):
 
                 if node.messagetype:
                     jOut = csv_to_json(sPayload, node)
-                    testPr(f"Messagetype {node.messagetype.msgName} found, jOut is {jOut}")
+                    testPr(
+                        f"Messagetype {node.messagetype.msgName} found, jOut is {jOut}"
+                    )
 
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
+                        dbUpdate = True
 
                     if node.influxUpload:
                         influxUpload(
                             node, InClient, msg, "Gateway", jOut["jTags"], jOut["jData"]
                         )
+                        dbUpdate = True
 
                     lUpdate = False
 
                     if "Version" in jOut["jTags"]:
-                        if node.software != jOut["jTags"]["Version"] and isinstance(jOut["jTags"]["Version"], str):
+                        if node.software != jOut["jTags"]["Version"] and isinstance(
+                            jOut["jTags"]["Version"], str
+                        ):
                             node.software = jOut["jTags"]["Version"]
                             lUpdate = True
 
                     if "HWType" in jOut["jTags"]:
-                        if node.hardware != jOut["jTags"]["HWType"] and isinstance(jOut["jTags"]["HWType"], str):
+                        if node.hardware != jOut["jTags"]["HWType"] and isinstance(
+                            jOut["jTags"]["HWType"], str
+                        ):
                             node.hardware = jOut["jTags"]["HWType"]
                             lUpdate = True
 
                     if lUpdate:
-                        testPr(f"{node.nodeID} updated with HW/SW details HW {jOut['jTags']['HWType']}, SW {jOut['jTags']['Version']}")
+                        testPr(
+                            f"{node.nodeID} updated with HW/SW details HW {jOut['jTags']['HWType']}, SW {jOut['jTags']['Version']}"
+                        )
                         node.save()
-
 
             except Exception as e:
                 testPr(e)
@@ -341,6 +360,7 @@ def mqtt_on_message(client, userdata, msg):
                 testPr(
                     f"Message type found in Gateway message, node is {node.nodeID}, jOut is {jOut}"
                 )
+
                 if node.influxUpload:
                     if node.team:
                         cTeam = node.team.teamID
@@ -358,9 +378,11 @@ def mqtt_on_message(client, userdata, msg):
                     influxUpload(
                         node, InClient, msg, cTeam, jOut["jTags"], jOut["jData"]
                     )
+                    dbUpdate = True
 
                 if node.thingsboardUpload:
                     thingsboardUpload(node, msg)
+                    dbUpdate = True
 
         # elif cTopic[1] == "Network":      # These are status messages sent by gateways and nodes. Data in JSON format
         #  x =1
@@ -396,6 +418,7 @@ def mqtt_on_message(client, userdata, msg):
                     # print("Found node {}".format(cNode))
                     if node.thingsboardUpload:
                         thingsboardUpload(node, msg)
+                        dbUpdate = True
 
                     if node.influxUpload:
                         # testPr("Publish to Influx")
@@ -415,6 +438,7 @@ def mqtt_on_message(client, userdata, msg):
                             jOut["jTags"],
                             jOut["jData"],
                         )
+                        dbUpdate = True
 
                 except Exception as e:
                     testPr(e)
@@ -430,7 +454,7 @@ def mqtt_on_message(client, userdata, msg):
 
         if "NodeID" in jPayload:
 
-            #if "PPC" in jPayload["NodeID"]:
+            # if "PPC" in jPayload["NodeID"]:
             #    print("Yay - People counter")
 
             # print("The NodeID is {}".format(jPayload["NodeID"]))
@@ -453,15 +477,20 @@ def mqtt_on_message(client, userdata, msg):
                 influxUpload(
                     node, InClient, msg, cTopic[0], jOut["jTags"], jOut["jData"]
                 )
+                dbUpdate = True
 
                 if node.thingsboardUpload:
                     thingsboardUpload(node, msg)
+                    dbUpdate = True
 
             except Exception as e:
                 print(f"Team error {e}")
 
         else:
             print("No NodeID in this payload {}".format(sPayload))
+    
+    if dbUpdate:
+        msgUpdates = msgUpdates + 1
 
 
 # ******************************************************************
@@ -579,13 +608,15 @@ def csv_to_json(payload, nNode):
 def mqtt_updater():
     """ The main program that sends updates to the MQTT system
     """
-    global InClient, scriptID, connectionCount
+    global InClient, scriptID, connectionCount, msgCount, msgUpdates
 
     print(" ")
     print(" ")
     print("------------------")
     print("Start Updater v1.5")
     print("------------------")
+
+    gConfig, created = Config.objects.get_or_create(id=1)
 
     # InClient = InfluxDBClient(host='influxdb', port=8086, username='aklciot', password='iotiscool', database='aklc')
     InClient = InfluxDBClient(
@@ -627,17 +658,17 @@ def mqtt_updater():
     print(f"MQTT env set up done - using host {eMqtt_host}")
 
     # get any pickled stats update data
-    try:
-        statsPfile = open("stats.pkl", "rb")
-        stats_data = pickle.load(statsPfile)
-        print("Pickled stats read")
-        statsPfile.close()
-    except:
-        print("Stats pickle file not found")
-        # not found, set last date in the past so we get an update now
-        stats_data = {
-            "LastStats": datetime.datetime.now() + datetime.timedelta(days=-3)
-        }
+    #try:
+    #    statsPfile = open("stats.pkl", "rb")
+    #    stats_data = pickle.load(statsPfile)
+    #    print("Pickled stats read")
+    #    statsPfile.close()
+    #except:
+    #    print("Stats pickle file not found")
+    #    # not found, set last date in the past so we get an update now
+    #    stats_data = {
+    #        "LastStats": datetime.datetime.now() + datetime.timedelta(days=-3)
+    #    }
 
     startTime = timezone.make_aware(
         datetime.datetime.now(), timezone.get_current_timezone()
@@ -647,26 +678,29 @@ def mqtt_updater():
     while True:
         time.sleep(1)
 
-        #if (timezone.now() - checkTimer) > datetime.timedelta(minutes=5):
-        #    checkTimer = timezone.now()  # reset timer
-        #    upTime = (
-        #        timezone.make_aware(
-        #            datetime.datetime.now(), timezone.get_current_timezone()
-        #        )
-        #        - startTime
-        #    )
-        #    payLoad = {
-        #        "scriptName": scriptID,
-        #        "connectionCount": connectionCount,
-        #        "upTime(s)": upTime.total_seconds(),
-        #    }
-        #    print(f"Regular reporting payload is {payLoad}")
-        #    client.publish(
-        #        f"AKLC/monitor/{scriptID}/status",
-        #        payload=json.dumps(payLoad),
-        #        qos=0,
-        #        retain=False,
-        #    )
+        if (timezone.now() - checkTimer) > datetime.timedelta(minutes=gConfig.MqttStatusPeriod):
+            checkTimer = timezone.now()  # reset timer
+            upTime = (
+                timezone.make_aware(
+                    datetime.datetime.now(), timezone.get_current_timezone()
+                )
+                - startTime
+            )
+            payLoad = {
+                "scriptName": scriptID,
+                "connectionCount": connectionCount,
+                "upTime(s)": upTime.total_seconds(),
+                "msgCount": msgCount,
+                "msgUpdates": msgUpdates,
+            }
+            print(f"Regular reporting payload is {payLoad}")
+            client.publish(
+                f"AKLC/monitor/{scriptID}/status",
+                payload=json.dumps(payLoad),
+                qos=0,
+                retain=False,
+            )
+            gConfig.refresh_from_db()
 
         # check if we need to send stats
         tDate = timezone.make_aware(
@@ -674,32 +708,32 @@ def mqtt_updater():
         )
 
         # Check and send messages on the hour
-        if (stats_data["LastStats"].day == tDate.day) and (
-            stats_data["LastStats"].hour == tDate.hour
+        # if (stats_data["LastStats"].day == tDate.day) and (
+        #    stats_data["LastStats"].hour == tDate.hour
+        # ):
+        if (gConfig.LastStats.day == tDate.day) and (
+            gConfig.LastStats.hour == tDate.hour
         ):
             # print("No need to send updates")
             x = 1
         else:
-            client.reconnect()      # put this in as I am betting LWT messages while script is still running
+            # client.reconnect()      # put this in as I am betting LWT messages while script is still running
             upTime = (
                 timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()
                 )
                 - startTime
             )
-            status_json = {
-                "scriptID": scriptID,
-                "ConnectionCount": connectionCount,
-                "upTime(s)": upTime.total_seconds(),
-            }
-            client.publish(
-                f"AKLC/monitor/{scriptID}/Status", payload=json.dumps(status_json)
-            )
-            print(
-                "Time to send radio stats, pickle date is {}, current date is {}".format(
-                    stats_data["LastStats"], tDate
-                )
-            )
+            #status_json = {
+            #    "scriptID": scriptID,
+            #    "ConnectionCount": connectionCount,
+            #    "upTime(s)": upTime.total_seconds(),
+            #}
+            #client.publish(
+            #    f"AKLC/monitor/{scriptID}/status", payload=json.dumps(status_json)
+            #)
+
+            print(f"Time to send radio stats, pickle date is {gConfig.LastStats}, current date is {tDate}")
             tDate2 = timezone.make_aware(
                 datetime.datetime.now() - datetime.timedelta(minutes=5),
                 timezone.get_current_timezone(),
@@ -711,6 +745,7 @@ def mqtt_updater():
             radioNodes = 0
             gatewayTot = 0
             radioGw = 0
+            gConfig.refresh_from_db()
             # print("Number of stat nodes is {}".format(len(aStat)))
             for s in aStat:
                 json_body = [
@@ -766,16 +801,19 @@ def mqtt_updater():
             InClient.write_points(json_body)
             print(json_body)
 
+            gConfig.LastStats = tDate
+            gConfig.save()
+
             # Save the time we sent to stats
-            stats_data["LastStats"] = tDate
-            try:
-                statsPfile = open("stats.pkl", "wb")
-                pickle.dump(stats_data, statsPfile)
-                statsPfile.close()
-                print("Write date {} to pickle file".format(tDate))
-            except Exception as e:
-                print(e)
-                print("Stats Pickle failed")
+            #stats_data["LastStats"] = tDate
+            #try:
+            #    statsPfile = open("stats.pkl", "wb")
+            #    pickle.dump(stats_data, statsPfile)
+            #    statsPfile.close()
+            #    print("Write date {} to pickle file".format(tDate))
+            #except Exception as e:
+            #    print(e)
+            #    print("Stats Pickle failed")
 
 
 # ********************************************************************

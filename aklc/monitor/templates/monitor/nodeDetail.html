@@ -127,7 +127,9 @@ Node Details
         <div id="node_message_table">
           <table>
             <tr><th>Auto update information: </th></tr>
-            <tr><td>Message Type : </td><td>{{node.messagetype.msgName}}</td></tr>
+            {% if  node.messagetype %}
+              <tr><td>Message Type : </td><td><a href="{% url 'monitor:msgDetail' node.messagetype.id %}">{{node.messagetype.msgName}}</a></td></tr>
+            {% endif %}
             <tr><td>Update Thingsboard : </td><td>{{node.thingsboardUpload}}</td></tr>
             <tr><td>Thingsboard credentials: </td><td>{{node.thingsboardCred}}</td></tr>
             <tr><td>Update InfluxDB : </td><td>{{node.influxUpload}}</td></tr>
