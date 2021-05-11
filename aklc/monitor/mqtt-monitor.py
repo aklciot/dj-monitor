@@ -704,21 +704,19 @@ def sys_monitor():
                         ):
                             # print("Node {} not seen for over {} minutes".format(n, n.allowedDowntime))
                             missing_node(n, client)
-                    gConfig.NodeCheckTime = timezone.make_aware(
-                        datetime.datetime.now(), timezone.get_current_timezone()
-                    )
+                    gConfig.NodeCheckTime = timezone.now()
                     gConfig.save()
                 # if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
 
                 localTime = datetime.time(hour=timezone.localtime().hour, minute=timezone.localtime().minute)
-
+                #print(f"DB record: {gConfig.LastSummary}, timezone.now day: {timezone.now()}")
+                #print(f"DB record day: {gConfig.LastSummary.day}, timezone.now day: {timezone.now().day}")
+                #print(f"DB record hour: {gConfig.LastSummary.hour}, timezone.now day: {timezone.now().hour}")
                 if localTime > gConfig.SummaryReportTime:
-                    print("Report time")
-                    #gConfig.refresh_from_db()
+                    #print("Report time")
                     # run at certain time of the day
-                    print(f"DB record: {gConfig.LastSummary}, Config day: {gConfig.LastSummary.day}, local day: {timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()).day}, datetime.datetime.now(): {datetime.datetime.now()} ")
-                    if False:
-                    #if (gConfig.LastSummary.day != timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone()).day):
+
+                    if (gConfig.LastSummary.day != timezone.now().day):
                         print("Send 8am messages")
 
                         allUsers = Profile.objects.all()
@@ -737,7 +735,7 @@ def sys_monitor():
 
                         # update our notification data and save
                         # write the data to the config table
-                        gConfig.LastSummary = timezone.make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+                        gConfig.LastSummary = timezone.now()
                         gConfig.save()
 
                         # function to remove old nodes in 'M'aintenance mode

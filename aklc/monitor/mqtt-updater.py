@@ -703,9 +703,7 @@ def mqtt_updater():
             gConfig.refresh_from_db()
 
         # check if we need to send stats
-        tDate = timezone.make_aware(
-            datetime.datetime.now(), timezone.get_current_timezone()
-        )
+        tDate = timezone.now()
 
         # Check and send messages on the hour
         # if (stats_data["LastStats"].day == tDate.day) and (
