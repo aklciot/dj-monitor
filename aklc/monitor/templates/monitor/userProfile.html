@@ -1,0 +1,37 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+User profile
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+  <div id="user-header"><H2>User profile</H2></div>
+    <div id="user_detail" class="content_block">
+      <div id="user_det_table">
+        <table>
+          <tr><td><b>Name:</b> </td><td class = "wrap_cell">{{ user.first_name }} {{ user.last_name }}</td></tr>
+          <tr><td><b>E Mail:</b> </td><td class = "wrap_cell">{{ user.email }}</td></tr>
+          <tr><td><b>Phone no:</b> </td><td class = "wrap_cell">{{ user.profile.phoneNumber }}</td></tr>
+
+        </table>
+      </div>
+      <div id="user_det_button" class="action_button">
+        <a href="{% url 'monitor:userUpdate' %}" class="btn btn-info" role="button">Update details</a>
+      </div>
+    </div>
+    {% if user.nodeuser_set.all %}
+        <div id="user_node_detail" class="content_block">
+        <b>Linked nodes</b>
+          <div id="user_node_table">
+            <ul>
+            {% for nd in user.nodeuser_set.all %}
+              <li><a href="{% url 'monitor:nodeDetail' nd.nodeID.id %}">{{nd.nodeID.nodeID}}</a></li>
+            {% endfor %}
+            </ul>
+          </div>
+        </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
