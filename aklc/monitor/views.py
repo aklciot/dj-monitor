@@ -22,6 +22,7 @@ from .forms import (
     NodeMessageForm,
     ProjectDetailForm,
     ProjectAddForm,
+    UserProfileForm,
 )
 
 from django.forms import modelformset_factory
@@ -195,8 +196,8 @@ def index_rp(request):
     return render(request, "monitor/index_rp.html", context)
 
 
-#@login_required
-@permission_required('monitor.view_messagetype')
+# @login_required
+@permission_required("monitor.view_messagetype")
 def index_msg(request):
     """
     View for message types.
@@ -334,6 +335,7 @@ def nodeMqttLog(request, node_ref, mq_ref):
     }
     return render(request, "monitor/nodeMqttLog.html", context)
 
+
 @login_required
 def gatewayMqttLog(request, gateway_ref, mq_ref):
     gateway = get_object_or_404(Node, pk=gateway_ref)
@@ -348,7 +350,6 @@ def gatewayMqttLog(request, gateway_ref, mq_ref):
         # "nodeactive": "Y",
     }
     return render(request, "monitor/nodeMqttLog.html", context)
-
 
 
 @login_required
@@ -715,6 +716,43 @@ def projectAdd(request):
     context["prjactive"] = "Y"
     return render(request, "monitor/projectAdd.html", context)
 
+
+@login_required
+def userProfile(request):
+    context = {"data": ""}
+
+    return render(request, "monitor/userProfile.html", context)
+
+
+@login_required
+def userUpdate(request):
+    user = request.user
+    if request.method == "POST":
+        print("Post message received")
+        nf = UserProfileForm(request.POST)
+        if nf.is_valid():
+            print(nf)
+            user.first_name = nf.cleaned_data['firstName']
+            user.last_name = nf.cleaned_data['surName']
+            user.email = nf.cleaned_data['email']
+            user.profile.phoneNumber = nf.cleaned_data['phoneNumber']
+            user.save()
+
+        return HttpResponseRedirect(reverse("monitor:userProfile"))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        nf = UserProfileForm(
+            {
+                "firstName": user.first_name,
+                "surName": user.last_name,
+                "email": user.email,
+                "phoneNumber": user.profile.phoneNumber,
+            }
+        )
+    context = {"form": nf}
+    if testFlag:
+        context["dev_msg"] = "(Development)"
+    return render(request, "monitor/userUpdate.html", context)
 
 def dashBoard(request):
     return render(request, "monitor/NetworkStatusPage.html")
