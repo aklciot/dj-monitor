@@ -709,16 +709,16 @@ def sys_monitor():
                 # if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
 
                 localTime = datetime.time(hour=timezone.localtime().hour, minute=timezone.localtime().minute)
-                print(f"localtime: {localTime}, gConfig.SummaryReportTime: {gConfig.SummaryReportTime}")
+                #print(f"localtime: {localTime}, gConfig.SummaryReportTime: {gConfig.SummaryReportTime}")
 
                 if localTime > gConfig.SummaryReportTime:
-                    print("Report time")
+                    testPr("Report time")
                     # run at certain time of the day
-                    print(f"DB record: {gConfig.LastSummary}, timezone.now day: {timezone.now()}")
-                    print(f"DB record day: {gConfig.LastSummary.day}, timezone.now day: {timezone.now().day}")
-                    print(f"DB record hour: {gConfig.LastSummary.hour}, timezone.now hour: {timezone.now().hour}")
-                    if (gConfig.LastSummary.day != timezone.now().day):
-                        print("Send 8am messages")
+                    #print(f"DB record: {gConfig.LastSummary.astimezone()}, timezone.now day: {timezone.localtime()}")
+                    #print(f"DB record day: {gConfig.LastSummary.astimezone().day}, timezone.localtime day: {timezone.localtime().day}")
+                    #print(f"DB record hour: {gConfig.LastSummary.astimezone().hour}, timezone.localtime hour: {timezone.localtime().hour}")
+                    if (gConfig.LastSummary.astimezone().day != timezone.localtime().day):
+                        testPr("Send 8am messages")
 
                         allUsers = Profile.objects.all()
 
@@ -736,7 +736,7 @@ def sys_monitor():
 
                         # update our notification data and save
                         # write the data to the config table
-                        gConfig.LastSummary = timezone.now()
+                        gConfig.LastSummary = timezone.localtime()
                         gConfig.save()
 
                         # function to remove old nodes in 'M'aintenance mode
