@@ -43,8 +43,24 @@ urlpatterns = [
     path("index_rp/", views.index_rp, name="index_rp"),
     path("repeater/<int:rp_ref>/", views.repeaterDetail, name="repeaterDetail"),
     path("repeater/update/<int:rp_ref>/", views.repeaterUpdate, name="repeaterUpdate"),
-    path("login/", accounts.login, name="login"),
+    path("login/", views.login, name="login"),
     path("logout/", accounts.logout, name="logout"),
     path("userprofile/", views.userProfile, name="userProfile"),
     path("userupdate/", views.userUpdate, name="userUpdate"),
+    path(
+        "password-change/",
+        auth_views.PasswordChangeView.as_view(
+            template_name="accounts/password_change.html",
+            success_url="password-change-done",
+        ),
+        name="passwordChange",
+    ),
+    path(
+        "password-change/password-change-done/",
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name="accounts/password_change_done.html",
+        ),
+        name="passwordChangeDone",
+    ),
+    path("password-reset/", views.passwordReset, name="password-reset"),
 ]

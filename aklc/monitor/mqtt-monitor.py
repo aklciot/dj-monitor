@@ -694,7 +694,7 @@ def sys_monitor():
                 tdRunning = timezone.now() - startedTime
                 if tdRunning.total_seconds() > (
                     gConfig.NodeCheckDelay * 60
-                ):  # dont check if nodes are down until you have been running for at least ten minutes
+                ):  # dont check if nodes are down until you have been running for a while
 
                     allNodes = Node.objects.all()
                     for n in allNodes:
@@ -709,13 +709,14 @@ def sys_monitor():
                 # if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
 
                 localTime = datetime.time(hour=timezone.localtime().hour, minute=timezone.localtime().minute)
-                #print(f"DB record: {gConfig.LastSummary}, timezone.now day: {timezone.now()}")
-                #print(f"DB record day: {gConfig.LastSummary.day}, timezone.now day: {timezone.now().day}")
-                #print(f"DB record hour: {gConfig.LastSummary.hour}, timezone.now day: {timezone.now().hour}")
-                if localTime > gConfig.SummaryReportTime:
-                    #print("Report time")
-                    # run at certain time of the day
+                print(f"localtime: {localTime}, gConfig.SummaryReportTime: {gConfig.SummaryReportTime}")
 
+                if localTime > gConfig.SummaryReportTime:
+                    print("Report time")
+                    # run at certain time of the day
+                    print(f"DB record: {gConfig.LastSummary}, timezone.now day: {timezone.now()}")
+                    print(f"DB record day: {gConfig.LastSummary.day}, timezone.now day: {timezone.now().day}")
+                    print(f"DB record hour: {gConfig.LastSummary.hour}, timezone.now hour: {timezone.now().hour}")
                     if (gConfig.LastSummary.day != timezone.now().day):
                         print("Send 8am messages")
 

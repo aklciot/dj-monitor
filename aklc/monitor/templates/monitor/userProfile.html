@@ -7,6 +7,9 @@ User profile
 {% block web-body %}
 <div class="iot_background">
   <div id="user-header"><H2>User profile</H2></div>
+    <div id="rassword_change_button" class="action_button">
+      <a href="{% url 'monitor:passwordChange' %}" class="btn btn-warning" role="button">Change password</a>
+    </div>
     <div id="user_detail" class="content_block">
       <div id="user_det_table">
         <table>

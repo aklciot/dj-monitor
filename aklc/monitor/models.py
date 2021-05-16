@@ -148,6 +148,7 @@ class Node(models.Model):
         max_length=40,
         blank=True,
         null=True,
+        default="VBat",
         help_text="The attribute name in JSON messages used for battery levels",
     )
     battMonitor = models.BooleanField(default=False)
