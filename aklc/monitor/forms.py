@@ -112,3 +112,6 @@ class UserProfileForm(forms.Form):
     phoneNumber = forms.CharField(required=False)
     #notification = forms.ChoiceField(choices=NOTIFY_ME)
 
+class PasswordResetForm(forms.Form):
+    original = forms.EmailField()
+

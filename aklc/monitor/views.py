@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.models import User
 from django.views import generic
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib import auth, messages
 from django.urls import reverse
 from django.utils import timezone
 import datetime, os
@@ -23,9 +24,11 @@ from .forms import (
     ProjectDetailForm,
     ProjectAddForm,
     UserProfileForm,
+    PasswordResetForm,
 )
 
 from django.forms import modelformset_factory
+from django.contrib.auth.forms import PasswordChangeForm
 
 testFlag = os.getenv("AKLC_TESTING", False)
 
@@ -716,6 +719,25 @@ def projectAdd(request):
     context["prjactive"] = "Y"
     return render(request, "monitor/projectAdd.html", context)
 
+def login(request):
+    if request.user.is_authenticated:
+        return redirect("monitor:index")
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = auth.authenticate(username=username, password=password)
+
+        if user is not None:
+            # correct username and password login the user
+            auth.login(request, user)
+            return redirect("monitor:index")
+
+        else:
+            messages.error(request, "Error wrong username/password")
+
+    return render(request, "accounts/login.html")
+
 
 @login_required
 def userProfile(request):
@@ -754,5 +776,22 @@ def userUpdate(request):
         context["dev_msg"] = "(Development)"
     return render(request, "monitor/userUpdate.html", context)
 
+@login_required
+def passwordChange(request):
+    if request.method == "POST":
+        f = PasswordChangeForm(request.POST)
+        if f.is_valid():
+            f.save(request)
+            #messages.success(request, "Password reset information sent by email")
+            return redirect("monitor:passwordChangeDone")
+    else:
+        f = PasswordResetForm()
+    context = {"form": f}
+    return render(request, "accounts/password_change.html", context)
+
+def passwordReset(request):
+    return
+
 def dashBoard(request):
     return render(request, "monitor/NetworkStatusPage.html")
+
