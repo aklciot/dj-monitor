@@ -26,20 +26,24 @@ Node list
             {% for node in b %}
               <div class="col-md-2 mb-md-2">
                 {% if node.status == 'X' %} 
-                  <div class="card bg-danger">
+                  <div class="card bg-dark text-white">
                 {% elif node.battName %}
                   {% if node.battLevel > node.battWarn %}
-                    <div class="card bg-success">
-                  {% elif node.battLevel > node.battCritical %}
                     <div class="card bg-warning">
+                  {% elif node.battLevel > node.battCritical %}
+                    <div class="card bg-danger">
                   {% else %}
                     <div class="card bg-success">
                   {% endif %}
                 {% else %}
                   <div class="card bg-success">
                 {% endif %}
-                  <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
-                  <p class="card-text">
+                  {% if node.status == 'X' %}
+                    <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center text-white">{{node.nodeID}}</a>
+                  {% else %}
+                    <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
+                  {% endif %}
+                  <p class="card-body">
                   {% if node.descr %} {{node.descr }} <br> {% endif %}
                   {% if node.battName %}Current battery value: {{node.battLevel}}<br>{% endif %}
                   {% if node.status == 'X' %}
