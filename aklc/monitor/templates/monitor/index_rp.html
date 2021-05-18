@@ -20,27 +20,27 @@ Repeater list
           {% for node in gRow %}
             <div class="col mb-md-3">
             {% if node.status == "X" %}
-              <div class="card bg-danger">
+              <div class="card bg-dark text-white">
             {% else %}
               {% if node.upTime %}
                 {% if node.upTime > 10080 %}
                   <div class="card bg-success"> 
-                {% elif node.upTime > 1440 %}
-                  <div class="card bg-info">
                 {% else %}
-                  <div class="card bg-warning">
+                  <div class="card bg-info">
                 {% endif %}
               {% else %}
                 {% if node.onlineTime > 10080 %}
                   <div class="card bg-success">
-                {% elif node.onlineTime > 1440 %}
-                  <div class="card bg-info">    
                 {% else %}
-                  <div class="card bg-warning">
+                  <div class="card bg-info">              
                 {% endif %}
               {% endif %}
             {% endif %}
+            {% if node.status == "X" %}
+              <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link card-header text-center text-white">{{node.nodeID}}</a>
+            {% else %}
               <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
+            {% endif %}
               <p class="card-text">
               {% if node.descr %} {{node.descr }} <br> {% endif %}
               {% if node.team %}Project: {{node.team.teamID}} <br>{% endif %}
