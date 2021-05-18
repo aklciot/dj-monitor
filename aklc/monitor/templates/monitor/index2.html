@@ -27,13 +27,13 @@ Node list
               <div class="col-md-2 mb-md-2">
                 {% if node.status == 'X' %} 
                   <div class="card bg-dark text-white">
-                {% elif node.battName %}
+                {% elif node.battName and node.battLevel > 0 %}
                   {% if node.battLevel > node.battWarn %}
-                    <div class="card bg-warning">
-                  {% elif node.battLevel > node.battCritical %}
-                    <div class="card bg-danger">
-                  {% else %}
                     <div class="card bg-success">
+                  {% elif node.battLevel > node.battCritical %}
+                    <div class="card bg-warning">
+                  {% else %}
+                    <div class="card bg-danger">
                   {% endif %}
                 {% else %}
                   <div class="card bg-success">
