@@ -1,0 +1,99 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="{% static "monitor/style.css" %}">    
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+    {% block pagerefresh %}<meta http-equiv="refresh" content="600">{% endblock %}
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-132422735-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-132422735-2');
+    </script>
+
+    <title>
+	    {% block title %}
+        Node monitoring system
+      {% endblock %}
+    </title>
+  </head>
+  <body class="iot_background">
+    {% block background %}
+      <div class="w3-container">
+    {% endblock %}
+    
+      <div id="logged_in">
+        {% if user.is_authenticated %}
+          Hi <a href="{% url 'monitor:userProfile' %}">{{ user.username|capfirst }} <a href="{% url 'monitor:logout' %}">Logout</a>
+        {% else %}
+          Not logged in 
+        {% endif %}
+      </div>
+      <div id="pg_header">
+        <img src="{% static 'monitor/LOGO.png' %}" class = "logo">
+        <span class="heading_text">Innovate Auckland Monitoring {{ dev_msg }}</span>
+      </div>
+
+      {% block navbar %}
+      <nav class="w3-bar w3-dark-grey">
+       
+            {% if nodeactive %}
+              <a class="w3-bar-item w3-button w3-black w3-mobile" href="{% url 'monitor:index' %}">Data nodes</a>
+            {% else %}
+              <a class="w3-bar-item w3-button w3-mobile" href="{% url 'monitor:index' %}">Data nodes</a>
+            {% endif %}
+
+            {% if repeateractive %}
+              <a class="w3-bar-item w3-button w3-black w3-mobile" href="{% url 'monitor:index_rp' %}">Repeaters</a>
+            {% else %}
+              <a class="w3-bar-item w3-button w3-mobile" href="{% url 'monitor:index_rp' %}">Repeaters</a>
+            {% endif %}
+            
+            {% if gatewayactive %}
+              <a class="w3-bar-item w3-button w3-black w3-mobile" href="{% url 'monitor:index_gw' %}">Gateways</a>
+            {% else %}
+              <a class="w3-bar-item w3-button w3-mobile" href="{% url 'monitor:index_gw' %}">Gateways</a>
+            {% endif %}
+
+            {% if perms.monitor.change_messagetype %}
+              {% if msgactive %}
+                <a class="w3-bar-item w3-button w3-black w3-mobile" href="{% url 'monitor:index_msg' %}">Message Types</a>
+              {% else %}
+                <a class="w3-bar-item w3-button w3-mobile" href="{% url 'monitor:index_msg' %}">Message Types</a>
+              {% endif %}
+            {% endif %}
+
+            {% if perms.monitor.change_team %}
+              {% if prjactive %}
+                <a class="w3-bar-item w3-button w3-black w3-mobile" href="{% url 'monitor:index_prj' %}">Projects</a>
+              {% else %}
+                <a class="w3-bar-item w3-button w3-mobile" href="{% url 'monitor:index_prj' %}">Projects</a>
+              {% endif %}
+            {% endif %}
+
+            <a class="w3-bar-item w3-button w3-mobile" href="{% url 'monitor:DashboardStatus' %}">Dashboard status</a>
+
+            <a class="w3-bar-item w3-button w3-right w3-mobile" href="{% url 'monitor:about' %}">About</a>
+            <a class="w3-bar-item w3-button w3-right w3-mobile" href="{% url 'monitor:contact' %}">Contact</a>
+
+      </nav>
+      {% endblock %}
+
+      {% block web-body %}
+        Node monitor
+      {% endblock %}
+      <!-- START FOOTER -->
+      <div class="footer w3-container">
+        <span class="">Auckland Council Innovation team</span>
+      </div>
+      <!-- END FOOTER -->
+    </div>
+
+  </body>
+</html>

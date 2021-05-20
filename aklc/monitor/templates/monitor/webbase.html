@@ -73,7 +73,7 @@
             {% if gatewayactive %}
               <li class="nav-item active">
             {% else %}
-              <li class="nav-item"></li>
+              <li class="nav-item">
             {% endif %}
               <a class="nav-link" href="{% url 'monitor:index_gw' %}">Gateways</a>
             </li>
@@ -82,7 +82,7 @@
               {% if msgactive %}
                 <li class="nav-item active">
               {% else %}
-                <li class="nav-item"></li>
+                <li class="nav-item">
               {% endif %}
                 <a class="nav-link" href="{% url 'monitor:index_msg' %}">Message Types</a>
               </li>
@@ -91,13 +91,19 @@
               {% if prjactive %}
                 <li class="nav-item active">
               {% else %}
-                <li class="nav-item"></li>
+                <li class="nav-item">
               {% endif %}
                 <a class="nav-link" href="{% url 'monitor:index_prj' %}">Projects</a>
               </li>
             {% endif %}
             <li class="nav-item"></li>
               <a class="nav-link" href="{% url 'monitor:DashboardStatus' %}">Dashboard status</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'monitor:about' %}">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'monitor:contact' %}">Contact</a>
             </li>
           </ul>
         </div>

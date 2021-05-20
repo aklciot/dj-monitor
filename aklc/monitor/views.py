@@ -795,3 +795,8 @@ def passwordReset(request):
 def dashBoard(request):
     return render(request, "monitor/NetworkStatusPage.html")
 
+def about(request):
+    return render(request, "monitor/about.html")
+
+def contact(request):
+    return render(request, "monitor/contact.html")
