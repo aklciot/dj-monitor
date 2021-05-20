@@ -1,0 +1,32 @@
+{% extends "monitor/webbase.html" %}
+{% load static %}
+
+{% block title %}
+Contact
+{% endblock %}
+
+{% block background %}
+  {% comment %}<div class="container-fluid background1" style="background-image: url({% static 'monitor/Gateway.jpg' %});">{% endcomment %}
+{% endblock %}
+
+{% block web-body %}
+<div id="contacts" class="container-fluid">
+    If you would like to know more about the systems, data and projects which have their data here please use the contacts below.
+
+    <ul>
+    <li>
+    <a href="mailto:warren.davies@aucklandcouncil.govt.nz">Warren Davies</a>
+    <br>Warren is the IoT lead and is always a great place to start.
+    </li>
+    <li>
+    <a href="mailto:aldo.coetzee@aucklandcouncil.govt.nz">Aldo Coetzee</a>
+    <br>Aldo is the 'Chief Engineer' and gets to do much of the work. He is great at creating new sensors, is a master at using 3D printers and has installed many of our system in the field.
+    </li>
+    <li>
+    <a href="mailto:jim.west@aucklandcouncil.govt.nz">Jim West</a>
+    <br>Just a back room geek really.
+    </li>
+    </ul>
+
+</div>
+{% endblock %}
