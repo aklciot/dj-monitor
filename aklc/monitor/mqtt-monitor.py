@@ -340,6 +340,9 @@ def mqtt_on_message(client, userdata, msg):
 
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
+        if not is_json(sPayload):
+          print(f"Project message revived, should be JSON but was topic: {msg.topic} & payload{sPayload}")
+          return
         jPayload = json.loads(sPayload)
         testPr(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
         if cTopic[0] in dProj:
