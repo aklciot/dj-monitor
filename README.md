@@ -3,6 +3,8 @@ The IoT monitoring system uses the MQTT queue data to provide informatio and ale
 
 [Changes to the system](docs/change_log.md)
 
+[New system documentation](docs/index.md)
+
 ### Web system
 The web system is how users an interact with node/repeater/gateway data. Some basic data about the nodes can be saved and latest data received is also available. This is a standard [django](https://www.djangoproject.com/) system.
 
