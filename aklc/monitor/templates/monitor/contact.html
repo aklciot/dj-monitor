@@ -12,22 +12,26 @@ Contact
 {% block web-body %}
 <div id="contacts" class="container-fluid"> 
     If you would like to know more about the systems, data and projects which have their data here please use the contacts below.
-
-    <ul>
-    <li>
-    <a href="mailto:jim.west@aucklandcouncil.govt.nz">Jim West</a>
-    <br>Developed this monitoring system.
-    </li>
-    <li>
-    <a href="mailto:warren.davies@aucklandcouncil.govt.nz">Warren Davies</a>
-    <br>Warren is the IoT lead and is always a great place to start with for new ideas.
-    </li>
-    <li>
-    <a href="mailto:aldo.coetzee@aucklandcouncil.govt.nz">Aldo Coetzee</a>
-    <br>Aldo is the 'Chief Engineer' and gets to do much of the work. He is great at creating new sensors, is a master at using 3D printers and has installed many of our system in the field.
-    </li>
-
-    </ul>
+    <div class="media border p-3">
+      <div class="media-body">
+        <a href="mailto:jim.west@aucklandcouncil.govt.nz">Jim West</a>
+        <br>Developed this monitoring system.
+      </div>
+    </div>
+    <div class="media border p-3">
+      <div class="media-body">
+      <a href="mailto:warren.davies@aucklandcouncil.govt.nz">Warren Davies</a>
+      <br>Warren is the IoT lead and is always a great place to start with for new ideas.
+    </div>
+      <img src="{% static 'monitor/superman.jpg'%}" alt="Warren" style="width:200px;height:280px" class="rounded">
+    </div>
+    <div class="media border p-3">
+      <div class="media-body">
+        <a href="mailto:aldo.coetzee@aucklandcouncil.govt.nz">Aldo Coetzee</a>
+        <br>Aldo is the 'Chief Engineer' and gets to do much of the work. He is great at creating new sensors, is a master at using 3D printers and has installed many of our systems in the field.
+      </div>
+      <img src="{% static 'monitor/Aldo.jpg'%}" alt="Warren" style="width:200px;height:296px" class="rounded">
+    </div>
 
 </div>
 {% endblock %}
