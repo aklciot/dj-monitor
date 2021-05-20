@@ -1,5 +1,9 @@
 # Change log
 This log records changes and updates to the IoT monitoring system
+### 21 May 2021
+* Added an about page with basic data of the innovation systems and links to more information
+* Added a contacts page with email links
+* Fixed issue with data going to a topic outside of AKLC/# with CSV data
 
 ### 18 May 2021
 * Modified display of **node** page:
