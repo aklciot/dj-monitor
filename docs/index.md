@@ -5,7 +5,7 @@ This is a system used by the innovation team to monitor the sensors, repeater & 
 [The changes to the system are recorded here](change_log.md)
 
 ## User guide
-TBD
+[User guide here](userguide.md)
 
 ## Issues and requests for changes
 Please record any problems, issues or enhancement requests on the github site for this system.
