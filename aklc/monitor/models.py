@@ -700,3 +700,6 @@ class notificationLog(models.Model):
 
     class Meta:
         ordering = ["-sent"]
+
+    def __str__(self):
+        return f"Address: {self.address}, Sent: {self.sent}"

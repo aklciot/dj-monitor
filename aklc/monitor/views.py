@@ -13,7 +13,7 @@ import datetime, os
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 
-from .models import Node, NodeUser, MessageType, MessageItem, Team, MqttQueue, MqttStore
+from .models import Node, NodeUser, MessageType, MessageItem, Team, MqttQueue, MqttStore, notificationLog
 
 from .forms import (
     NodeDetailForm,
@@ -235,12 +235,14 @@ def nodeDetail(request, node_ref):
     aNodeUsers = NodeUser.objects.filter(
         nodeID=node
     )  # users that have an 'interest' in this node
+    nLog = notificationLog.objects.filter(node=node)[:50]
     context = {
         "node": node,
         "user": request.user,
         "aNodeUser": aNodeUsers,
         "passData": passList,
         "nodeactive": "Y",
+        "nLog": nLog,
     }
     if testFlag:
         context["dev_msg"] = "(Development)"
@@ -257,12 +259,14 @@ def gatewayDetail(request, gateway_ref):
         nodeID=gw
     )  # users that have an 'interest' in this gateway
     passList = gw.passOnData()  # nodes that have been processed by this gateway
+    nLog = notificationLog.objects.filter(node=gw)[:50]
     context = {
         "gateway": gw,
         "user": request.user,
         "aNodeUser": aNodeUsers,
         "passData": passList,
         "gatewayactive": "Y",
+        "nLog": nLog,
     }
     if testFlag:
         context["dev_msg"] = "(Development)"
@@ -279,12 +283,14 @@ def repeaterDetail(request, rp_ref):
         nodeID=rp
     )  # users that have an 'interest' in this gateway
     passList = rp.passOnData()  # nodes that have been processed by this repeater
+    nLog = notificationLog.objects.filter(node=rp)[:50]
     context = {
         "node": rp,
         "user": request.user,
         "aNodeUser": aNodeUsers,
         "passData": passList,
         "repeateractive": "Y",
+        "nLog": nLog,
     }
     if testFlag:
         context["dev_msg"] = "(Development)"
@@ -332,10 +338,13 @@ def nodeMqttLog(request, node_ref, mq_ref):
         "node": node,
         "mqttQueue": mqttQueue,
         "mqMsg": mqMsg,
-        # "aNodeUser": aNodeUsers,
-        # "passData": passList,
-        # "nodeactive": "Y",
     }
+    if node.isGateway:
+        context["gatewayactive"] = "Y"
+    elif node.isRepeater:
+        context["repeateractive"] = "Y"
+    else:
+        context["nodeactive"] = "Y"
     return render(request, "monitor/nodeMqttLog.html", context)
 
 
@@ -348,9 +357,7 @@ def gatewayMqttLog(request, gateway_ref, mq_ref):
         "node": gateway,
         "mqttQueue": mqttQueue,
         "mqMsg": mqMsg,
-        # "aNodeUser": aNodeUsers,
-        # "passData": passList,
-        # "nodeactive": "Y",
+        "gatewayactive": "Y",
     }
     return render(request, "monitor/nodeMqttLog.html", context)
 
@@ -421,45 +428,6 @@ def nodeModNotify(request, node_ref):
     return render(request, "monitor/nodeModNotify.html", context)
 
 
-"""
-@login_required
-def nodeModOtherNotify(request, node_ref):
-    
-    #View to process the form that manages OTHER peoples notification preferences for a specific node
-    
-    node = get_object_or_404(Node, pk=node_ref)
-    nu, created = NodeUser.objects.get_or_create(nodeID=node, user=request.user)
-
-    if request.method == "POST":
-        nf = NodeNotifyForm(request.POST)
-        if nf.is_valid():
-            # print("Get or create")
-
-            if nf.cleaned_data["notification"] == "N":
-                nu.delete()
-            else:
-                if nf.cleaned_data["sms"] or nf.cleaned_data["email"]:
-                    nu.sms = nf.cleaned_data["sms"]
-                    nu.email = nf.cleaned_data["email"]
-                    nu.save()
-                else:
-                    nu.delete()
-        return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
-
-    context = {"form": nf, "node": node}
-    if node.isGateway:
-        context["gatewayactive"] = "Y"
-    elif node.isRepeater:
-        context["repeateractive"] = "Y"
-    else:
-        context["nodeactive"] = "Y"
-    if testFlag:
-        context["dev_msg"] = "(Development)"
-    return render(request, "monitor/nodeModOtherNotify.html", context)
-"""
 
 
 @login_required
@@ -504,12 +472,9 @@ def nodeModNotifyOthers(request, node_ref):
 @login_required
 def nodeMsgUpdate(request, node_ref):
     node = get_object_or_404(Node, pk=node_ref)
-    print("BP1")
     if request.method == "POST":
-        print("Post message received")
         nf = NodeMessageForm(request.POST, instance=node)
         if nf.is_valid():
-            print("Valid BK 1")
             nf.save()
 
             return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
