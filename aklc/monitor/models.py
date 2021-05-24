@@ -310,7 +310,7 @@ class Node(models.Model):
                             payload["Body"] = body
                             payload["Subject"] = f"Device {self.nodeID} is back up"
                             mqttClient.publish(eMail_topic, json.dumps(payload))
-                            #print(f"Email sent to {usr.user.email}")
+                            # print(f"Email sent to {usr.user.email}")
 
                         except Exception as e:
                             print(e)
@@ -362,8 +362,8 @@ class Node(models.Model):
         if "RSSI" in jPayload:
             if isinstance(jPayload["RSSI"], int) or isinstance(jPayload["RSSI"], float):
                 self.RSSI = jPayload["RSSI"]
-            #else:
-                #print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
+            # else:
+            # print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
         if "Uptime" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime"])
         if "Uptime(m)" in jPayload:
@@ -420,8 +420,8 @@ class Node(models.Model):
 
         if not self.messagetype:
             return jStr
-        #print(f"Message type found {self.messagetype.msgName}")
-        #print(f"Payload is {payload}")
+        # print(f"Message type found {self.messagetype.msgName}")
+        # print(f"Payload is {payload}")
         cPayload = payload.split(",")
 
         # Don't try and process if a Status message. Status message has 'OK' as second value
@@ -439,7 +439,7 @@ class Node(models.Model):
                     continue
                 lRepeater = False
                 if itm.startswith("RP"):
-                    #print(f"Remove {itm} from input")
+                    # print(f"Remove {itm} from input")
                     cPayload.remove(itm)
                     lRepeater = True
                     break
@@ -468,13 +468,13 @@ class Node(models.Model):
 
             jStr[mItem.name] = val
 
-        #print(f"jStr is {jStr}")
+        # print(f"jStr is {jStr}")
         return jStr
 
     def bootTimeUpdate(self, inMinutes):
         """Updates a node uptime and boottime based on seconds uptime"""
         if isinstance(inMinutes, (float, int)):
-           nNum = inMinutes
+            nNum = inMinutes
         elif isinstance(inMinutes, (str)):
             nNum = float(inMinutes)
         else:
@@ -656,15 +656,16 @@ class JsonError(models.Model):
     def __str__(self):
         return f"Node: {self.node.nodeID}, MQTT Q: {self.mqttQueue.descr}, field: {self.fieldKey}, error: {self.message}"
 
+
 class Config(models.Model):
     """
     Only intended for a single record
     Will contain global config parameters
     Can contain values needed between system restarts
     """
+
     NodeCheckPeriod = models.IntegerField(
-        default=15,
-        help_text="Seconds between checks for node unavailability",
+        default=15, help_text="Seconds between checks for node unavailability",
     )
 
     NodeCheckDelay = models.IntegerField(
@@ -672,14 +673,30 @@ class Config(models.Model):
         help_text="Minutes after starting script before nodes start getting marked unavailble",
     )
 
-    SummaryReportTime = models.TimeField(default = time(hour=8, minute=0), help_text="Time to run the summary report",)
+    SummaryReportTime = models.TimeField(
+        default=time(hour=8, minute=0), help_text="Time to run the summary report",
+    )
 
     MqttStatusPeriod = models.IntegerField(
-        default=5,
-        help_text="Minutes between MQTT status messages",
+        default=5, help_text="Minutes between MQTT status messages",
     )
 
     NodeCheckTime = models.DateTimeField(blank=True, null=True)  # system update only
     LastSummary = models.DateTimeField(blank=True, null=True)  # system update only
     LastStats = models.DateTimeField(blank=True, null=True)  # system update only
-  
+
+
+class notificationLog(models.Model):
+    node = models.ForeignKey(
+        Node, null=True, on_delete=models.SET_NULL, related_name="notifNode"
+    )
+    user = models.ForeignKey(
+        User, null=True, on_delete=models.SET_NULL, related_name="notifUser"
+    )
+    address = models.CharField(max_length=300)
+    sent = models.DateTimeField(auto_now=True)
+    subject = models.CharField(max_length=300, blank=True, null=True)
+    body = models.TextField()
+
+    class Meta:
+        ordering = ["-sent"]
