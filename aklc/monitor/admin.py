@@ -16,6 +16,7 @@ from .models import (
     JsonError,
     MqttStore,
     Config,
+    notificationLog,
 )
 
 admin.site.register(Node)
@@ -32,3 +33,4 @@ admin.site.register(HtmlTemplate)
 admin.site.register(JsonError)
 admin.site.register(MqttStore)
 admin.site.register(Config)
+admin.site.register(notificationLog)

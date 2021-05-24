@@ -1,0 +1,20 @@
+{% extends "monitor/email-base.html" %}
+
+{% block title %}
+Node DOWN notification
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ user.username|capfirst }}</p>
+
+  <div id="devices">
+
+    Not great news. This is to inform you that <b><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a></b>
+    {% if node.descr %}
+      which is <b>{{node.descr}}</b>
+    {% endif %}  
+    has been non-responsive for more than {{ node/allowedDownTime }} minutes.
+
+  </div>  
+
+{% endblock %}

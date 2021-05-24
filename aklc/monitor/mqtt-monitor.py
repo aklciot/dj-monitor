@@ -19,7 +19,7 @@ sys.path.append("/code/aklc")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aklc.settings")
 django.setup()
 
-from monitor.models import Node, Profile, NodeUser, Team, NodeGateway, Config
+from monitor.models import Node, Profile, NodeUser, Team, NodeGateway, Config, notificationLog
 from django.contrib.auth.models import User
 
 # all config parameters are set as environment variables, best practice in docker environment
@@ -400,9 +400,7 @@ def missing_node(node, mqtt_client):
         node.notification_sent = True
         node.upTime = 0
         node.onlineTime = 0
-        node.status_sent = timezone.make_aware(
-            datetime.datetime.now(), timezone.get_current_timezone()
-        )
+        node.status_sent = timezone.now()
         node.save()
         cDict = {"node": node}  # dict to pass to template
         uNotify = NodeUser.objects.filter(
@@ -418,6 +416,7 @@ def missing_node(node, mqtt_client):
                         f"monitor/{usr.nodeID.email_down_template.fileName}",
                         mqtt_client,
                         usr.user,
+                        node=node,
                     )
                 else:
                     sendNotifyEmail(
@@ -426,28 +425,25 @@ def missing_node(node, mqtt_client):
                         "monitor/email-down.html",
                         mqtt_client,
                         usr.user,
+                        node=node,
                     )
                 print(
                     f"Node {node.nodeID} marked as down and email notification sent to {usr.user.username}"
                 )
-                usr.lastemail = timezone.make_aware(
-                    datetime.datetime.now(), timezone.get_current_timezone()
-                )
+                usr.lastemail = timezone.now()
             if usr.sms:
                 sendNotifySMS(node, "monitor/sms-down.html", mqtt_client, usr.user)
                 print(
                     f"Node {node.nodeID} marked as down and SMS notification sent to {usr.user.username}"
                 )
                 usr.smsSent = True
-                usr.lastsms = timezone.make_aware(
-                    datetime.datetime.now(), timezone.get_current_timezone()
-                )
+                usr.lastsms = timezone.now()
             usr.save()
     return
 
 
 # ******************************************************************************
-def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
+def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser, node=None):
     """A function to send email notification
     """
     payload = {}
@@ -468,6 +464,11 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
         mqtt_client.publish(eMail_topic, json.dumps(payload))
         print(f"Email sent to {mailUser.email}")
 
+        notifLog = notificationLog(address=mailUser.email, subject=payload["Subject"], body=body, user=mailUser)
+        if node:
+            notifLog.node = node
+        notifLog.save()
+
     except Exception as e:
         print(e)
         print(f"Houston, we have an error {e}")
@@ -476,7 +477,7 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser):
 
 
 # ******************************************************************************
-def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
+def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser, node=None):
     """A function to send email notification
     """
     testPr(f"Send an SMS to {mailUser.username} about {inNode.nodeID}")
@@ -497,6 +498,10 @@ def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser):
         else:
             payload["Text"] = body
         mqtt_client.publish(sMs_topic, json.dumps(payload))
+
+        notifLog = notificationLog(address=uProfile.phoneNumber, body=payload["Text"], user=mailUser, node=inNode)
+        notifLog.save()
+
     except Exception as e:
         print(e)
         print(f"Houston, we have an error {e}")
@@ -604,6 +609,7 @@ def sendDailyReminder(mqttClient):
                             f"monitor/{nu.nodeID.email_reminder_template.fileName}",
                             mqttClient,
                             usr,
+                            node=nu,
                         )
 
 
