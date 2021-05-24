@@ -140,13 +140,46 @@ Repeater Details
           </table>
         </div>
 
+
+
         <div id="node_notify_button" class="action_button">
           <a href="{% url 'monitor:nodeMsgUpdate' node.id %}" class="btn btn-info" role="button">Auto Update control</a>
         </div>
       </div>
   
     {% endif %}
-  
+
+    {% if nLog %}
+      <div id="node_notififications" class="content_block"> 
+        <div id="node_notifications_table">
+          <h4>Notifications sent</h4>
+          <table class="table table-bordered text-white">
+            <tr>
+              <th>Date/time</th>
+              <th>User</th>
+              <th>Address</th>
+              <th>Subject</th>
+              <th>Body</th>
+            </tr>
+            {% for n in nLog %}
+              <tr>
+                <td>{{n.sent}}</td>
+                {% if n.user %}
+                  <td>{{n.user.username}}</td>
+                {% else %}
+                  <td> </td>
+                {% endif %}
+                <td>{{n.address}}</td>
+                <td>{{n.subject}}</td>
+                <td>{{n.body}}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+
   </div>
 
   <a href="{% url 'monitor:index' %}" class="btn btn-info" role="button">Home</a>

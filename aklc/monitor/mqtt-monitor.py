@@ -187,8 +187,8 @@ def mqtt_on_message(client, userdata, msg):
             AKLC_Gateway = AKLC_Gateway + 1
             cPayload = sPayload.split(",")  # the payload should be CSV
             if len(cPayload) < 2:
-                print(
-                    f"Gateway msg (AKLC/Gateway) received, invalid payload {sPayload}"
+                testPr(
+                    f"Gateway msg {msg.topic} received, invalid payload {sPayload}"
                 )
                 return
             testPr(
