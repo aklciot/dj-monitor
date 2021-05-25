@@ -3,6 +3,7 @@ This log records changes and updates to the IoT monitoring system
 ### 25 May 2021
 * Created a log in the database for notifications sent out by this system.
 * Notifications sent out are displayed on the node/repeater/gateway pages
+* Improvements to the node data automatically collected
 
 ### 21 May 2021
 * Added an about page with basic data of the innovation systems and links to more information

@@ -462,17 +462,6 @@ def mqtt_on_message(client, userdata, msg):
                 node = Node.objects.get(nodeID=jPayload["NodeID"])
                 # print("Node retrieved")
                 jOut = json_for_influx(sPayload, node)
-                # json_body = [
-                #    {
-                #        "measurement": cTopic[0],
-                #        "tags": jOut["jTags"],
-                #        "fields": jOut["jData"],
-                #    }
-                # ]
-
-                # print(f"Influx updated from TEAM message, package is {json_body}")
-                # if not InClient.write_points(json_body):
-                #    print("Influx update failed")
 
                 influxUpload(
                     node, InClient, msg, cTopic[0], jOut["jTags"], jOut["jData"]
@@ -657,18 +646,6 @@ def mqtt_updater():
 
     print(f"MQTT env set up done - using host {eMqtt_host}")
 
-    # get any pickled stats update data
-    #try:
-    #    statsPfile = open("stats.pkl", "rb")
-    #    stats_data = pickle.load(statsPfile)
-    #    print("Pickled stats read")
-    #    statsPfile.close()
-    #except:
-    #    print("Stats pickle file not found")
-    #    # not found, set last date in the past so we get an update now
-    #    stats_data = {
-    #        "LastStats": datetime.datetime.now() + datetime.timedelta(days=-3)
-    #    }
 
     startTime = timezone.make_aware(
         datetime.datetime.now(), timezone.get_current_timezone()
