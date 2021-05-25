@@ -280,41 +280,50 @@ class Node(models.Model):
         """
         This function updates node data when a new message is received.
         """
-        self.lastseen = timezone.make_aware(
-            datetime.datetime.now(), timezone.get_current_timezone()
-        )
+        self.lastseen = timezone.now()
         if self.status != "C":  # if the node is not current, update the status
             self.textStatus = "Online"
             self.status = "C"
-            self.cameOnline = timezone.make_aware(
-                datetime.datetime.now(), timezone.get_current_timezone()
-            )
+            self.cameOnline = timezone.now()
 
-            if self.email_up_template:
-                for usr in self.nodeuser_set.all():
-                    if usr.email:
-                        print(f"Send email to {usr.user} that {self.nodeID} is back up")
+            
+            for usr in self.nodeuser_set.all():
+                if usr.email:
+                    print(f"Send email to {usr.user} that {self.nodeID} is back up")
 
-                        payload = {}
-                        try:
-                            inDataDict = {"node": self}
-                            # inDataDict["web_base_url"] = eWeb_Base_URL
-                            inDataDict["user"] = usr.user
+                    payload = {}
+                    try:
+                        inDataDict = {"node": self}
+                        # inDataDict["web_base_url"] = eWeb_Base_URL
+                        inDataDict["user"] = usr.user
+                        if self.email_up_template:
                             t = template.loader.get_template(
                                 f"monitor/{self.email_up_template.fileName}"
                             )
-                            body = t.render(inDataDict)
+                        else:
+                            t = template.loader.get_template(
+                                f"monitor/email/email-node-up.html"
+                            )
+                        body = t.render(inDataDict)
 
-                            payload["To"] = usr.user.email
-                            payload["From"] = emailFrom
-                            payload["Body"] = body
-                            payload["Subject"] = f"Device {self.nodeID} is back up"
-                            mqttClient.publish(eMail_topic, json.dumps(payload))
-                            # print(f"Email sent to {usr.user.email}")
+                        payload["To"] = usr.user.email
+                        payload["From"] = emailFrom
+                        payload["Body"] = body
+                        payload["Subject"] = f"Device {self.nodeID} is back up"
+                        mqttClient.publish(eMail_topic, json.dumps(payload))
+                        # print(f"Email sent to {usr.user.email}")
+                        notifLog = notificationLog(
+                            address=usr.user.email,
+                            subject=payload["Subject"],
+                            body=body,
+                            user=usr.user,
+                            node=self,
+                        )
+                        notifLog.save()
 
-                        except Exception as e:
-                            print(e)
-                            print(f"Houston, we have an error {e}")
+                    except Exception as e:
+                        print(e)
+                        print(f"Houston, we have an error {e}")
 
         minDelta = (
             timezone.make_aware(
@@ -374,6 +383,12 @@ class Node(models.Model):
             self.software = jPayload["Version"]
         if "Type" in jPayload and isinstance(jPayload["Type"], str):
             self.hardware = jPayload["Type"]
+        if self.battName:
+            if self.battName in jPayload:
+                self.battLevel = jPayload[self.battName]
+        else:
+            if "VBat" in jPayload:
+                self.battLevel = jPayload["VBat"]
         self.save()
         return ()
 

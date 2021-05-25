@@ -218,13 +218,15 @@ def mqtt_on_message(client, userdata, msg):
                 else:
                     nd.isRepeater = False
                 nJson = nd.make_json(sPayload)
+                sJson = json.dumps(nJson)
+                nd.jsonLoad(sJson)
                 testPr(f"JSON is {nJson}")
-                if "Uptime" in nJson:
-                    nd.bootTimeUpdate(nJson["Uptime"])
-                if "Uptime(s)" in nJson:
-                    nd.bootTimeUpdate(nJson["Uptime(s)"] / 60)
-                if "Uptime(m)" in nJson:
-                    nd.bootTimeUpdate(nJson["Uptime(m)"])
+                #if "Uptime" in nJson:
+                #    nd.bootTimeUpdate(nJson["Uptime"])
+                #if "Uptime(s)" in nJson:
+                #    nd.bootTimeUpdate(nJson["Uptime(s)"] / 60)
+                #if "Uptime(m)" in nJson:
+                #    nd.bootTimeUpdate(nJson["Uptime(m)"])
                 nd.save()
 
             # Check and update the gateways info

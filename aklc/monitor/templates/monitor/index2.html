@@ -45,7 +45,7 @@ Node list
                   {% endif %}
                   <p class="card-body">
                   {% if node.descr %} {{node.descr }} <br> {% endif %}
-                  {% if node.battName %}Current battery value: {{node.battLevel}}<br>{% endif %}
+                  {% if node.battLevel %}Current battery value: {{node.battLevel}}<br>{% endif %}
                   {% if node.status == 'X' %}
                     Missing for: {{ node.lastseen|timesince }} 
                   {% else %}
