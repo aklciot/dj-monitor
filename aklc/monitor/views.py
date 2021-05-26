@@ -411,7 +411,12 @@ def nodeModNotify(request, node_ref):
                     nu.save()
                 else:
                     nu.delete()
-        return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
+        if node.isGateway:
+            return HttpResponseRedirect(reverse("monitor:gatewayDetail", args=[node.id]))
+        elif node.isRepeater:
+            return HttpResponseRedirect(reverse("monitor:repeaterDetail", args=[node.id]))
+        else:
+            return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
     # if a GET (or any other method) we'll create a blank form
     else:
         nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})

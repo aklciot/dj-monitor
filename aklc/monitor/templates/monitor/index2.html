@@ -3,7 +3,7 @@
 {% comment %}
 {% block pagerefresh %}<meta http-equiv="refresh" content="300">{% endblock %}
 {% endcomment %}
-{% block pagerefresh %}<meta http-equiv="refresh" content="30">{% endblock %}
+{% block pagerefresh %}<meta http-equiv="refresh" content="300">{% endblock %}
 
 {% block title %}
 Node list
@@ -38,28 +38,38 @@ Node list
                 {% else %}
                   <div class="card bg-success">
                 {% endif %}
-                  {% if node.status == 'X' %}
-                    <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center text-white">{{node.nodeID}}</a>
-                  {% else %}
-                    <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
-                  {% endif %}
-                  <p class="card-body">
-                  {% if node.descr %} {{node.descr }} <br> {% endif %}
-                  {% if node.battLevel %}Current battery value: {{node.battLevel}}<br>{% endif %}
-                  {% if node.status == 'X' %}
-                    Missing for: {{ node.lastseen|timesince }} 
-                  {% else %}
-                    {% if node.upTime %}
-                      Up time : {{ node.startTime|timesince }}
+                  <div class="card-header">
+                    {% if node.status == 'X' %}
+                      <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link text-white">{{node.nodeID}}</a>
                     {% else %}
-                      Online for: {{ node.cameOnline|timesince }}
+                      <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link text-body">{{node.nodeID}}</a>
                     {% endif %}
-                  {% endif %}
-                  {% comment %}    {% if node.battName %}
-                    Current value: {{node.battLevel}}
-                  {% endif %}
-                  {% endcomment %}
-                  </p>
+                    
+                    {% for nu in node.nodeuser_set.all %}
+                      {% if user == nu.user %}
+                        {% if nu.email %}
+                          <img src="{% static 'monitor/email.png' %}" class="float-right">
+                        {% endif %}
+                        {% if nu.sms %}
+                          <img src="{% static 'monitor/sms.png' %}" class="float-right">
+                        {% endif %}
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                  
+                  <div class="card-body">
+                    {% if node.descr %} {{node.descr }} <br> {% endif %}
+                    {% if node.battLevel %}Current battery value: {{node.battLevel}}<br>{% endif %}
+                    {% if node.status == 'X' %}
+                      Missing for: {{ node.lastseen|timesince }} 
+                    {% else %}
+                      {% if node.upTime %}
+                        Up time : {{ node.startTime|timesince }}
+                      {% else %}
+                        Online for: {{ node.cameOnline|timesince }}
+                      {% endif %}
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             {% endfor %}
