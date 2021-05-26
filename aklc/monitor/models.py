@@ -8,6 +8,7 @@ from django.utils import timezone
 from django import template
 import json
 import numbers
+import html2text
 from datetime import time
 
 # Create your models here.
@@ -315,7 +316,7 @@ class Node(models.Model):
                         notifLog = notificationLog(
                             address=usr.user.email,
                             subject=payload["Subject"],
-                            body=body,
+                            body=html2text.html2text(body),
                             user=usr.user,
                             node=self,
                         )

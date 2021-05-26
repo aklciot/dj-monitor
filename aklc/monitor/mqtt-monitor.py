@@ -7,7 +7,7 @@ import paho.mqtt.publish as publish
 import json
 import datetime
 import time
-import pickle
+import html2text
 from django.utils import timezone
 from django import template
 from email.mime.text import MIMEText
@@ -19,7 +19,15 @@ sys.path.append("/code/aklc")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aklc.settings")
 django.setup()
 
-from monitor.models import Node, Profile, NodeUser, Team, NodeGateway, Config, notificationLog
+from monitor.models import (
+    Node,
+    Profile,
+    NodeUser,
+    Team,
+    NodeGateway,
+    Config,
+    notificationLog,
+)
 from django.contrib.auth.models import User
 
 # all config parameters are set as environment variables, best practice in docker environment
@@ -44,7 +52,7 @@ AKLC_Status = 0
 AKLC_Network = 0
 AKLC_Node = 0
 AKLC_Gateway = 0
-dProj = {}              # empty dict for project totals
+dProj = {}  # empty dict for project totals
 
 if testFlag:
     scriptID = "DJ_Mon_Script-TEST"
@@ -187,9 +195,7 @@ def mqtt_on_message(client, userdata, msg):
             AKLC_Gateway = AKLC_Gateway + 1
             cPayload = sPayload.split(",")  # the payload should be CSV
             if len(cPayload) < 2:
-                testPr(
-                    f"Gateway msg {msg.topic} received, invalid payload {sPayload}"
-                )
+                testPr(f"Gateway msg {msg.topic} received, invalid payload {sPayload}")
                 return
             testPr(
                 f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}"
@@ -221,11 +227,11 @@ def mqtt_on_message(client, userdata, msg):
                 sJson = json.dumps(nJson)
                 nd.jsonLoad(sJson)
                 testPr(f"JSON is {nJson}")
-                #if "Uptime" in nJson:
+                # if "Uptime" in nJson:
                 #    nd.bootTimeUpdate(nJson["Uptime"])
-                #if "Uptime(s)" in nJson:
+                # if "Uptime(s)" in nJson:
                 #    nd.bootTimeUpdate(nJson["Uptime(s)"] / 60)
-                #if "Uptime(m)" in nJson:
+                # if "Uptime(m)" in nJson:
                 #    nd.bootTimeUpdate(nJson["Uptime(m)"])
                 nd.save()
 
@@ -343,8 +349,10 @@ def mqtt_on_message(client, userdata, msg):
     else:  # not AKLC, a team subscription
         # the payload is expected to be json
         if not is_json(sPayload):
-          print(f"Project message received, should be JSON but was topic: {msg.topic} & payload: {sPayload}")
-          return
+            print(
+                f"Project message received, should be JSON but was topic: {msg.topic} & payload: {sPayload}"
+            )
+            return
         jPayload = json.loads(sPayload)
         testPr(f"Team message arrived, topic is {msg.topic}, payload is {sPayload}")
         if cTopic[0] in dProj:
@@ -445,7 +453,9 @@ def missing_node(node, mqtt_client):
 
 
 # ******************************************************************************
-def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser, node=None):
+def sendNotifyEmail(
+    inSubject, inDataDict, inTemplate, mqtt_client, mailUser, node=None
+):
     """A function to send email notification
     """
     payload = {}
@@ -466,7 +476,12 @@ def sendNotifyEmail(inSubject, inDataDict, inTemplate, mqtt_client, mailUser, no
         mqtt_client.publish(eMail_topic, json.dumps(payload))
         print(f"Email sent to {mailUser.email}")
 
-        notifLog = notificationLog(address=mailUser.email, subject=payload["Subject"], body=body, user=mailUser)
+        notifLog = notificationLog(
+            address=mailUser.email,
+            subject=payload["Subject"],
+            body=html2text.html2text(body),
+            user=mailUser,
+        )
         if node:
             notifLog.node = node
         notifLog.save()
@@ -501,7 +516,12 @@ def sendNotifySMS(inNode, inTemplate, mqtt_client, mailUser, node=None):
             payload["Text"] = body
         mqtt_client.publish(sMs_topic, json.dumps(payload))
 
-        notifLog = notificationLog(address=uProfile.phoneNumber, body=payload["Text"], user=mailUser, node=inNode)
+        notifLog = notificationLog(
+            address=uProfile.phoneNumber,
+            body=payload["Text"],
+            user=mailUser,
+            node=inNode,
+        )
         notifLog.save()
 
     except Exception as e:
@@ -719,16 +739,18 @@ def sys_monitor():
                     gConfig.save()
                 # if (timezone.now() - startTime) > datetime.timedelta(hours=1):    # this section is ony run if the script has been running for an hour
 
-                localTime = datetime.time(hour=timezone.localtime().hour, minute=timezone.localtime().minute)
-                #print(f"localtime: {localTime}, gConfig.SummaryReportTime: {gConfig.SummaryReportTime}")
+                localTime = datetime.time(
+                    hour=timezone.localtime().hour, minute=timezone.localtime().minute
+                )
+                # print(f"localtime: {localTime}, gConfig.SummaryReportTime: {gConfig.SummaryReportTime}")
 
                 if localTime > gConfig.SummaryReportTime:
                     testPr("Report time")
                     # run at certain time of the day
-                    #print(f"DB record: {gConfig.LastSummary.astimezone()}, timezone.now day: {timezone.localtime()}")
-                    #print(f"DB record day: {gConfig.LastSummary.astimezone().day}, timezone.localtime day: {timezone.localtime().day}")
-                    #print(f"DB record hour: {gConfig.LastSummary.astimezone().hour}, timezone.localtime hour: {timezone.localtime().hour}")
-                    if (gConfig.LastSummary.astimezone().day != timezone.localtime().day):
+                    # print(f"DB record: {gConfig.LastSummary.astimezone()}, timezone.now day: {timezone.localtime()}")
+                    # print(f"DB record day: {gConfig.LastSummary.astimezone().day}, timezone.localtime day: {timezone.localtime().day}")
+                    # print(f"DB record hour: {gConfig.LastSummary.astimezone().hour}, timezone.localtime hour: {timezone.localtime().hour}")
+                    if gConfig.LastSummary.astimezone().day != timezone.localtime().day:
                         testPr("Send 8am messages")
 
                         allUsers = Profile.objects.all()
@@ -764,9 +786,11 @@ def sys_monitor():
         except Exception as e:
             print(f"Houston, we have an error {e}")
 
-        #print(f"{timezone.now()} - {statusTimer} is {timezone.now() - statusTimer}, and diff is {datetime.timedelta(minutes=gConfig.MqttStatusPeriod)}")
+        # print(f"{timezone.now()} - {statusTimer} is {timezone.now() - statusTimer}, and diff is {datetime.timedelta(minutes=gConfig.MqttStatusPeriod)}")
 
-        if (timezone.now() - statusTimer) > datetime.timedelta(minutes=gConfig.MqttStatusPeriod):
+        if (timezone.now() - statusTimer) > datetime.timedelta(
+            minutes=gConfig.MqttStatusPeriod
+        ):
             print("Send MQTT Status")
             statusTimer = timezone.now()  # reset timer
             upTime = (
@@ -785,7 +809,7 @@ def sys_monitor():
                 "AKLC_Network": AKLC_Network,
                 "AKLC_Status": AKLC_Status,
                 "AKLC_Gateway": AKLC_Gateway,
-                #"Projects": dProj,
+                # "Projects": dProj,
             }
             for p, v in dProj.items():
                 payLoad[p] = v
