@@ -167,7 +167,7 @@ Node Details
                 {% endif %}
                 <td>{{n.address}}</td>
                 <td>{{n.subject}}</td>
-                <td>{{n.body}}</td>
+                <td>{{n.body|striptags}}</td>
               </tr>
             {% endfor %}
           </table>

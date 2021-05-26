@@ -36,25 +36,38 @@ Repeater list
                 {% endif %}
               {% endif %}
             {% endif %}
-            {% if node.status == "X" %}
-              <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link card-header text-center text-white">{{node.nodeID}}</a>
-            {% else %}
-              <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link card-header text-center">{{node.nodeID}}</a>
-            {% endif %}
-              <p class="card-text">
-              {% if node.descr %} {{node.descr }} <br> {% endif %}
-              {% if node.team %}Project: {{node.team.teamID}} <br>{% endif %}
-              HW: {{ node.hardware }} SW version : {{node.software}} <br>
-              {% if node.status != "X" %}
-                {% if node.upTime %}
-                  Up time : {{ node.startTime|timesince }}
+
+              <div class="card-header">
+                {% if node.status == "X" %}
+                  <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link text-white">{{node.nodeID}}</a>
                 {% else %}
-                  Uptime : N/A (Online for: {{ node.cameOnline|timesince }})
+                  <a href="{% url 'monitor:repeaterDetail' node.id %}" class="stretched-link text-body">{{node.nodeID}}</a>
                 {% endif %}
-              {% else %}
-                Status: Down
-              {% endif %}
-              </p>
+                {% for nu in node.nodeuser_set.all %}
+                  {% if user == nu.user %}
+                    {% if nu.email %}
+                      <img src="{% static 'monitor/email.png' %}" class="float-right">
+                    {% endif %}
+                    {% if nu.sms %}
+                      <img src="{% static 'monitor/sms.png' %}" class="float-right">
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <div class="card-text">
+                {% if node.descr %} {{node.descr }} <br> {% endif %}
+                {% if node.team %}Project: {{node.team.teamID}} <br>{% endif %}
+                HW: {{ node.hardware }} SW version : {{node.software}} <br>
+                {% if node.status != "X" %}
+                  {% if node.upTime %}
+                    Up time : {{ node.startTime|timesince }}
+                  {% else %}
+                    Uptime : N/A (Online for: {{ node.cameOnline|timesince }})
+                  {% endif %}
+                {% else %}
+                  Status: Down
+                {% endif %}
+              </div>
             
               </div>
             </div>
