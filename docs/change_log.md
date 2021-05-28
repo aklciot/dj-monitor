@@ -1,5 +1,8 @@
 # Change log
 This log records changes and updates to the IoT monitoring system
+### 28 May 2021
+* Changed notification icons to outlines
+
 ### 27 May 2021
 * Remove HTML from message body when storing & displaying email notifications
 * Add notification type icons on Node, repeater & Gateway menus

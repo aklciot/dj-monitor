@@ -1,5 +1,5 @@
 # dj-monitor
-The IoT monitoring system uses the MQTT queue data to provide informatio and alerting functions.
+The IoT monitoring system uses the MQTT queue data to provide information and alerting functions.
 
 [Changes to the system](docs/change_log.md)
 
