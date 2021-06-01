@@ -719,3 +719,22 @@ class notificationLog(models.Model):
 
     def __str__(self):
         return f"Address: {self.address}, Sent: {self.sent}"
+
+class webNotification(models.Model):
+    node = models.ForeignKey(
+        Node, null=True, on_delete=models.SET_NULL, related_name="webNotify"
+    )
+    user = models.ForeignKey(
+        User, null=True, on_delete=models.SET_NULL, related_name="webNotify"
+    )
+    email = models.BooleanField(blank=True, default=False)
+    sms = models.BooleanField(blank=True, default=False)
+    address = models.CharField(max_length=300)
+    sent = models.DateTimeField(auto_now=True)
+    subject = models.CharField(max_length=300, blank=True, null=True)
+    body = models.TextField()
+    processed = models.BooleanField(default=False)
+    processed_dt = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["-sent"]

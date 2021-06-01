@@ -1,5 +1,8 @@
 # Change log
 This log records changes and updates to the IoT monitoring system
+### 1 June 2021
+* Added ability to modify notifications for other people, for users who are classified as 'staff'.
+
 ### 28 May 2021
 * Changed notification icons to outlines
 

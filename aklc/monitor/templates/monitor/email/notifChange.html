@@ -1,0 +1,13 @@
+{% extends "monitor/email-base.html" %}
+
+{% block title %}
+Node notification change
+{% endblock %}
+
+{% block email-body %}
+  <p>Hi {{ person.username|capfirst }}</p>
+
+  <p>This is a message to let you know that <span class="nodename">{{nu.nodeID}}</span> has had notifications modified.
+  <br>
+  The user {{ nu.user }} will no longer erceive any notifications.
+{% endblock %}

@@ -17,6 +17,7 @@ from .models import (
     MqttStore,
     Config,
     notificationLog,
+    webNotification,
 )
 
 admin.site.register(Node)
@@ -34,3 +35,4 @@ admin.site.register(JsonError)
 admin.site.register(MqttStore)
 admin.site.register(Config)
 admin.site.register(notificationLog)
+admin.site.register(webNotification)

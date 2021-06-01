@@ -13,7 +13,17 @@ import datetime, os
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 
-from .models import Node, NodeUser, MessageType, MessageItem, Team, MqttQueue, MqttStore, notificationLog
+from .models import (
+    Node,
+    NodeUser,
+    MessageType,
+    MessageItem,
+    Team,
+    MqttQueue,
+    MqttStore,
+    notificationLog,
+    webNotification,
+)
 
 from .forms import (
     NodeDetailForm,
@@ -25,10 +35,13 @@ from .forms import (
     ProjectAddForm,
     UserProfileForm,
     PasswordResetForm,
+    NodeUserDetailForm,
 )
 
 from django.forms import modelformset_factory
 from django.contrib.auth.forms import PasswordChangeForm
+
+from .support import sendNotification
 
 testFlag = os.getenv("AKLC_TESTING", False)
 
@@ -57,8 +70,7 @@ def index(request):
     nodeByTeam = nodeByTeam.exclude(isGateway=True).exclude(isRepeater=True)
 
     noTeamNode = nodeByTeam.exclude(team__isnull=False)
-    # print(f"All nodes {len(nodeByTeam)}, no team nodes {len(noTeamNode)}")
-    # print(" ")
+
     nodeBlock = []
     if len(nodeByTeam) != len(noTeamNode):
         teamDict = {"Name": nodeByTeam[0].team.teamID, "teamBlock": []}
@@ -177,7 +189,7 @@ def index_rp(request):
     )
     # Remove anything that is not a repeater
     nodeList = nodeList.exclude(isRepeater=False)
-    print(f"There are {len(nodeList)} repeaters")
+
     rp_block = []  # will be a list of lists
     nCnt = 1
     innerList = []
@@ -244,6 +256,8 @@ def nodeDetail(request, node_ref):
         "nodeactive": "Y",
         "nLog": nLog,
     }
+    if request.user.is_staff:
+        context["staff"] = "Y"
     if testFlag:
         context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeDetail.html", context)
@@ -412,9 +426,13 @@ def nodeModNotify(request, node_ref):
                 else:
                     nu.delete()
         if node.isGateway:
-            return HttpResponseRedirect(reverse("monitor:gatewayDetail", args=[node.id]))
+            return HttpResponseRedirect(
+                reverse("monitor:gatewayDetail", args=[node.id])
+            )
         elif node.isRepeater:
-            return HttpResponseRedirect(reverse("monitor:repeaterDetail", args=[node.id]))
+            return HttpResponseRedirect(
+                reverse("monitor:repeaterDetail", args=[node.id])
+            )
         else:
             return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
     # if a GET (or any other method) we'll create a blank form
@@ -422,6 +440,10 @@ def nodeModNotify(request, node_ref):
         nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
 
     context = {"form": nf, "node": node}
+    # print(f"User is: {request.user.username}, staff status is {request.user.is_staff}")
+    if request.user.is_staff:
+        context["staff"] = "Y"
+
     if node.isGateway:
         context["gatewayactive"] = "Y"
     elif node.isRepeater:
@@ -431,8 +453,6 @@ def nodeModNotify(request, node_ref):
     if testFlag:
         context["dev_msg"] = "(Development)"
     return render(request, "monitor/nodeModNotify.html", context)
-
-
 
 
 @login_required
@@ -441,28 +461,67 @@ def nodeModNotifyOthers(request, node_ref):
     View to process the form that manages other peoples notification preferences for a specific node
     """
     node = get_object_or_404(Node, pk=node_ref)
-    people = User.objects.all()
+    admins = User.objects.filter(is_superuser=True)
+
+    # NodeUserFormSet = modelformset_factory(
+    #    NodeUser, form=NodeUserDetailForm, extra=1, can_delete=True
+    # )
+
+    NodeUserFormSet = modelformset_factory(
+        NodeUser, fields=("user", "sms", "email"), extra=1, can_delete=True
+    )
 
     if request.method == "POST":
-        nf = NodeNotifyForm(request.POST)
-        if nf.is_valid():
+        fItems = NodeUserFormSet(
+            request.POST,
+            queryset=node.nodeuser_set.all().exclude(user=request.user),
+            prefix="ITEMS",
+        )
+        if fItems.is_valid():
             # print("Get or create")
 
-            if nf.cleaned_data["notification"] == "N":
-                nu.delete()
-            else:
-                if nf.cleaned_data["sms"] or nf.cleaned_data["email"]:
-                    nu.sms = nf.cleaned_data["sms"]
-                    nu.email = nf.cleaned_data["email"]
-                    nu.save()
+            for i in fItems:
+                # print(i.__dict__)
+                if i.is_valid() and i.cleaned_data:
+                    i.instance.nodeID = node
+                    context = {"nu": i.instance}
+                    if i.cleaned_data["DELETE"]:
+
+                        sendNotification(
+                            admins,
+                            inEmail=True,
+                            inSubject=f"A notification was deleted from {node.nodeID}",
+                            context=context,
+                            inTemplate="monitor/email/notifChange.html",
+                            inNode = node,
+                        )
+                        i.instance.delete()
+                    elif i.cleaned_data["sms"] or i.cleaned_data["email"]:
+                        i.save()
+                    else:  # no choices
+                        sendNotification(
+                            admins,
+                            inEmail=True,
+                            inSubject=f"A notification was deleted from {node.nodeID}",
+                            context=context,
+                            inTemplate="monitor/email/notifChange.html",
+                            inNode = node,
+                        )
+                        i.instance.delete()
                 else:
-                    nu.delete()
+                    # print(f"{i} is invalid")
+                    x = 1
+
         return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
     # if a GET (or any other method) we'll create a blank form
     else:
-        nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
+        # nf = NodeUserDetailForm(instance=node)
+        fItems = NodeUserFormSet(
+            queryset=node.nodeuser_set.all().exclude(user=request.user), prefix="ITEMS"
+        )
 
-    context = {"form": nf, "node": node}
+    context = {"node": node, "fItems": fItems}
+
     if node.isGateway:
         context["gatewayactive"] = "Y"
     elif node.isRepeater:
@@ -471,7 +530,7 @@ def nodeModNotifyOthers(request, node_ref):
         context["nodeactive"] = "Y"
     if testFlag:
         context["dev_msg"] = "(Development)"
-    return render(request, "monitor/nodeModNotify.html", context)
+    return render(request, "monitor/nodeModNotifyOthers.html", context)
 
 
 @login_required
@@ -648,10 +707,10 @@ def projectUpdate(request, prj_ref):
     prj = get_object_or_404(Team, pk=prj_ref)
     # print("BP1")
     if request.method == "POST":
-        print("Post message received")
+        # print("Post message received")
         nf = ProjectDetailForm(request.POST, instance=prj)
         if nf.is_valid():
-            print("Valid BK 1")
+            # print("Valid BK 1")
             nf.save()
 
             return HttpResponseRedirect(
@@ -663,14 +722,14 @@ def projectUpdate(request, prj_ref):
 
     context = {"form": nf, "prj": prj}
     context["prjactive"] = "Y"
-    print(context)
+    # print(context)
     return render(request, "monitor/projectUpdate.html", context)
 
 
 @login_required
 def projectAdd(request):
     # prj = get_object_or_404(Team, pk=prj_ref)
-    print("BP1")
+
     if request.method == "POST":
         print("Post message received")
         nf = ProjectAddForm(request.POST)
@@ -682,12 +741,12 @@ def projectAdd(request):
             return HttpResponseRedirect(reverse("monitor:projectDetail", args=[prj.id]))
     # if a GET (or any other method) we'll create a blank form
     else:
-        print("BP2")
         nf = ProjectAddForm()
 
     context = {"form": nf}
     context["prjactive"] = "Y"
     return render(request, "monitor/projectAdd.html", context)
+
 
 def login(request):
     if request.user.is_authenticated:
@@ -720,14 +779,12 @@ def userProfile(request):
 def userUpdate(request):
     user = request.user
     if request.method == "POST":
-        print("Post message received")
         nf = UserProfileForm(request.POST)
         if nf.is_valid():
-            print(nf)
-            user.first_name = nf.cleaned_data['firstName']
-            user.last_name = nf.cleaned_data['surName']
-            user.email = nf.cleaned_data['email']
-            user.profile.phoneNumber = nf.cleaned_data['phoneNumber']
+            user.first_name = nf.cleaned_data["firstName"]
+            user.last_name = nf.cleaned_data["surName"]
+            user.email = nf.cleaned_data["email"]
+            user.profile.phoneNumber = nf.cleaned_data["phoneNumber"]
             user.save()
 
         return HttpResponseRedirect(reverse("monitor:userProfile"))
@@ -746,27 +803,32 @@ def userUpdate(request):
         context["dev_msg"] = "(Development)"
     return render(request, "monitor/userUpdate.html", context)
 
+
 @login_required
 def passwordChange(request):
     if request.method == "POST":
         f = PasswordChangeForm(request.POST)
         if f.is_valid():
             f.save(request)
-            #messages.success(request, "Password reset information sent by email")
+            # messages.success(request, "Password reset information sent by email")
             return redirect("monitor:passwordChangeDone")
     else:
         f = PasswordResetForm()
     context = {"form": f}
     return render(request, "accounts/password_change.html", context)
 
+
 def passwordReset(request):
     return
+
 
 def dashBoard(request):
     return render(request, "monitor/NetworkStatusPage.html")
 
+
 def about(request):
     return render(request, "monitor/about.html")
+
 
 def contact(request):
     return render(request, "monitor/contact.html")
