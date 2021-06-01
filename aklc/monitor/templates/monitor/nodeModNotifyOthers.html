@@ -1,0 +1,38 @@
+{% extends "monitor/webbase.html" %}
+
+{% block title %}
+Node Notification
+{% endblock %}
+
+{% block web-body %}
+<div class="iot_background">
+
+  <div id="node-header"><h3>Notifications update for <b>{{node.nodeID}}</b> for other people</h3></div>
+  
+    <div id="node_update" class="content_block">
+      Change how others are notified
+      <div id="node_oth_not_table">
+        <form action="{% url 'monitor:nodeModNotifyOthers' node.id %}" method="POST">
+          {% csrf_token %}
+          {{ fItems.management_form }}
+          <table>
+            <tr><th>User</th><th>SMS</th> <th>Email</th> <th>Delete</th></tr>
+
+            {% for itm in fItems %}
+              <tr><td>{{ itm.user }}</td><td>{{ itm.sms }}</td><td>{{ itm.email }}</td><td>{{ itm.DELETE }}</td><td>{{ itm.id }}</td><td>{{ itm.errors }}</td></tr>
+            {% endfor %}
+
+          </table>
+        <input type="submit" value="Submit">
+        <span id="node_cancel_button" class="cancel_button">
+          <a href="{% url 'monitor:nodeDetail' node.id %}" class="btn btn-link btn-outline-warning" role="button">Cancel</a>
+        </span>
+
+        </form>
+      </div>
+    </div>
+    
+  </div>
+ 
+</div>
+{% endblock %}

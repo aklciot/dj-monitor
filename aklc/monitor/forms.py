@@ -1,5 +1,5 @@
 from django import forms
-from .models import Node, MessageType, MessageItem, Team
+from .models import Node, MessageType, MessageItem, Team, NodeUser
 
 
 class ContactForm(forms.Form):
@@ -115,3 +115,12 @@ class UserProfileForm(forms.Form):
 class PasswordResetForm(forms.Form):
     original = forms.EmailField()
 
+class NodeUserDetailForm(forms.ModelForm):
+    class Meta:
+        model = NodeUser
+        fields = [
+            "user",
+            "email",
+            "sms",
+        ]
+        

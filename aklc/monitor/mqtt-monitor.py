@@ -10,7 +10,7 @@ import time
 import html2text
 from django.utils import timezone
 from django import template
-from email.mime.text import MIMEText
+#from email.mime.text import MIMEText
 
 # timezone.make_aware(yourdate, timezone.get_current_timezone())
 

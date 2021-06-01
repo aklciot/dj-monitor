@@ -12,10 +12,7 @@ These pages will display all the nodes, repeaters & gateways currently operating
 The nodes are separated by the projects they aare asssociated with, and nodes unallocated are shown at the bottom. Some data is shown on the node icon, the system attempts to get this data from the message queue, but it is also usful to add it yourself.
 
 The colour of the node depicts their status
-| Colour | Meaning | Notes |
-| --- | --- | --- |
-| Green | Battery OK | or no battery info available |
-| Orange | Warning battery level |
-| Red | Critical battery level |
-| Black |node down | The time from the last message to when it is marked down can be configured in the **Update details** section |
-
+  - Green: Battery OK or no battery info available
+  - Orange: Warning battery level
+  - Red: Critical battery level
+  - Black: Node down, the time from the last message to when it is marked down can be configured in the **Update details** section
