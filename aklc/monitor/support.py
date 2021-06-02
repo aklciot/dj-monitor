@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 from django import template
 
+# ******************************************************************
 def sendNotification(recipients, context, inEmail=True, inSubject="", inTemplate="", inNode=None):
     """
     """
@@ -29,6 +30,7 @@ def sendNotification(recipients, context, inEmail=True, inSubject="", inTemplate
                 subject=inSubject,
                 body=cBody,
                 email=True,
+                user=r,
             )
             if inNode:
                 wn.node = inNode
