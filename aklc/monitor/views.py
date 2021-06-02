@@ -485,18 +485,47 @@ def nodeModNotifyOthers(request, node_ref):
                 if i.is_valid() and i.cleaned_data:
                     i.instance.nodeID = node
                     context = {"nu": i.instance}
+                    context["formData"] = i.cleaned_data
                     if i.cleaned_data["DELETE"]:
-
                         sendNotification(
                             admins,
                             inEmail=True,
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
-                            inTemplate="monitor/email/notifChange.html",
-                            inNode = node,
+                            inTemplate="monitor/email/notifRemove.html",
+                            inNode=node,
                         )
                         i.instance.delete()
                     elif i.cleaned_data["sms"] or i.cleaned_data["email"]:
+                        nuOld = NodeUser.objects.filter(
+                            nodeID=node, user=i.instance.user
+                        )
+                        if len(nuOld) == 0:
+                            context["origSMS"] = "None"
+                            context["origEmail"] = "None"
+                            sendNotification(
+                                admins,
+                                inEmail=True,
+                                inSubject=f"A notification was added for {node.nodeID}",
+                                context=context,
+                                inTemplate="monitor/email/notifChange.html",
+                                inNode=node,
+                            )
+
+                        else:
+                            context["origSMS"] = nuOld[0].sms
+                            context["origEmail"] = nuOld[0].email
+                            if (nuOld[0].sms != i.cleaned_data["sms"]) or (
+                                nuOld[0].email != i.cleaned_data["email"]
+                            ):
+                                sendNotification(
+                                    admins,
+                                    inEmail=True,
+                                    inSubject=f"A notification was changed for {node.nodeID}",
+                                    context=context,
+                                    inTemplate="monitor/email/notifChange.html",
+                                    inNode=node,
+                                )
                         i.save()
                     else:  # no choices
                         sendNotification(
@@ -504,8 +533,8 @@ def nodeModNotifyOthers(request, node_ref):
                             inEmail=True,
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
-                            inTemplate="monitor/email/notifChange.html",
-                            inNode = node,
+                            inTemplate="monitor/email/notifRemove.html",
+                            inNode=node,
                         )
                         i.instance.delete()
                 else:
