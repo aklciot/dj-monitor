@@ -29,6 +29,7 @@ def sendNotification(recipients, context, inEmail=True, inSubject="", inTemplate
                 subject=inSubject,
                 body=cBody,
                 email=True,
+                user=r,
             )
             if inNode:
                 wn.node = inNode

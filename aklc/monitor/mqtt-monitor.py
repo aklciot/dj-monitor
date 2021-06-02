@@ -27,6 +27,7 @@ from monitor.models import (
     NodeGateway,
     Config,
     notificationLog,
+    webNotification,
 )
 from django.contrib.auth.models import User
 
@@ -634,6 +635,52 @@ def sendDailyReminder(mqttClient):
                             node=nu,
                         )
 
+# ******************************************************************
+def sendWebNotify(mqtt_client):
+    """
+    Sends notifications left in the webNotification table
+    """
+    wN = webNotification.objects.filter(processed=False)
+
+    print("Checking for web notifications")
+
+    if wN:
+        print(f"We have {len(wN)} web notifications to process")
+
+        for w in wN:
+            if w.email:
+                payload= {"To": w.address}
+                payload["From"] = eMail_From
+                payload["Body"] = w.body
+                payload["Subject"] = w.subject
+                mqtt_client.publish(eMail_topic, json.dumps(payload))
+                print(f"Email sent to {w.address}")
+
+                
+            if w.sms:
+                payload = {"Number": w.address}
+                if testFlag:
+                    payload["Text"] = "(Dev) " + w.body
+                else:
+                    payload["Text"] = w.body
+                mqtt_client.publish(sMs_topic, json.dumps(payload))
+                print(f"SMS sent to {w.address}")
+
+            notifLog = notificationLog(
+                address=w.address,
+                subject=w.subject,
+                body=html2text.html2text(w.body),
+            )
+            if w.user:
+                notifLog.user = w.user
+            if w.node:
+                notifLog.node = w.node
+            notifLog.save()
+            w.processed = True
+            w.processed_dt = timezone.now()
+            w.save()
+
+
 
 # ******************************************************************
 def sys_monitor():
@@ -782,6 +829,9 @@ def sys_monitor():
                         print(f"There are {len(allMaint)} nodes in maintenance mode")
                         # delete all these nodes
                         allMaint.delete()
+
+                #check to see if there are any messages that need to be sent
+                sendWebNotify(client)
 
         except Exception as e:
             print(f"Houston, we have an error {e}")
