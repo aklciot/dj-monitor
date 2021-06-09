@@ -9,7 +9,10 @@ Node notification change
 
   <p>This is a message to let you know that <span class="nodename">{{nu.nodeID}}</span> has had notifications modified.
   <br>
-  The user <b>{{ nu.user }}</b> will receive the following notifications:
-  Previous SMS {{ origSMS }} Current SMS {{ formData.sms }}
-  Previous Email {{ origEmail }} Current Email {{ formData.email }}
+  The user <b>{{ nu.user|capfirst }}</b> will receive the following notifications:
+  <ul>
+  <li>Previous SMS <b>{{ origSMS }}</b> Current SMS <b>{{ currSMS }}</b></li>
+  <li>Previous Email <b>{{ origEmail }}</b> Current Email <b>{{ currEmail }}</b></li>
+  </ul>
+  The change was made by: <b>{{ user.username|capfirst }}</b>
 {% endblock %}

@@ -488,22 +488,25 @@ def nodeModNotifyOthers(request, node_ref):
                 # print(i.__dict__)
                 if i.is_valid() and i.cleaned_data:
                     i.instance.nodeID = node
-                    context = {"nu": i.instance}
-                    context["formData"] = i.cleaned_data
+                    context = {"nu": i.instance, "user": request.user}
                     if i.cleaned_data["DELETE"]:
+
                         sendNotification(
                             admins,
                             inEmail=True,
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
-                            inTemplate="monitor/email/notifRemove.html",
-                            inNode=node,
+                            inTemplate="monitor/email/notifChange.html",
+                            inNode = node,
                         )
                         i.instance.delete()
                     elif i.cleaned_data["sms"] or i.cleaned_data["email"]:
+
                         nuOld = NodeUser.objects.filter(
                             nodeID=node, user=i.instance.user
                         )
+                        context["currSMS"] = i.cleaned_data["sms"]
+                        context["currEmail"] = i.cleaned_data["email"]
                         if len(nuOld) == 0:
                             context["origSMS"] = "None"
                             context["origEmail"] = "None"
@@ -530,6 +533,9 @@ def nodeModNotifyOthers(request, node_ref):
                                     inTemplate="monitor/email/notifChange.html",
                                     inNode=node,
                                 )
+
+
+
                         i.save()
                     else:  # no choices
                         sendNotification(
@@ -537,8 +543,8 @@ def nodeModNotifyOthers(request, node_ref):
                             inEmail=True,
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
-                            inTemplate="monitor/email/notifRemove.html",
-                            inNode=node,
+                            inTemplate="monitor/email/notifChange.html",
+                            inNode = node,
                         )
                         i.instance.delete()
                 else:

@@ -556,7 +556,7 @@ def csv_to_json(payload, nNode):
                 lRepeater = True
 
     # print("csv_to_json entered, payload is {}".format(cPayload))
-    for mItem in nNode.messagetype.messageitem_set.all():
+    for mItem in nNode.messagetype.items.all():
         # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
         # some validation here
 
