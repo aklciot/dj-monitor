@@ -22,7 +22,7 @@ class Team(models.Model):
 
     class Meta:
         ordering = ["teamID"]
-        verbose_name = "Project"
+        #verbose_name = "Project"
 
     def __str__(self):
         return self.teamID
@@ -57,7 +57,7 @@ class MessageItem(models.Model):
         ("I", "Integer"),
         ("F", "Float"),
     ]
-    msgID = models.ForeignKey(MessageType, on_delete=models.CASCADE)
+    msgID = models.ForeignKey(MessageType, related_name='items', on_delete=models.CASCADE)
     name = models.CharField(
         max_length=15, help_text="The element name, will be used in JSON messages"
     )
@@ -114,7 +114,6 @@ class Node(models.Model):
     onlineTime = models.FloatField("Online in minutes", default=0.0)
     status_sent = models.DateTimeField(null=True, blank=True)
     notification_sent = models.BooleanField(default=False)
-    nextUpdate = models.DateTimeField(blank=True, null=True)
     lastStatusTime = models.DateTimeField(blank=True, null=True)
     lastDataTime = models.DateTimeField(blank=True, null=True)
 
@@ -164,7 +163,7 @@ class Node(models.Model):
     )
     # dataMsgCount = models.IntegerField(default=0)
     RSSI = models.FloatField(default=0.0)
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
+    team = models.ForeignKey(Team, related_name='nodes', on_delete=models.SET_NULL, null=True, blank=True)
     portal = models.URLField(
         max_length=100,
         blank=True,
