@@ -2,7 +2,7 @@ from django.conf.urls import url
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
-from . import views, accounts
+from . import views, accounts, apiviews
 
 app_name = "monitor"
 urlpatterns = [
@@ -65,4 +65,11 @@ urlpatterns = [
     path("password-reset/", views.passwordReset, name="password-reset"),
     path("about/", views.about, name="about"),
     path("contact/", views.contact, name="contact"),
+
+    # paths for API's
+    path("api/teams/", apiviews.team_list, name="api-team-list"),
+    path("api/teamdetail/<int:team_ref>/", apiviews.api_team_view, name="api-team-view"),
+    path("api/nodedetail/<int:node_ref>/", apiviews.api_node_view, name="api-node-view"),
+    path("api/messagelist/", apiviews.message_list, name="api-message-list"),
+    path("api/messagedetail/<int:msgtype_ref>/", apiviews.message_detail, name="api-message-detail"),
 ]

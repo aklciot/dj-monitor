@@ -11,7 +11,7 @@ from django.utils import timezone
 import datetime, os
 
 # Create your views here.
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
 from .models import (
     Node,
@@ -36,6 +36,10 @@ from .forms import (
     UserProfileForm,
     PasswordResetForm,
     NodeUserDetailForm,
+)
+
+from.serializers import (
+    TeamSerializer,
 )
 
 from django.forms import modelformset_factory
@@ -602,7 +606,7 @@ def tb2(request, node_ref):
 @login_required
 def msgDetail(request, msg_ref):
     msg = get_object_or_404(MessageType, pk=msg_ref)
-    msgItems = msg.messageitem_set.all()
+    msgItems = msg.items.all()
     msgNodes = msg.node_set.all()
     context = {"msg": msg, "msgItems": msgItems, "msgNodes": msgNodes}
     context["msgactive"] = "Y"
@@ -623,7 +627,7 @@ def msgUpdate(request, msg_ref):
         nf = MessageTypeDetailForm(request.POST, instance=msg)
         fItems = MsgItemFormSet(
             request.POST,
-            queryset=msg.messageitem_set.all(),
+            queryset=msg.items.all(),
             prefix="ITEMS",
             initial=[{"msgID": msg}],
         )
@@ -648,7 +652,7 @@ def msgUpdate(request, msg_ref):
     else:
         nf = MessageTypeDetailForm(instance=msg)
         fItems = MsgItemFormSet(
-            queryset=msg.messageitem_set.all(), prefix="ITEMS", initial=[{"msgID": msg}]
+            queryset=msg.items.all(), prefix="ITEMS", initial=[{"msgID": msg}]
         )
     context = {"form": nf, "msg": msg, "fItems": fItems}
 
@@ -696,7 +700,7 @@ def msgAdd(request):
 @login_required
 def projectDetail(request, prj_ref):
     prj = get_object_or_404(Team, pk=prj_ref)
-    prjNodes = prj.node_set.all()
+    prjNodes = prj.nodes.all()
     context = {"prj": prj, "prjNodes": prjNodes}
     context["prjactive"] = "Y"
     return render(request, "monitor/projectDetail.html", context)

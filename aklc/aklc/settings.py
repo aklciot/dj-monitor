@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -133,3 +135,5 @@ STATIC_URL = '/static/'
 # Login settings
 LOGOUT_REDIRECT_URL = "monitor:index"
 LOGIN_URL = "/monitor/login"
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

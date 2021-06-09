@@ -4,3 +4,4 @@ paho-mqtt>=1.4
 influxdb
 Geohash
 html2text
+djangorestframework
