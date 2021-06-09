@@ -11,7 +11,7 @@ from django.utils import timezone
 import datetime, os
 
 # Create your views here.
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
 from .models import (
     Node,
@@ -36,6 +36,10 @@ from .forms import (
     UserProfileForm,
     PasswordResetForm,
     NodeUserDetailForm,
+)
+
+from.serializers import (
+    TeamSerializer,
 )
 
 from django.forms import modelformset_factory
@@ -484,48 +488,19 @@ def nodeModNotifyOthers(request, node_ref):
                 # print(i.__dict__)
                 if i.is_valid() and i.cleaned_data:
                     i.instance.nodeID = node
-                    context = {"nu": i.instance}
-                    context["formData"] = i.cleaned_data
+                    context = {"nu": i.instance, "user": request.user}
                     if i.cleaned_data["DELETE"]:
+
                         sendNotification(
                             admins,
                             inEmail=True,
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
-                            inTemplate="monitor/email/notifRemove.html",
-                            inNode=node,
+                            inTemplate="monitor/email/notifChange.html",
+                            inNode = node,
                         )
                         i.instance.delete()
                     elif i.cleaned_data["sms"] or i.cleaned_data["email"]:
-                        nuOld = NodeUser.objects.filter(
-                            nodeID=node, user=i.instance.user
-                        )
-                        if len(nuOld) == 0:
-                            context["origSMS"] = "None"
-                            context["origEmail"] = "None"
-                            sendNotification(
-                                admins,
-                                inEmail=True,
-                                inSubject=f"A notification was added for {node.nodeID}",
-                                context=context,
-                                inTemplate="monitor/email/notifChange.html",
-                                inNode=node,
-                            )
-
-                        else:
-                            context["origSMS"] = nuOld[0].sms
-                            context["origEmail"] = nuOld[0].email
-                            if (nuOld[0].sms != i.cleaned_data["sms"]) or (
-                                nuOld[0].email != i.cleaned_data["email"]
-                            ):
-                                sendNotification(
-                                    admins,
-                                    inEmail=True,
-                                    inSubject=f"A notification was changed for {node.nodeID}",
-                                    context=context,
-                                    inTemplate="monitor/email/notifChange.html",
-                                    inNode=node,
-                                )
                         i.save()
                     else:  # no choices
                         sendNotification(
@@ -533,8 +508,8 @@ def nodeModNotifyOthers(request, node_ref):
                             inEmail=True,
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
-                            inTemplate="monitor/email/notifRemove.html",
-                            inNode=node,
+                            inTemplate="monitor/email/notifChange.html",
+                            inNode = node,
                         )
                         i.instance.delete()
                 else:
@@ -631,7 +606,7 @@ def tb2(request, node_ref):
 @login_required
 def msgDetail(request, msg_ref):
     msg = get_object_or_404(MessageType, pk=msg_ref)
-    msgItems = msg.messageitem_set.all()
+    msgItems = msg.items.all()
     msgNodes = msg.node_set.all()
     context = {"msg": msg, "msgItems": msgItems, "msgNodes": msgNodes}
     context["msgactive"] = "Y"
@@ -652,7 +627,7 @@ def msgUpdate(request, msg_ref):
         nf = MessageTypeDetailForm(request.POST, instance=msg)
         fItems = MsgItemFormSet(
             request.POST,
-            queryset=msg.messageitem_set.all(),
+            queryset=msg.items.all(),
             prefix="ITEMS",
             initial=[{"msgID": msg}],
         )
@@ -677,7 +652,7 @@ def msgUpdate(request, msg_ref):
     else:
         nf = MessageTypeDetailForm(instance=msg)
         fItems = MsgItemFormSet(
-            queryset=msg.messageitem_set.all(), prefix="ITEMS", initial=[{"msgID": msg}]
+            queryset=msg.items.all(), prefix="ITEMS", initial=[{"msgID": msg}]
         )
     context = {"form": nf, "msg": msg, "fItems": fItems}
 
@@ -725,7 +700,7 @@ def msgAdd(request):
 @login_required
 def projectDetail(request, prj_ref):
     prj = get_object_or_404(Team, pk=prj_ref)
-    prjNodes = prj.node_set.all()
+    prjNodes = prj.nodes.all()
     context = {"prj": prj, "prjNodes": prjNodes}
     context["prjactive"] = "Y"
     return render(request, "monitor/projectDetail.html", context)
