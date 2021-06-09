@@ -654,7 +654,7 @@ def sendWebNotify(mqtt_client):
                 payload["Body"] = w.body
                 payload["Subject"] = w.subject
                 mqtt_client.publish(eMail_topic, json.dumps(payload))
-                print(f"Email sent to {w.address}")
+                print(f"Email sent to {w.address}, payload is: {payload}")
 
                 
             if w.sms:
