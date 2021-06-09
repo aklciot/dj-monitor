@@ -459,7 +459,7 @@ class Node(models.Model):
                     lRepeater = True
                     break
 
-        for mItem in self.messagetype.messageitem_set.all():
+        for mItem in self.messagetype.items.all():
             # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
             # some validation here
 
