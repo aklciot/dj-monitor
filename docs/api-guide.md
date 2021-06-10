@@ -5,11 +5,7 @@ The monitor system exposes some API's which provide access to data stored in the
 ## Access & authentication
 The system used basic authentication with the same user name and password used to access details of the system. You do need to request access rights to the API, just email [Jim](mailto:westji@aklc.govt.nz).
 
-## Available API's
-
-* [Teams/project list](#Teams/projects)
-* [Team detail](#Team)
-
+## Data format
 Data is available in JSON
 
 ### Teams/projects list
@@ -106,4 +102,3 @@ API URL <https://monitor.innovateauckland.nz/api/nodedetail/node_id>. The node_i
     }
 ]
 ```
-
