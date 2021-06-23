@@ -1,4 +1,4 @@
-{% extends "monitor/email-base.html" %}
+{% extends "monitor/email/email-base.html" %}
 
 {% block title %}
 Node down notification
@@ -7,7 +7,7 @@ Node down notification
 {% block email-body %}
   <p>Hi {{ user.username|capfirst }}</p>
 
-  <div id="devices">
+  <div id="nodes">
 
     <div id="critical" class="devices">  
       {% if nodeCrit %}
@@ -44,7 +44,7 @@ Node down notification
         <p>Nodes that are <b>DOWN</b> are:</p>
         <ul id = "nodeDown">
         {% for entry in nodeDown %}
-          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down" >{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -56,12 +56,12 @@ Node down notification
         {% endif %}
     </div>
 
-    <div id="repeaterDown" class="devices">  
-        {% if repeaterDown %}
-        <p>Repeaters that are <b>DOWN</b> are:</p>
-        <ul id = "nodeDown">
-        {% for entry in repeaterDown %}
-          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+    <div id="nodes" class="devices">  
+      {% if nodes %}
+        <p>Nodes that are fine are:</p>
+        <ul id = "nodeOK">
+        {% for entry in nodeOK %}
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="nodeup">{{entry.nodeID}}</a></span>
             {% if entry.descr %}
               <br><span class="descr">{{ entry.descr }}</span>
             {% endif %}
@@ -69,29 +69,77 @@ Node down notification
         {% endfor %}
         </ul>
         {% else %}
-          <p class="nodeup">All repeaters are operational.</p>
+          <p class="nodeup">All nodes are operational.</p>
         {% endif %}
     </div>
+  </div>  
 
+  <div id="repeaters">
+    <div id="repeaterDown" class="devices">  
+      {% if repeaterDown %}
+        <p>Repeaters that are <b>DOWN</b> are:</p>
+        <ul id = "repeaterDown">
+        {% for entry in repeaterDown %}
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+            {% if entry.descr %}
+              <br><span class="descr">{{ entry.descr }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
 
-    <div id="gatewayDown" class="devices">  
-      {% if gatewayDown %}
-        <p>Gateways that are <b>DOWN</b> are:</p>
-        <ul id = "gatewayDown">
-        {% for entry in gatewayDown %}
-          <li><span class="node_down"><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+    <div id="repeaterUp" class="devices">  
+      {% if repeaterOK %}
+        <p>Repeaters that are fine are:</p>
+        <ul id = "nodeOK">
+        {% for entry in repeaterOK %}
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="nodeup">{{entry.nodeID}}</a></span> 
           {% if entry.descr %}
             <br><span class="descr">{{ entry.descr }}</span>
           {% endif %}
           </li>
         {% endfor %}
         </ul>
-      {% else %}
-        <p class="nodeup">All gateways are operational.</p>
       {% endif %}
+    </div>
+
+  <div id="gateways">
+    <div id="gatewayDown" class="devices">  
+      {% if gatewayDown %}
+        <p>Gateways that are <b>DOWN</b> are:</p>
+        <ul id = "gatewayDown">
+        {% for entry in gatewayDown %}
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="node_down">{{entry.nodeID}}</a></span> <span class="lastseen">(last seen {{entry.lastseen}})</span>
+            {% if entry.descr %}
+              <br><span class="descr">{{ entry.descr }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+
+    <div id="gatewayUp" class="devices">  
+      {% if gatewayOK %}
+        <p>Gateways that are fine are:</p>
+        <ul id = "nodeOK">
+        {% for entry in gatewayOK %}
+          <li><span><a href="{{web_base_url}}/monitor/node/{{entry.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}" class="nodeup">{{entry.nodeID}}</a></span> 
+          {% if entry.descr %}
+            <br><span class="descr">{{ entry.descr }}</span>
+          {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+
+
   </div>
 
-  </div>  
 
 {% endblock %}
    

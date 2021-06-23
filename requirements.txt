@@ -5,3 +5,5 @@ influxdb
 Geohash
 html2text
 djangorestframework
+requests
+requests_oauthlib
