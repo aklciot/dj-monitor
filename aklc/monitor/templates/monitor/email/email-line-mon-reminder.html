@@ -1,4 +1,4 @@
-{% extends "monitor/email-base.html" %}
+{% extends "monitor/email/email-base.html" %}
 
 {% block title %}
 Node down notification
@@ -9,7 +9,7 @@ Node down notification
 
   <div id="devices">
 
-  This is a reminder that <b>{{node.nodeID}} </b>
+  This is a reminder that <b><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a> </b>
   {% if node.descr %}
    {{ node.descr }}
   {% endif %}
@@ -17,4 +17,4 @@ Node down notification
   </div>  
 
 {% endblock %}
-   
+  

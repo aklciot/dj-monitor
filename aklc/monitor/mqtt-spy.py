@@ -94,15 +94,19 @@ def mqtt_on_connect(client, userdata, flags, rc):
       This procedure is called on connection to the mqtt broker
     """
     global scriptID
+    if userdata['dbRec'].prefix:
+        cPrefix = userdata['dbRec'].prefix
+    else:
+        cPrefix = ''
     userdata["nConnCnt"] = userdata["nConnCnt"] + 1
     print(
         f"Connected to {userdata['dbRec'].descr} with result code {rc}, connection count is {userdata['nConnCnt']}, Message count is {userdata['nMsgCnt']}"
     )
-    sub_topic = "AKLC/#"
+    sub_topic = f"{cPrefix}AKLC/#"
     client.subscribe(sub_topic)
     print("mqtt Subscribed to " + sub_topic)
     client.publish(
-        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+        f"{cPrefix}AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
     )
     print("Sent connection message")
 
@@ -110,7 +114,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
     # We subscribe to all defined teams
     aTeams = Team.objects.all()
     for t in aTeams:
-        sub_topic = t.teamID + "/#"
+        sub_topic = f"{cPrefix}{t.teamID}/#"
         print("MQTT Subscribed to {}".format(sub_topic))
         client.subscribe(sub_topic)
     return
@@ -272,9 +276,10 @@ def mqtt_on_message(client, userdata, msg):
                     cNode = jStr["NodeID"]
 
     else:  # must be a team message
-        jPayload = json.loads(sPayload)
-        if "NodeID" in jPayload:
-            cNode = jPayload["NodeID"]
+        if is_json(sPayload):
+            jPayload = json.loads(sPayload)
+            if "NodeID" in jPayload:
+                cNode = jPayload["NodeID"]
 
     # Lets get the node record
     try:

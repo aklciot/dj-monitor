@@ -37,6 +37,7 @@ eMqtt_host = os.getenv("AKLC_MQTT_HOST", "mqtt")
 eMqtt_port = os.getenv("AKLC_MQTT_PORT", "1883")
 eMqtt_user = os.getenv("AKLC_MQTT_USER", "aklciot")
 eMqtt_password = os.getenv("AKLC_MQTT_PASSWORD", "iotiscool")
+eMqtt_prefix = os.getenv("AKLC_MQTT_PREFIX", "")
 eMail_From = os.getenv("AKLC_MAIL_FROM", "info@innovateauckland.nz")
 eMail_To = os.getenv("AKLC_MAIL_TO", "westji@aklc.govt.nz")
 
@@ -86,11 +87,11 @@ def mqtt_on_connect(client, userdata, flags, rc):
     """
     global scriptID, dProj
     print(f"Connected to mqtt with result code {str(rc)}")
-    sub_topic = "AKLC/#"
+    sub_topic = f"{eMqtt_prefix}AKLC/#"
     client.subscribe(sub_topic)
     print(f"MQTT Subscribed to {sub_topic}")
     client.publish(
-        f"AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
+        f"{eMqtt_prefix}AKLC/monitor/{scriptID}/LWT", payload="Running", qos=0, retain=True
     )
     print("Sent connection message")
 
@@ -98,7 +99,7 @@ def mqtt_on_connect(client, userdata, flags, rc):
     # We subscribe to all devined teams
     aTeams = Team.objects.all()
     for t in aTeams:
-        sub_topic = t.teamID + "/#"
+        sub_topic = f"{eMqtt_prefix}{t.teamID}/#"
         print(sub_topic)
         client.subscribe(sub_topic)
         if t.teamID not in dProj:
@@ -132,6 +133,11 @@ def mqtt_on_message(client, userdata, msg):
 
     # separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
+    if eMqtt_prefix:
+        if cTopic[0] in eMqtt_prefix:
+            del cTopic[0]
+            #print(f"Removed prefix, cTopic is now {cTopic}")
+
     cDict = {}
 
     # get the payload as a string
@@ -378,7 +384,7 @@ def mqtt_on_message(client, userdata, msg):
                     tm = Team.objects.get(teamID=cTopic[0])
                     nd.team = tm
                 except:
-                    print("team {} not found".format(cTopic[0]))
+                    print(f"team {cTopic[0]} not found")
 
                 nd.save()
             except Exception as e:
@@ -424,7 +430,7 @@ def missing_node(node, mqtt_client):
                     sendNotifyEmail(
                         "Node down notification for {}".format(node.nodeID),
                         cDict,
-                        f"monitor/{usr.nodeID.email_down_template.fileName}",
+                        f"monitor/email/{usr.nodeID.email_down_template.fileName}",
                         mqtt_client,
                         usr.user,
                         node=node,
@@ -433,7 +439,7 @@ def missing_node(node, mqtt_client):
                     sendNotifyEmail(
                         "Node down notification for {}".format(node.nodeID),
                         cDict,
-                        "monitor/email-down.html",
+                        "monitor/email/email-down.html",
                         mqtt_client,
                         usr.user,
                         node=node,
@@ -597,13 +603,13 @@ def sendReport(aNotifyUsers, mqttClient):
     for u in allUsers:
         if u.reportType == "F":
             sendNotifyEmail(
-                "Daily report", cDict, "monitor/email-full.html", mqttClient, u.user
+                "Daily report", cDict, "monitor/email/email-full.html", mqttClient, u.user
             )
         elif u.reportType == "S":
             sendNotifyEmail(
                 "Daily summary report",
                 cDict,
-                "monitor/email-summary.html",
+                "monitor/email/email-summary.html",
                 mqttClient,
                 u.user,
             )
@@ -629,7 +635,7 @@ def sendDailyReminder(mqttClient):
                         sendNotifyEmail(
                             f"Daily reminder that {nu.nodeID} is still unresponsive",
                             cDict,
-                            f"monitor/{nu.nodeID.email_reminder_template.fileName}",
+                            f"monitor/email/{nu.nodeID.email_reminder_template.fileName}",
                             mqttClient,
                             usr,
                             node=nu,
@@ -742,17 +748,6 @@ def sys_monitor():
         allUsers = Profile.objects.filter(user__username__startswith="jim")
 
         sendDailyReminder(client)
-
-        allNodes = Node.objects.all()
-        for n in allNodes:
-            # if nothing then our 'patience' will run out
-            if (timezone.now() - n.lastseen) > datetime.timedelta(
-                minutes=n.allowedDowntime
-            ):
-                print(
-                    "Node {} not seen for over {} minutes".format(n, n.allowedDowntime)
-                )
-                missing_node(n, client)
 
     print("About to start loop")
 

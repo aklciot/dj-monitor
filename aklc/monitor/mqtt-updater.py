@@ -50,6 +50,7 @@ eInflux_user = os.getenv("AKLC_INFLUX_USER", "aklciot")
 eInflux_pw = os.getenv("AKLC_INFLUX_PW", "password")
 eInflux_db = os.getenv("AKLC_INFLUX_DB", "aklc")
 
+eMqtt_prefix = os.getenv("AKLC_MQTT_PREFIX", "")
 eTesting = os.getenv("AKLC_TESTING", "N")
 if eTesting == "Y":
     testFlag = True
@@ -254,6 +255,11 @@ def mqtt_on_message(client, userdata, msg):
     # print("mqtt message received {} : {}".format(msg.topic, msg.payload))
     # separate the topic up so we can work with it
     cTopic = msg.topic.split("/")
+    if eMqtt_prefix:
+        if cTopic[0] in eMqtt_prefix:
+            del cTopic[0]
+            #print(f"Removed prefix, cTopic is now {cTopic}")
+
     cDict = {}
 
     msgCount = msgCount + 1
@@ -595,7 +601,7 @@ def csv_to_json(payload, nNode):
 
 # ******************************************************************
 def mqtt_updater():
-    """ The main program that sends updates to the MQTT system
+    """ The main program that sends updates from MQTT to Thingsboard & Influx
     """
     global InClient, scriptID, connectionCount, msgCount, msgUpdates
 
@@ -692,7 +698,7 @@ def mqtt_updater():
             # print("No need to send updates")
             x = 1
         else:
-            # client.reconnect()      # put this in as I am betting LWT messages while script is still running
+            # client.reconnect()      # put this in as I am getting LWT messages while script is still running
             upTime = (
                 timezone.make_aware(
                     datetime.datetime.now(), timezone.get_current_timezone()

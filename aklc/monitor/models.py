@@ -599,6 +599,7 @@ class MqttQueue(models.Model):
     port = models.IntegerField()
     user = models.CharField(max_length=50, blank=True, null=True)
     pw = models.CharField(max_length=50, blank=True, null=True)
+    prefix = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         ordering = ["descr"]

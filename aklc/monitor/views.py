@@ -335,7 +335,7 @@ def nodeUpdate(request, node_ref):
     else:
         nf = NodeDetailForm(instance=node)
     context = {"form": nf, "node": node}
-    2
+    
     if node.isGateway:
         context["gatewayactive"] = "Y"
     elif node.isRepeater:
@@ -609,7 +609,13 @@ def nodeRemove(request, node_ref):
         if removeMe == "Y":
             node.status = "M"
             node.save()
-            return HttpResponseRedirect(reverse("monitor:index"))
+            if node.isGateway:
+                return HttpResponseRedirect(reverse("monitor:index_gw"))
+            elif node.isRepeater:
+                return HttpResponseRedirect(reverse("monitor:index_rp"))
+            else:
+                return HttpResponseRedirect(reverse("monitor:index"))
+            
     context = {"node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
