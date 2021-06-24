@@ -1,5 +1,10 @@
 # Change log
 This log records changes and updates to the IoT monitoring system
+### 24 June 2021
+* Created separate script to upload to the TRAP.NZ API
+* Some documentation improvements
+* Some improvements to email templates
+
 ### 1 June 2021
 * Added ability to modify notifications for other people, for users who are classified as 'staff'.
 
