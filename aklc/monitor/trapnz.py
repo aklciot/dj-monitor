@@ -173,7 +173,7 @@ def mqtt_on_message(client, userdata, msg):
         }
 
         sData = {"dev_id": node.nodeID}
-        sData["metadata"] = {"time": datetime.datetime.now().isoformat()}
+        sData["metadata"] = {"time": timezone.now().isoformat()}
 
         sPayload = {"type": "sensor_report"}
         if jPayload["Event"] == "H":
