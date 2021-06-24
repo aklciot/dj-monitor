@@ -159,6 +159,7 @@ def mqtt_on_message(client, userdata, msg):
             # These are status messages sent by gateways. Data in CSV format
             cPayload = sPayload.split(",")
             cNode = cPayload[0]
+            print(f"Status message for {cNode}")
             testPr(
                 f"Gateway status (AKLC/Status) message received for {cNode}, payload is {cPayload}"
             )
@@ -204,6 +205,7 @@ def mqtt_on_message(client, userdata, msg):
             if len(cPayload) < 2:
                 testPr(f"Gateway msg {msg.topic} received, invalid payload {sPayload}")
                 return
+            print(f"gateway message for {cPayload[1]}, processed by gateway {cPayload[0]}")
             testPr(
                 f"Gateway msg (AKLC/Gateway) received, Node {cPayload[1]}, Gateway {cPayload[0]}, payload is {sPayload}"
             )
@@ -306,6 +308,7 @@ def mqtt_on_message(client, userdata, msg):
                         )
                         return
                     if node_validate(devID):
+                        print(f"Network message received from {devID}")
                         # print("Processing network message")
                         # print(jPayload)
                         nd, created = Node.objects.get_or_create(nodeID=devID)
@@ -341,6 +344,7 @@ def mqtt_on_message(client, userdata, msg):
             if len(cTopic) > 2:
                 # print("Topic[2] is {}".format(cTopic[2]))
                 if node_validate(cTopic[2]):
+                    print(f"Node message for {cTopic[2]}")
                     testPr(f"Processing node message for {cTopic[2]}")
                     nd, created = Node.objects.get_or_create(nodeID=cTopic[2])
                     nd.msgReceived(client, eMail_From, eMail_topic)
@@ -365,6 +369,7 @@ def mqtt_on_message(client, userdata, msg):
         if cTopic[0] in dProj:
             dProj[cTopic[0]] = dProj[cTopic[0]] + 1
         if "NodeID" in jPayload:
+            print(f"Team (not AKLC) message recived for {jPayload['NodeID']}")
             try:
                 nd, created = Node.objects.get_or_create(nodeID=jPayload["NodeID"])
                 nd.msgReceived(client, eMail_From, eMail_topic)

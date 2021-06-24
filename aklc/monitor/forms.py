@@ -72,6 +72,7 @@ class NodeMessageForm(forms.ModelForm):
             "thingsboardUpload",
             "thingsboardCred",
             "influxUpload",
+            "trapNZ",
             "locationOverride",
             "projectOverride",
         ]

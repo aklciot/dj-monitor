@@ -204,6 +204,11 @@ class Node(models.Model):
         null=True,
         help_text="The credentials needed for thingsboard data load",
     )
+    trapNZ = models.BooleanField(
+        "Upload to TRAP.NZ API",
+        default=False,
+        help_text="Select this if you want data uploaded to TRAP.NZ.",
+    )
     sms_template = models.ForeignKey(
         HtmlTemplate,
         on_delete=models.SET_NULL,
