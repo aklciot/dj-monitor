@@ -1,3 +1,15 @@
+"""
+This script is used to update TRAP.NZ with 'sensor' records
+
+# Subscribes to 'EnvironmentalServices' queue on MQTT, all messages are expected there
+# Payloads are all expected to be in JSON
+# Nodes need to have the 'trapNZ' flag set befor an upload will occur
+
+# The script starts by getting an access token from API.TRAP.NZ
+# Thereafter the access token is refreshed 60 secs before it expires. 
+# Access & refresh tokens are maintained in memory only, if the script restarts a new token is requested
+
+"""
 # Lets import the things we need
 import django
 import sys
@@ -56,104 +68,8 @@ else:
 access_token = ""
 refresh_token = ""
 
-#client_id = "cb7c2987-f6e6-4d1f-bc22-ee971e244405"
-#client_secret = "frogman-rollback-replica"
-#username = "jimboeri"
-#password = "changeme"
-
-#trapnz_access_url = "https://io.trap.nz/api-sensor/oauth/token"
-#if web:
-#    trapnz_record_url = "https://io.trap.nz/api-sensor/iot/sensor-record?_format=json"
-#else:
-#    trapnz_record_url = "https://noderedtest.west.net.nz/trapnz/python?_format=json"
-
 print(f"Starting Trap NZ script")
 
-"""
-print("Set up API call")
-print("-------------------")
-
-hdr = {
-    "Authorization": f"Bearer {access_token}",
-    "Cache-Control": "no-cache",
-    "Content-Type": "application/hal+json",
-    "accept": "application/hal+json",
-}
-
-nodeID = "JW-Trap01"
-
-sData = {"dev_id": nodeID}
-sData["metadata"] = {"time": datetime.datetime.now().isoformat()}
-
-sPayload = {"type": "sensor_report"}
-sPayload["field_event"] = [{"value": "Sprung"}]
-sPayload["field_status"] = [{"value": "Set"}]
-sPayload["field_network"] = [{"value": "Iwinet"}]
-sPayload["field_gateway"] = [{"value": "JW02"}]
-sPayload["field_sequence"] = [{"value": 1}]
-sPayload["field_counter"] = [{"value": 2}]
-sPayload["field_battery_voltage"] = [{"value": 3.141}]
-
-sData["payload_fields"] = sPayload
-
-#print(f"sData to Json string: {json.dumps(sData)}")
-
-#dResp = requests.post(trapnz_record_url, headers=hdr, data=json.dumps(sData))
-
-print(f"Request URL: {trapnz_record_url}")
-print(" ")
-#print(f"Return reason: {dResp.reason}")
-print(" ")
-#print(f"Return status code: {dResp.status_code}")
-print(" ")
-print(f"Data: {json.dumps(sData)}")
-print(" ")
-
-while True:
-    time.sleep(1)
-    x = input("Typr something and press enter")
-    print(f"Input received: {x}")
-    if x =="x":
-        exit()
-    
-    refresh_payload = {
-        "grant_type": "refresh_token",
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "refresh_token": refresh_token,
-    }
-    refresh_headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-
-    print("Refreshing access code")
-    print("-------------------")
-
-    rRefreshToken = requests.post(trapnz_access_url, data=refresh_payload, headers=refresh_headers)
-
-    print(f"Status code of access code refresh request: {rRefreshToken.status_code}")
-
-    jResp = rRefreshToken.json()
-    newAccess_token = jResp["access_token"]
-    print(jResp)
-    
-
-    print(f"Try old code")
-    dResp = requests.post(trapnz_record_url, headers=hdr, data=json.dumps(sData))
-    print(f"Status code of old access code request: {dResp.status_code}")
-
-
-    hdr = {
-        "Authorization": f"Bearer {newAccess_token}",
-        "Cache-Control": "no-cache",
-        "Content-Type": "application/hal+json",
-        "accept": "application/hal+json",
-    }
-    
-    print("Try new code")
-    dResp = requests.post(trapnz_record_url, headers=hdr, data=json.dumps(sData))
-    print(f"Status code of new access code request: {dResp.status_code}")
-"""
 
 # ********************************************************************
 def testPr(tStr):
