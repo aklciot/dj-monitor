@@ -9,7 +9,7 @@ Node down notification
 
   <div id="devices">
 
-  This is a reminder that <b><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a> </b>
+  This is a reminder that <span class="nodename"><a href="{{web_base_url}}/monitor/node/{{node.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}">{{node.nodeID}}</a></span>
   {% if node.descr %}
    {{ node.descr }}
   {% endif %}
