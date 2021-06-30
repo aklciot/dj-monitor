@@ -7,7 +7,7 @@ Node down notification
 {% block email-body %}
   <p>Hi {{ user.username|capfirst }}</p>
 
-  <p>This is a notification to let you know that <span class="nodename">{{node.nodeID}}</span> is down.
+  <p>This is a notification to let you know that <span class="nodename"><a href="{{web_base_url}}/monitor/node/{{node.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}">{{node.nodeID}}</a></span> is down.
   {% if node.descr %}
      <br><span class="descr">{{ node.descr }}</span>
   {% endif %}

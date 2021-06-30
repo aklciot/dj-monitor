@@ -9,7 +9,7 @@ Node DOWN notification
 
   <div id="devices">
 
-    Not great news. This is to inform you that <b><a href="{% url 'monitor:nodeDetail' node.id %}">{{node.nodeID}}</a></b>
+    Not great news. This is to inform you that <span class="nodename"><a href="{{web_base_url}}/monitor/node/{{node.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}">{{node.nodeID}}</a></span>
     {% if node.descr %}
       which is <b>{{node.descr}}</b>
     {% endif %}  

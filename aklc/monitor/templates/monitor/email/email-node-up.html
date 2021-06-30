@@ -9,7 +9,7 @@ Node UP notification
 
   <div id="devices">
 
-    Happy news. This is to inform you that <b><a href="{{web_base_url}}/monitor/node/{{node.id}}">{{node.nodeID}}</a></b>
+    Happy news. This is to inform you that <span class="nodename"><a href="{{web_base_url}}/monitor/node/{{node.id}}?utm_source=monitor&utm_medium=email&utm_campaign={{ user.username|capfirst }}">{{node.nodeID}}</a></span>
     {% if node.descr %}
       which is <b>{{node.descr}}</b>
     {% endif %}  
@@ -17,5 +17,4 @@ Node UP notification
 
   </div>  
 
-{% endblock %}
-   
+{% endblock %}   
