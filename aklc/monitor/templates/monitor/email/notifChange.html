@@ -7,7 +7,7 @@ Node notification change
 {% block email-body %}
   <p>Hi {{ person.username|capfirst }}</p>
 
-  <p>This is a message to let you know that <span class="nodename">{{nu.nodeID}}</span> has had notifications modified.
+  <p>This is a message to let you know that <b><a href="{{web_base_url}}/monitor/node/{{node.id}}">{{node.nodeID}}</a></b> has had notifications modified.
   <br>
   The user <b>{{ nu.user|capfirst }}</b> will receive the following notifications:
   <ul>
