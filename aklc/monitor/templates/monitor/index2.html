@@ -40,9 +40,17 @@ Node list
                 {% endif %}
                   <div class="card-header">
                     {% if node.status == 'X' %}
-                      <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link text-white">{{node.nodeID}}</a>
+                      <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link text-white">{{node.nodeID}}
+                      {% if node.trapID %}
+                        &nbsp({{ node.trapID }})
+                      {% endif %}
+                      </a>
                     {% else %}
                       <a href="{% url 'monitor:nodeDetail' node.id %}" class="stretched-link text-body">{{node.nodeID}}</a>
+                      {% if node.trapID %}
+                        &nbsp({{ node.trapID }})
+                      {% endif %}
+
                     {% endif %}
                     
                     {% for nu in node.nodeuser_set.all %}
