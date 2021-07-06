@@ -249,6 +249,12 @@ class Node(models.Model):
         related_name="emailStatusTemplate",
         help_text="Optional HTML template to be used for weekly email status messages",
     )
+    trapID = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="The trap ID associated with the sensor",
+    )
 
     class Meta:
         ordering = ["nodeID"]
@@ -394,6 +400,8 @@ class Node(models.Model):
         else:
             if "VBat" in jPayload:
                 self.battLevel = jPayload["VBat"]
+        if "TrapID" in jPayload:
+            self.trapID = jPayload["TrapID"]
         self.save()
         return ()
 
