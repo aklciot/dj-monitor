@@ -162,8 +162,8 @@ def mqtt_on_message(client, userdata, msg):
             print(f'Value of "Event" is {jPayload["Event"]}, must be "T" or "H"')
             return
 
-        print("Set up API call")
-        print("-------------------")
+        #print("Set up API call")
+        #print("-------------------")
 
         hdr = {
             "Authorization": f"Bearer {access_token}",
@@ -202,14 +202,14 @@ def mqtt_on_message(client, userdata, msg):
 
         dResp = requests.post(eTrapNZ_sensor_URL, headers=hdr, data=json.dumps(sData))
 
-        print(f"Request URL: {eTrapNZ_sensor_URL}")
-        print(" ")
-        print(f"Return reason: {dResp.reason}")
-        print(" ")
-        print(f"Return status code: {dResp.status_code}")
-        print(" ")
-        print(f"Data: {json.dumps(sData)}")
-        print(" ")
+        #print(f"Request URL: {eTrapNZ_sensor_URL}")
+        #print(" ")
+        #print(f"Return reason: {dResp.reason}")
+        #print(" ")
+        #print(f"Return status code: {dResp.status_code}")
+        #print(" ")
+        #print(f"Data: {json.dumps(sData)}")
+        #print(" ")
 
 
 
