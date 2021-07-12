@@ -11,6 +11,8 @@ import numbers
 import html2text
 from datetime import time
 
+from monitor.utils import testPr, DEBUG, INFO, WARNING, ERROR, CRITICAL
+
 # Create your models here.
 class Team(models.Model):
     """
@@ -22,7 +24,7 @@ class Team(models.Model):
 
     class Meta:
         ordering = ["teamID"]
-        #verbose_name = "Project"
+        # verbose_name = "Project"
 
     def __str__(self):
         return self.teamID
@@ -57,7 +59,9 @@ class MessageItem(models.Model):
         ("I", "Integer"),
         ("F", "Float"),
     ]
-    msgID = models.ForeignKey(MessageType, related_name='items', on_delete=models.CASCADE)
+    msgID = models.ForeignKey(
+        MessageType, related_name="items", on_delete=models.CASCADE
+    )
     name = models.CharField(
         max_length=15, help_text="The element name, will be used in JSON messages"
     )
@@ -163,7 +167,9 @@ class Node(models.Model):
     )
     # dataMsgCount = models.IntegerField(default=0)
     RSSI = models.FloatField(default=0.0)
-    team = models.ForeignKey(Team, related_name='nodes', on_delete=models.SET_NULL, null=True, blank=True)
+    team = models.ForeignKey(
+        Team, related_name="nodes", on_delete=models.SET_NULL, null=True, blank=True
+    )
     portal = models.URLField(
         max_length=100,
         blank=True,
@@ -297,10 +303,9 @@ class Node(models.Model):
             self.status = "C"
             self.cameOnline = timezone.now()
 
-            
             for usr in self.nodeuser_set.all():
                 if usr.email:
-                    print(f"Send email to {usr.user} that {self.nodeID} is back up")
+                    print(f"TESTING : Send email to {usr.user} that {self.nodeID} is back up")
 
                     payload = {}
                     try:
@@ -309,7 +314,7 @@ class Node(models.Model):
                         inDataDict["user"] = usr.user
                         if self.email_up_template:
                             t = template.loader.get_template(
-                                f"monitor/{self.email_up_template.fileName}"
+                                f"monitor/email/{self.email_up_template.fileName}"
                             )
                         else:
                             t = template.loader.get_template(
@@ -322,7 +327,7 @@ class Node(models.Model):
                         payload["Body"] = body
                         payload["Subject"] = f"Device {self.nodeID} is back up"
                         mqttClient.publish(eMail_topic, json.dumps(payload))
-                        # print(f"Email sent to {usr.user.email}")
+
                         notifLog = notificationLog(
                             address=usr.user.email,
                             subject=payload["Subject"],
@@ -333,8 +338,10 @@ class Node(models.Model):
                         notifLog.save()
 
                     except Exception as e:
-                        print(e)
-                        print(f"Houston, we have an error {e}")
+                        testPr(
+                            f"Houston, we have an error in node.msgReceived {e} sending node up notification",
+                            level=WARNING,
+                        )
 
         minDelta = (
             timezone.make_aware(
@@ -382,8 +389,7 @@ class Node(models.Model):
         if "RSSI" in jPayload:
             if isinstance(jPayload["RSSI"], int) or isinstance(jPayload["RSSI"], float):
                 self.RSSI = jPayload["RSSI"]
-            # else:
-            # print(f"Invalid data for RSSI, recieved {jPayload['RSSI']}")
+
         if "Uptime" in jPayload:
             self.bootTimeUpdate(jPayload["Uptime"])
         if "Uptime(m)" in jPayload:
@@ -448,8 +454,7 @@ class Node(models.Model):
 
         if not self.messagetype:
             return jStr
-        # print(f"Message type found {self.messagetype.msgName}")
-        # print(f"Payload is {payload}")
+
         cPayload = payload.split(",")
 
         # Don't try and process if a Status message. Status message has 'OK' as second value
@@ -467,17 +472,14 @@ class Node(models.Model):
                     continue
                 lRepeater = False
                 if itm.startswith("RP"):
-                    # print(f"Remove {itm} from input")
                     cPayload.remove(itm)
                     lRepeater = True
                     break
 
         for mItem in self.messagetype.items.all():
-            # print("  msgItem is {}, value is {}".format(mItem.name, cPayload[mItem.order-1]))
             # some validation here
 
             if mItem.order > len(cPayload):
-                # print(f"Message type mismatch, payload is {cPayload}, message type is {nNode.messagetype.msgName}, index is {mItem.order}")
                 break
 
             try:
@@ -489,14 +491,13 @@ class Node(models.Model):
                     val = cPayload[mItem.order - 1]
 
             except Exception as e:
-                print(
-                    f"CSV to JSON error, cPayload is {cPayload}, message type is {self.messagetype.msgName}"
+                testPr(
+                    f"CSV to JSON error in make_json , cPayload is {cPayload}, message type is {self.messagetype.msgName}, error: {e}",
+                    level=ERROR,
                 )
-                print(e)
 
             jStr[mItem.name] = val
 
-        # print(f"jStr is {jStr}")
         return jStr
 
     def bootTimeUpdate(self, inMinutes):
@@ -515,7 +516,7 @@ class Node(models.Model):
             ) - datetime.timedelta(minutes=inMinutes)
             self.save()
         except Exception as e:
-            print(f"Error in bootTimeUpdate, {e}, input was {inMinutes}")
+            testPr(f"Error in bootTimeUpdate, {e}, input was {inMinutes}", level=ERROR)
         return
 
 
@@ -732,6 +733,7 @@ class notificationLog(models.Model):
 
     def __str__(self):
         return f"Address: {self.address}, Sent: {self.sent}"
+
 
 class webNotification(models.Model):
     node = models.ForeignKey(
