@@ -91,6 +91,7 @@ class ProjectDetailForm(forms.ModelForm):
             "descr": forms.Textarea(attrs={"rows": 3}),
         }
 
+
 class ProjectAddForm(forms.ModelForm):
     class Meta:
         model = Team
@@ -102,19 +103,22 @@ class ProjectAddForm(forms.ModelForm):
             "descr": forms.Textarea(attrs={"rows": 3}),
         }
 
+
 class UserProfileForm(forms.Form):
-    #NOTIFY_ME = [
+    # NOTIFY_ME = [
     #    ("Y", "Notify me"),
     #    ("N", "No notifications, thanks"),
-    #]
+    # ]
     firstName = forms.CharField(required=False, label="First name")
     surName = forms.CharField(required=False, label="Surname")
     email = forms.EmailField(required=False)
     phoneNumber = forms.CharField(required=False)
-    #notification = forms.ChoiceField(choices=NOTIFY_ME)
+    # notification = forms.ChoiceField(choices=NOTIFY_ME)
+
 
 class PasswordResetForm(forms.Form):
     original = forms.EmailField()
+
 
 class NodeUserDetailForm(forms.ModelForm):
     class Meta:
@@ -123,5 +127,6 @@ class NodeUserDetailForm(forms.ModelForm):
             "user",
             "email",
             "sms",
+            "pushbullet",
         ]
-        
+
