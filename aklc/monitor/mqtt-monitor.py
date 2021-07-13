@@ -5,6 +5,7 @@ from django.conf import settings
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import json
+import apprise
 import datetime
 import time
 import html2text
@@ -510,6 +511,15 @@ def missing_node(node, mqtt_client):
                 )
                 usr.smsSent = True
                 usr.lastsms = timezone.now()
+
+            if usr.pushbullet:
+                print(f"TEST-PB step 1")
+                if usr.user.profile.pushbulletApi:
+                    print(f"TEST-PB: Send pushbullet notification to {usr.user.username}")
+                    apobj = apprise.Apprise()
+                    apobj.add(f"pbul://{usr.user.profile.pushbulletApi}")
+                    apobj.notify(body=f"Node {node.nodeID} is down", title="Node  down")
+
             usr.save()
     return
 

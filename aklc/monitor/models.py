@@ -529,6 +529,7 @@ class NodeUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.BooleanField(blank=True, default=False)
     sms = models.BooleanField(blank=True, default=False)
+    pushbullet = models.BooleanField(blank=True, default=False)
     lastemail = models.DateTimeField(blank=True, null=True)
     lastsms = models.DateTimeField(blank=True, null=True)
     smsSent = models.BooleanField(blank=True, default=False)
