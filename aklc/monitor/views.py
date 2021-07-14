@@ -38,9 +38,7 @@ from .forms import (
     NodeUserDetailForm,
 )
 
-from.serializers import (
-    TeamSerializer,
-)
+from .serializers import TeamSerializer
 
 from django.forms import modelformset_factory
 from django.contrib.auth.forms import PasswordChangeForm
@@ -335,7 +333,7 @@ def nodeUpdate(request, node_ref):
     else:
         nf = NodeDetailForm(instance=node)
     context = {"form": nf, "node": node}
-    
+
     if node.isGateway:
         context["gatewayactive"] = "Y"
     elif node.isRepeater:
@@ -423,9 +421,14 @@ def nodeModNotify(request, node_ref):
             if nf.cleaned_data["notification"] == "N":
                 nu.delete()
             else:
-                if nf.cleaned_data["sms"] or nf.cleaned_data["email"]:
+                if (
+                    nf.cleaned_data["sms"]
+                    or nf.cleaned_data["email"]
+                    or nf.cleaned_data["pushbullet"]
+                ):
                     nu.sms = nf.cleaned_data["sms"]
                     nu.email = nf.cleaned_data["email"]
+                    nu.pushbullet = nf.cleaned_data["pushbullet"]
                     nu.save()
                 else:
                     nu.delete()
@@ -441,7 +444,14 @@ def nodeModNotify(request, node_ref):
             return HttpResponseRedirect(reverse("monitor:nodeDetail", args=[node.id]))
     # if a GET (or any other method) we'll create a blank form
     else:
-        nf = NodeNotifyForm({"email": nu.email, "sms": nu.sms, "notification": "Y"})
+        nf = NodeNotifyForm(
+            {
+                "email": nu.email,
+                "sms": nu.sms,
+                "pushbullet": nu.pushbullet,
+                "notification": "Y",
+            }
+        )
 
     context = {"form": nf, "node": node}
     # print(f"User is: {request.user.username}, staff status is {request.user.is_staff}")
@@ -472,7 +482,10 @@ def nodeModNotifyOthers(request, node_ref):
     # )
 
     NodeUserFormSet = modelformset_factory(
-        NodeUser, fields=("user", "sms", "email"), extra=1, can_delete=True
+        NodeUser,
+        fields=("user", "sms", "email", "pushbullet"),
+        extra=1,
+        can_delete=True,
     )
 
     if request.method == "POST":
@@ -497,7 +510,7 @@ def nodeModNotifyOthers(request, node_ref):
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
                             inTemplate="monitor/email/notifChange.html",
-                            inNode = node,
+                            inNode=node,
                         )
                         i.instance.delete()
                     elif i.cleaned_data["sms"] or i.cleaned_data["email"]:
@@ -534,8 +547,6 @@ def nodeModNotifyOthers(request, node_ref):
                                     inNode=node,
                                 )
 
-
-
                         i.save()
                     else:  # no choices
                         sendNotification(
@@ -544,7 +555,7 @@ def nodeModNotifyOthers(request, node_ref):
                             inSubject=f"A notification was deleted from {node.nodeID}",
                             context=context,
                             inTemplate="monitor/email/notifChange.html",
-                            inNode = node,
+                            inNode=node,
                         )
                         i.instance.delete()
                 else:
@@ -615,7 +626,7 @@ def nodeRemove(request, node_ref):
                 return HttpResponseRedirect(reverse("monitor:index_rp"))
             else:
                 return HttpResponseRedirect(reverse("monitor:index"))
-            
+
     context = {"node": node}
     if node.isGateway:
         context["gatewayactive"] = "Y"
@@ -830,7 +841,9 @@ def userUpdate(request):
             user.last_name = nf.cleaned_data["surName"]
             user.email = nf.cleaned_data["email"]
             user.profile.phoneNumber = nf.cleaned_data["phoneNumber"]
+            user.profile.pushbulletApi = nf.cleaned_data["pushbulletApi"]
             user.save()
+            user.profile.save()
 
         return HttpResponseRedirect(reverse("monitor:userProfile"))
     # if a GET (or any other method) we'll create a blank form
@@ -841,6 +854,7 @@ def userUpdate(request):
                 "surName": user.last_name,
                 "email": user.email,
                 "phoneNumber": user.profile.phoneNumber,
+                "pushbulletApi": user.profile.pushbulletApi,
             }
         )
     context = {"form": nf}

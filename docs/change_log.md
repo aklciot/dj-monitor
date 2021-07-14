@@ -1,5 +1,13 @@
 # Change log
 This log records changes and updates to the IoT monitoring system
+### 15 July 2021
+PushBullet notifications and bug fixes
+* PushBullet
+  * Update profile section so users can store access token
+  * Update node/repeater/gateway detail page to enable PushBullet notifications
+  * Update *monitor script* to do the notifications
+* Fixed bug where email notifiactions that devices had come back up were failing
+
 ### 24 June 2021
 * Created separate script to upload to the TRAP.NZ API
 * Some documentation improvements

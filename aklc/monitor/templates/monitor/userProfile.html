@@ -13,9 +13,10 @@ User profile
     <div id="user_detail" class="content_block">
       <div id="user_det_table">
         <table>
-          <tr><td><b>Name:</b> </td><td class = "wrap_cell">{{ user.first_name }} {{ user.last_name }}</td></tr>
-          <tr><td><b>E Mail:</b> </td><td class = "wrap_cell">{{ user.email }}</td></tr>
-          <tr><td><b>Phone no:</b> </td><td class = "wrap_cell">{{ user.profile.phoneNumber }}</td></tr>
+          <tr><td><b>Name :</b> </td><td class = "wrap_cell">{{ user.first_name }} {{ user.last_name }}</td></tr>
+          <tr><td><b>E Mail :</b> </td><td class = "wrap_cell">{{ user.email }}</td></tr>
+          <tr><td><b>Mobile phone no :</b> </td><td class = "wrap_cell">{{ user.profile.phoneNumber }}</td></tr>
+          <tr><td><b>PushBullet Access token :</b> </td><td class = "wrap_cell">{{ user.profile.pushbulletApi }}</td></tr>
 
         </table>
       </div>
