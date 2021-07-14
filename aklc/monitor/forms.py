@@ -38,6 +38,7 @@ class NodeNotifyForm(forms.Form):
     ]
     email = forms.BooleanField(required=False)
     sms = forms.BooleanField(required=False)
+    pushbullet = forms.BooleanField(required=False)
     notification = forms.ChoiceField(choices=NOTIFY_ME)
 
 
@@ -111,8 +112,9 @@ class UserProfileForm(forms.Form):
     # ]
     firstName = forms.CharField(required=False, label="First name")
     surName = forms.CharField(required=False, label="Surname")
-    email = forms.EmailField(required=False)
-    phoneNumber = forms.CharField(required=False)
+    email = forms.EmailField(required=False, label="Email address")
+    phoneNumber = forms.CharField(required=False, label="Phone number")
+    pushbulletApi = forms.CharField(required=False, label="PushBullet API key")
     # notification = forms.ChoiceField(choices=NOTIFY_ME)
 
 
